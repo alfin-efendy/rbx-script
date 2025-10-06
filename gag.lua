@@ -1,1 +1,8010 @@
-local _0xfbbdec = {} _0xfbbdec["pet/ui.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0x2ef14a local _0x3f9be7 local _0xf9a473 local _0x6b6668 local _0x38f402 function _0xb73f3b:Init(_window, _petTeam, _egg, _pet, _garden, _player) _0x7ae931 = _window _0x2ef14a = _petTeam _0x3f9be7 = _egg _0xf9a473 = _pet _0x6b6668 = _garden _0x38f402 = _player end function _0xb73f3b:CreatePetTab() local _0x57486e = _0x7ae931:AddTab({ Name = "Pet", Icon = "😺", }) self:AddPetTeamsSection(_0x57486e) self:AddEggsSection(_0x57486e) self:AddSellSection(_0x57486e) end function _0xb73f3b:AddPetTeamsSection(_0x57486e) local _0x8625e7 = _0x57486e:AddAccordion({ Title = "Pet Teams", Icon = "🛠️", Expanded = false, }) _0x8625e7:AddLabel("Create and manage pet teams for different tasks.") local _0x400f16 = _0x8625e7:AddTextBox({ Name = "Team Name", Placeholder = "Enter team name example: exp, hatch, sell, etc...", Default = "", }) _0x8625e7:AddButton("Save Team", function() local _0xe98305 = _0x400f16.GetText() if _0xe98305 and _0xe98305 ~= "" then print("Please enter a valid team name.") end local _0x192281 = _0xf9a473:GetAllActivePets() if not _0x192281 then print("No active pets found.") return end local _0x3cdc6e = {} for _0xd00576, petState in pairs(_0x192281) do table.insert(_0x3cdc6e, _0xd00576) end print("Creating pet team:", _0xe98305) _0x2ef14a:SaveTeamPets(_0xe98305, _0x3cdc6e) _0x400f16.Clear() end) _0x8625e7:AddSeparator() _0x8625e7:AddLabel("Select a pet team to set as core, change, or delete.") local _0xe73227 = _0x8625e7:AddSelectBox({ Name = "Select Pet Team", Options = _0x2ef14a:GetAllPetTeams(), Placeholder = "Select Pet Team...", MultiSelect = false, OnDropdownOpen = function(currentOptions, updateOptions) local _0x4b0fc3 = _0x2ef14a:GetAllPetTeams() local _0xa65c56 = {} for _, team in pairs(_0x4b0fc3) do table.insert(_0xa65c56, {_0x1c31a7 = team, _0x25d758 = team}) end updateOptions(_0xa65c56) end }) local _0x1b687d _0x8625e7:AddButton("Set Core Team", function() local _0x407c39 = _0xe73227.GetSelected() if _0x407c39 and #_0x407c39 > 0 then local _0xe98305 = _0x407c39[1] _0x7ae931:SetConfigValue("CorePetTeam", _0xe98305) _0x1b687d.SetText("Current Core Team: " .. _0xe98305) end end) _0x1b687d = _0x8625e7:AddLabel("Current Core Team: " .. (_0x7ae931:GetConfigValue("CorePetTeam") or "None")) _0x8625e7:AddSeparator() _0x8625e7:AddButton("Change Team", function() local _0x407c39 = _0xe73227.GetSelected() if _0x407c39 and #_0x407c39 > 0 then local _0xe98305 = _0x407c39[1] print("Changing to pet team:", _0xe98305) _0xf9a473:ChangeTeamPets(_0xe98305) end end) _0x8625e7:AddButton("Delete Selected Team", function() local _0x407c39 = _0xe73227.GetSelected() if _0x407c39 and #_0x407c39 > 0 then local _0xe98305 = _0x407c39[1] _0x2ef14a:DeleteTeamPets(_0xe98305) _0xe73227.Clear() end end) end function _0xb73f3b:AddEggsSection(_0x57486e) local _0x8625e7 = _0x57486e:AddAccordion({ Title = "Eggs", Icon = "🥚", Expanded = false, }) _0x8625e7:AddLabel("Select an egg to place in your farm.") _0x8625e7:AddSelectBox({ Name = "Select Egg", Options = {"Loading..."}, Placeholder = "Select Egg...", MultiSelect = false, Flag = "EggPlacing", OnInit = function(currentOptions, updateOptions, _0x7e7266) local _0xc1ca31 = {} local _0x1ce684 = _0x3f9be7:GetEggRegistry() for egg, _ in pairs(_0x1ce684) do table.insert(_0xc1ca31, {_0x1c31a7 = egg, _0x25d758 = egg}) end if #_0xc1ca31 > 0 then table.sort(_0xc1ca31, function(a, b) if not a or not b or not a._0x1c31a7 or not b._0x1c31a7 then return false end return string.lower(tostring(a._0x1c31a7)) < string.lower(tostring(b._0x1c31a7)) end) end updateOptions(_0xc1ca31) end }) _0x8625e7:AddLabel("Max Place Eggs") _0x8625e7:AddNumberBox({ Name = "Max Place Eggs", Placeholder = "Enter max eggs...", Default = 0, Min = 0, Max = 13, Increment = 1, Flag = "MaxPlaceEggs", }) _0x8625e7:AddLabel("Position to Place Eggs") _0x8625e7:AddSelectBox({ Name = "Position to Place Eggs", Options = {"Random", "Front Right", "Front Left", "Back Right", "Back Left"}, Default = "Random", MultiSelect = false, Placeholder = "Select position...", Flag = "PositionToPlaceEggs", }) _0x8625e7:AddButton("Place Selected Egg", function() _0x3f9be7:PlacingEgg() end) _0x8625e7:AddSeparator() _0x8625e7:AddLabel("Team for Hatching Eggs") _0x8625e7:AddSelectBox({ Name = "Select Pet Team for Hatch", Options = {"Loading..."}, Placeholder = "Select Pet Team...", MultiSelect = false, Flag = "HatchPetTeam", OnInit = function(currentOptions, updateOptions) local _0x4b0fc3 = _0x2ef14a:GetAllPetTeams() local _0xa65c56 = {} for _, team in pairs(_0x4b0fc3) do table.insert(_0xa65c56, {_0x1c31a7 = team, _0x25d758 = team}) end updateOptions(_0xa65c56) end, OnDropdownOpen = function(currentOptions, updateOptions) local _0x4b0fc3 = _0x2ef14a:GetAllPetTeams() local _0xa65c56 = {} for _, team in pairs(_0x4b0fc3) do table.insert(_0xa65c56, {_0x1c31a7 = team, _0x25d758 = team}) end updateOptions(_0xa65c56) end }) _0x8625e7:AddToggle({ Name = "Auto Boost Pets Before Hatching", Default = false, Flag = "AutoBoostBeforeHatch", }) _0x8625e7:AddSeparator() _0x8625e7:AddLabel("Select Hatching Special Pet") _0x8625e7:AddSelectBox({ Name = "Select Special Pet", Options = {"Loading..."}, Placeholder = "Select Special Pet...", MultiSelect = true, Flag = "SpecialHatchingPet", OnInit = function(currentOptions, updateOptions, _0x7e7266) local _0xd267aa = _0xf9a473:GetPetRegistry() updateOptions(_0xd267aa) end }) _0x8625e7:AddLabel("Or If Weight is Higher Than") _0x8625e7:AddNumberBox({ Name = "Weight Threshold", Placeholder = "Enter weight...", Default = 0.0, Min = 0.0, Max = 20.0, Increment = 1.0, Decimals = 2, Flag = "WeightThresholdSpecialHatching", }) _0x8625e7:AddLabel("Select Team for Special Hatching") _0x8625e7:AddSelectBox({ Name = "Select Pet Team for Special Hatch", Options = {"Loading..."}, Placeholder = "Select Pet Team...", MultiSelect = false, Flag = "SpecialHatchPetTeam", OnInit = function(currentOptions, updateOptions) local _0x4b0fc3 = _0x2ef14a:GetAllPetTeams() local _0xa65c56 = {} for _, team in pairs(_0x4b0fc3) do table.insert(_0xa65c56, {_0x1c31a7 = team, _0x25d758 = team}) end updateOptions(_0xa65c56) end, OnDropdownOpen = function(currentOptions, updateOptions) local _0x4b0fc3 = _0x2ef14a:GetAllPetTeams() local _0xa65c56 = {} for _, team in pairs(_0x4b0fc3) do table.insert(_0xa65c56, {_0x1c31a7 = team, _0x25d758 = team}) end updateOptions(_0xa65c56) end }) _0x8625e7:AddToggle({ Name = "Auto Boost Pets Before Special Hatching", Default = false, Flag = "AutoBoostBeforeSpecialHatch", }) _0x8625e7:AddSeparator() _0x8625e7:AddToggle({ Name = "Auto Hatch Eggs", Default = false, Flag = "AutoHatchEggs", Callback = function(_0x25d758) if _0x25d758 then _0x3f9be7:StartAutoHatching() end end }) end function _0xb73f3b:AddSellSection(_0x57486e) local _0x8625e7 = _0x57486e:AddAccordion({ Title = "Sell Pets", Icon = "💰", Expanded = false, }) _0x8625e7:AddLabel("Select a pet to sell.") _0x8625e7:AddSelectBox({ Name = "Select Pet to Sell", Options = {"Loading..."}, Placeholder = "Select Pet...", MultiSelect = true, Flag = "PetToSell", OnInit = function(currentOptions, updateOptions, _0x7e7266) local _0xd267aa = _0xf9a473:GetPetRegistry() updateOptions(_0xd267aa) end, }) _0x8625e7:AddLabel("And If Base Weight Is Less Than Or Equal") _0x8625e7:AddNumberBox({ Name = "Weight Threshold", Placeholder = "Enter weight...", Default = 1.0, Min = 0.5, Max = 20.0, Increment = 1.0, Decimals = 2, Flag = "WeightThresholdSellPet", }) _0x8625e7:AddLabel("And If Age Is Less Than Or Equal") _0x8625e7:AddNumberBox({ Name = "Age Threshold (in days)", Placeholder = "Enter age...", Default = 1, Min = 1, Max = 100, Increment = 1, Flag = "AgeThresholdSellPet", }) _0x8625e7:AddLabel("Pet Team to Use for Selling") _0x8625e7:AddSelectBox({ Name = "Select Pet Team for Sell", Options = {"Loading..."}, Placeholder = "Select Pet Team...", MultiSelect = false, Flag = "SellPetTeam", OnInit = function(currentOptions, updateOptions) local _0x4b0fc3 = _0x2ef14a:GetAllPetTeams() local _0xa65c56 = {} for _, team in pairs(_0x4b0fc3) do table.insert(_0xa65c56, {_0x1c31a7 = team, _0x25d758 = team}) end updateOptions(_0xa65c56) end, OnDropdownOpen = function(currentOptions, updateOptions) local _0x4b0fc3 = _0x2ef14a:GetAllPetTeams() local _0xa65c56 = {} for _, team in pairs(_0x4b0fc3) do table.insert(_0xa65c56, {_0x1c31a7 = team, _0x25d758 = team}) end updateOptions(_0xa65c56) end }) _0x8625e7:AddToggle({ Name = "Auto Boost Pets Before Selling", Default = false, Flag = "AutoBoostBeforeSelling", }) _0x8625e7:AddToggle({ Name = "Auto Sell Pets After Hatching", Default = false, Flag = "AutoSellPetsAfterHatching", }) _0x8625e7:AddButton("Sell Selected Pet", function() _0xf9a473:SellPet() end) end return _0xb73f3b end _0xfbbdec["../module/core.lua"] = function() local _0xb73f3b = {} _0xb73f3b.Players = game:GetService("Players") _0xb73f3b.ReplicatedStorage = game:GetService("ReplicatedStorage") _0xb73f3b.TeleportService = game:GetService("TeleportService") _0xb73f3b._0x079a25 = game:GetService("UserInputService") _0xb73f3b.GuiService = game:GetService("GuiService") _0xb73f3b.Workspace = game:GetService("Workspace") _0xb73f3b.VirtualUser = game:GetService("VirtualUser") _0xb73f3b.PlaceId = game.PlaceId _0xb73f3b.JobId = game.JobId _0xb73f3b.LocalPlayer = _0xb73f3b.Players.LocalPlayer _0xb73f3b.GameEvents = _0xb73f3b.ReplicatedStorage.GameEvents function _0xb73f3b:GetCharacter() return self.LocalPlayer.Character end function _0xb73f3b:GetHumanoid() local _0x944952 = self:GetCharacter() return _0x944952 and _0x944952:FindFirstChildOfClass("Humanoid") or nil end function _0xb73f3b:GetHumanoidRootPart() local _0x944952 = self:GetCharacter() return _0x944952 and _0x944952:FindFirstChild("HumanoidRootPart") or nil end function _0xb73f3b:GetBackpack() return self.LocalPlayer:FindFirstChild("Backpack") end function _0xb73f3b:GetPlayerGui() return self.LocalPlayer:FindFirstChild("PlayerGui") end function _0xb73f3b:Rejoin() if self.PlaceId and self.JobId then self.TeleportService:TeleportToPlaceInstance(self.PlaceId, self.JobId, self.LocalPlayer) else warn("Core:Rejoin - PlaceId or JobId is nil, cannot rejoin.") end end function _0xb73f3b:HopServer() if self.PlaceId then self.TeleportService:Teleport(self.PlaceId, self.LocalPlayer) else warn("Core:HopServer - PlaceId is nil, cannot hop server.") end end function _0xb73f3b:MakeLoop(_isEnableFunc, _func) coroutine.wrap(function() local _0xf19b1f = 0 local _0x61d355 = 5 while true do local _0xf791bc = tick() local _0x3c91ae = false if _0xf791bc - _0xf19b1f >= _0x61d355 then if type(_isEnableFunc) == "function" then _0x3c91ae = _isEnableFunc() else _0x3c91ae = _isEnableFunc end _0xf19b1f = _0xf791bc else if type(_isEnableFunc) == "function" then _0x3c91ae = _isEnableFunc() else _0x3c91ae = _isEnableFunc end end if not _0x3c91ae then task.wait(5) continue end _func() task.wait(3) end end)() end return _0xb73f3b end _0xfbbdec["quest/ascension.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0xa090b6 local _0xfd5fa8 local _0x38f402 _0xb73f3b.AscensionItem = { Name = "N/A", Amount = 0, Mutations = "N/A" } function _0xb73f3b:Init(_window, _core, _plant, _player) _0x7ae931 = _window _0xa090b6 = _core _0xfd5fa8 = _plant _0x38f402 = _player task.spawn(function() _0xb73f3b.AscensionItem = self:GetQuestDetail() end) _0xa090b6:MakeLoop(function() return _0x7ae931:GetConfigValue("AutoAscend") end, function() self:AutoSubmitQuest() end) end function _0xb73f3b:GetQuestDetail() local _0x8cdd5c = _0xa090b6:GetPlayerGui():FindFirstChild("RebirthConfirmation") if not _0x8cdd5c then warn("RebirthConfirmation UI not found") return nil end local _0x9226e1 = _0x8cdd5c.Frame.Display.RebirthDetails:FindFirstChild("RequiredItemTemplate") if not _0x9226e1 then warn("RequiredItemTemplate not found") return nil end local _0x659b55 = _0x9226e1:FindFirstChild("ItemName") if not _0x659b55 then warn("ItemName not found") return nil end local _0x488088 = _0x9226e1:FindFirstChild("ItemAmount") if not _0x488088 then warn("ItemAmount not found") return nil end local _0x219817 = _0x9226e1:FindFirstChild("ItemMutations") if not _0x219817 then warn("ItemMutations not found") return nil end local function _0xfa9554(_0x1c31a7) if not _0x1c31a7 then return "" end return _0x1c31a7:gsub('<font[^>]*>', ''):gsub('</font>', '') end local _0x17e486 = _0x659b55.Text local _0xe25639 = tonumber(_0x488088.Text:match("%d+")) local _0x301665 = _0xfa9554(_0x219817.Text) _0xb73f3b.AscensionItem = { Name = _0x17e486, Amount = _0xe25639, Mutations = _0x301665 } return { Name = _0x17e486, Amount = _0xe25639, Mutations = _0x301665 } end function _0xb73f3b:IsQuestFruit(_fruit) local _0xaa704d = false if not _fruit:IsA("Tool") then return _0xaa704d end if _fruit:GetAttribute("b") ~= "j" then return _0xaa704d end if _fruit:FindFirstChild("f") ~= self.AscensionItem.Name then return _0xaa704d end if self.AscensionItem.Mutations == "" or self.AscensionItem.Mutations == "N/A" then return true end for attributeName, attributeValue in pairs(_fruit:GetAttributes()) do if attributeValue == true and attributeName == self.AscensionItem.Mutations then _0xaa704d = true break end end return _0xaa704d end function _0xb73f3b:GetAllOwnedFruitsQuest() local _0xcde3a6 = {} for _, fruit in pairs(_0xa090b6:GetBackpack():GetChildren()) do if self:IsQuestFruit(fruit) then table.insert(_0xcde3a6, fruit) end end return _0xcde3a6 end function _0xb73f3b:SubmitRebirth(fruit) local _0x16b0d1 = function() _0xa090b6.GameEvents.BuyRebirth:FireServer() wait(1) self.AscensionItem = self:GetQuestDetail() end _0x38f402:AddToQueue(fruit, 10, function() _0x16b0d1() end) end function _0xb73f3b:AutoSubmitQuest() local _0x74e590 = self:GetQuestDetail() if not _0x74e590 then return end local _0xf58a47 = self:GetAllOwnedFruitsQuest() if _0xf58a47 and #_0xf58a47 >= _0x74e590.Amount then self:SubmitRebirth(_0xf58a47[1]) end local _0x764d31 = _0xfd5fa8:FindPlants(_0x74e590.Name) or {} if not _0x764d31 or #_0x764d31 < _0x74e590.Amount then warn("Not enough plants found for quest:", _0x74e590.Name) local _0x63941c = _0x7ae931:GetConfigValue("PlantingAscensionPosition") or "Random" print("Planting more seeds:", _0x74e590.Name, "to reach", _0x74e590.Amount, "positions:", _0x63941c) _0xfd5fa8:PlantSeed(_0x74e590.Name, _0x74e590.Amount - #_0x764d31, _0x63941c) return end local _0x04ab5f = {} for _, plant in pairs(_0x764d31) do if #_0x04ab5f >= _0x74e590.Amount then break end local _0x3d0111 = _0xfd5fa8:GetPlantDetail(plant) if not _0x3d0111 or #_0x3d0111._0xe6677a == 0 then continue end for _, fruit in pairs(_0x3d0111._0xe6677a) do if not fruit.isEligibleToHarvest then continue end if fruit._0xa89595 ~= _0x74e590.Name then continue end print("Found matching fruit:", fruit._0xa89595) print("Required mutation:", _0x74e590.Mutations) print("Fruit mutations:", table.concat(fruit._0xab6c95, ", ")) if not _0x74e590.Mutations or _0x74e590.Mutations == "" or _0x74e590.Mutations == "N/A" then table.insert(_0x04ab5f, fruit.model) break end for _, mutation in pairs(fruit._0xab6c95) do if mutation == _0x74e590.Mutations then table.insert(_0x04ab5f, fruit.model) break end end end end if not _0x04ab5f or #_0x04ab5f == 0 then warn("No suitable plants found to submit for the quest.") return end local _0xe09780 = 0 for _, fruit in pairs(_0x04ab5f) do if _0xe09780 >= _0x74e590.Amount then break end print("Harvesting fruit:", fruit.Name) local _0x69fcd6 = _0xfd5fa8:HarvestFruit(fruit) if _0x69fcd6 then _0xe09780 = _0xe09780 + 1 task.wait(0.15) end end end return _0xb73f3b end _0xfbbdec["quest/ui.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0xa090b6 local _0xfff9ae local _0x97e0db function _0xb73f3b:Init(_window, _core, _ascension, _chubbyChipmunkUI) _0x7ae931 = _window _0xa090b6 = _core _0xfff9ae = _ascension _0x97e0db = _chubbyChipmunkUI end function _0xb73f3b:CreateQuestTab() local _0x57486e = _0x7ae931:AddTab({ Name = "Quests", Icon = "📜", }) _0x97e0db:AddQuestSection(_0x57486e) self:AscensionSection(_0x57486e) end function _0xb73f3b:AscensionSection(_0x57486e) local _0x8625e7 = _0x57486e:AddAccordion({ Name = "Ascension", Icon = "🪙", Expanded = false, }) _0x8625e7:AddLabel("Current Ascension Quest:") _0x8625e7:AddLabel(" - Item: " .. (_0xfff9ae.AscensionItem.Name or "N/A")) _0x8625e7:AddLabel(" - Amount: " .. (_0xfff9ae.AscensionItem.Amount or "N/A")) _0x8625e7:AddLabel(" - Mutations: " .. (_0xfff9ae.AscensionItem.Mutations or "N/A")) _0x8625e7:AddLabel("Position planting seeds:") _0x8625e7:AddSelectBox({ Name = "Planting Position", Flag = "PlantingAscensionPosition", Options = {"Random", "Front Right", "Front Left", "Back Right", "Back Left"}, Default = "Random", MultiSelect = false, Placeholder = "Select position...", }) _0x8625e7:AddToggle({ Name = "Auto Ascend", Default = false, Flag = "AutoAscend", Tooltip = "Automatically ascend when the option is available.", }) end return _0xb73f3b end _0xfbbdec["event/chubby_chipmunk/quest.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0xa090b6 local _0x34733f local _0x15aacd function _0xb73f3b:Init(_window, _core) _0x7ae931 = _window _0xa090b6 = _core _0xa090b6.GameEvents.SpecialEventStarted.OnClientEvent:Connect(function(weather) self:StopAutoSubmitEventPlants() task.wait(300) self:StartAutoSubmitEventPlants() end) task.spawn(function() self:StartAutoSubmitEventPlants() end) end function _0xb73f3b:StartAutoSubmitEventPlants() if not _0x7ae931:GetConfigValue("AutoSubmitSeedStagePlants") then return end if not _0x34733f then _0x34733f = _0xa090b6:GetBackpack().ChildAdded:Connect(function(child) if tick() - (_0x15aacd or 0) < 5 then return end if child:GetAttribute("b") ~= "j" then return end _0xa090b6.GameEvents.SubmitChipmunkFruit:FireServer("All") _0x15aacd = tick() end) end _0xa090b6.GameEvents.SubmitChipmunkFruit:FireServer("All") _0x15aacd = tick() end function _0xb73f3b:StopAutoSubmitEventPlants() if _0x34733f then _0x34733f:Disconnect() _0x34733f = nil end end return _0xb73f3b end _0xfbbdec["inventory/inventory.lua"] = function() local _0xb73f3b = {} local _0xa090b6 local _0x38f402 local _0x7ae931 local _0xb25f54 function _0xb73f3b:Init(_core, _player, _window) _0xa090b6 = _core _0x38f402 = _player _0x7ae931 = _window _0xb25f54 = _0xa090b6:GetBackpack().ChildAdded:Connect(function(child) self:AutoFavoritePet(child) end) end function _0xb73f3b:GetAllPets() local _0x28b380 = {} for _, _0x32f8a4 in next, _0x38f402:GetAllTools() do local _0x5785ce = _0x32f8a4:GetAttribute("b") _0x5785ce = _0x5785ce and string.lower(_0x5785ce) or "" if _0x5785ce == "l" then table.insert(_0x28b380, _0x32f8a4) end end return _0x28b380 end function _0xb73f3b:FavoriteItem(item) _0xa090b6.GameEvents.Favorite_Item:FireServer(item) task.wait(0.15) end function _0xb73f3b:AutoFavoritePet(item) if not item or not item:IsA("Tool") then return end local _0xd2558d = _0x7ae931:GetConfigValue("AutoFavoritePets") or false if not _0xd2558d then return end local _0x25720d = item:GetAttribute("b") if not _0x25720d or string.lower(_0x25720d) ~= "l" then return end local _0xb5612a = item:GetAttribute("d") or false if _0xb5612a then return end local _0x648d2b = _0x7ae931:GetConfigValue("AutoFavoritePetName") or {} local _0xa9275c = _0x7ae931:GetConfigValue("AutoFavoritePetWeight") or 0.0 local _0xa9ccaa = _0x7ae931:GetConfigValue("AutoFavoritePetAge") or 0 local _0x2c7647, weightStr, ageStr = item.Name:match("^(.-)%s*%[(.-)%s*KG%]%s*%[Age%s*(%d+)%]") if not _0x2c7647 then _0x2c7647 = item.Name weightStr = nil ageStr = nil end local _0x5e3e23 = weightStr and tonumber(weightStr:match("%d+%.?%d*")) or 0 local _0x791714 = ageStr and tonumber(ageStr) or 0 print(string.format("Checking pet: %s | Weight: %.2f | Age: %d", _0x2c7647, _0x5e3e23, _0x791714)) for _, _0xa89595 in ipairs(_0x648d2b) do if _0x2c7647 == _0xa89595 then print("Auto-favoriting pet by name:", _0x2c7647) self:FavoriteItem(item) return end end if _0x5e3e23 >= _0xa9275c or _0x791714 >= _0xa9ccaa then self:FavoriteItem(item) end end function _0xb73f3b:FavoriteAllPets() for _, _0x32f8a4 in pairs(self:GetAllPets()) do self:AutoFavoritePet(_0x32f8a4) end end return _0xb73f3b end _0xfbbdec["inventory/ui.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0x51f9b7 local _0xf9a473 function _0xb73f3b:Init(_window, _inventory, _pet) _0x7ae931 = _window _0x51f9b7 = _inventory _0xf9a473 = _pet end function _0xb73f3b:CreateTab() local _0x57486e = _0x7ae931:AddTab({ Name = "Inventory", Icon = "🎒" }) self:AddPetSection(_0x57486e) end function _0xb73f3b:AddPetSection(_0x57486e) local _0x8625e7 = _0x57486e:AddAccordion({ Title = "Pets", Icon = "🐶", Expanded = false, }) _0x8625e7:AddLabel("Select pet name for auto favorite:") _0x8625e7:AddSelectBox({ Name = "Auto Favorite Pet Name", Options = {"Loading..."}, Placeholder = "Select a pet", MultiSelect = true, Flag = "AutoFavoritePetName", OnInit = function(currentOptions, updateOptions, _0x7e7266) local _0xd267aa = _0xf9a473:GetPetRegistry() updateOptions(_0xd267aa) end }) _0x8625e7:AddLabel("Or If Weight Is Higher Than Or Equal To") _0x8625e7:AddNumberBox({ Name = "Weight Threshold", Placeholder = "Enter weight...", Default = 0.0, Min = 0.0, Max = 20.0, Increment = 1.0, Decimals = 2, Flag = "AutoFavoritePetWeight", }) _0x8625e7:AddLabel("Or If Age Is Higher Than Or Equal To") _0x8625e7:AddNumberBox({ Name = "Age Threshold", Placeholder = "Enter age...", Default = 0, Min = 0, Max = 100, Increment = 1, Flag = "AutoFavoritePetAge", }) _0x8625e7:AddToggle({ Name = "Auto Favorite Pets", Flag = "AutoFavoritePets", Default = false, Callback = function(_0x25d758) if _0x25d758 then _0x51f9b7:FavoriteAllPets() end end }) end return _0xb73f3b end _0xfbbdec["notification/ui.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0x206cb2 function _0xb73f3b:Init(_window, _test) _0x7ae931 = _window _0x206cb2 = _test end function _0xb73f3b:CreateNotificationTab() local _0x57486e = _0x7ae931:AddTab({ Name = "Notifications", Icon = "🔔", }) _0x57486e:AddLabel("Discord Webhook URL (for notifications)") _0x57486e:AddTextBox({ Name = "Discord Webhook URL", Default = "", Flag = "DiscordWebhookURL", Placeholder = "https://discord.com/api/webhooks/...", MaxLength = 500, }) _0x57486e:AddLabel("Discord Ping ID (optional)") _0x57486e:AddTextBox({ Name = "Discord Ping ID", Default = "", Flag = "DiscordPingID", Placeholder = "123456789012345678", MaxLength = 50, }) _0x57486e:AddButton("Test Notification", function() task.spawn(function() _0x206cb2:HatchEgg("Test Pet", "Test Egg", 10) task.wait(0.15) _0x206cb2:Statistics("Test Egg", 5) end) end) end return _0xb73f3b end _0xfbbdec["farm/plant.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0xa090b6 local _0x38f402 local _0x6b6668 local _0x216362 function _0xb73f3b:Init(_window, _core, _player, _garden) _0x7ae931 = _window _0xa090b6 = _core _0x38f402 = _player _0x6b6668 = _garden local _0xd0ec2d = _0x6b6668:GetMyFarm() if not _0xd0ec2d then warn("Failed to find player's garden") return end local _0x27951d = _0xd0ec2d:FindFirstChild("Important") _0x216362 = _0x27951d:FindFirstChild("Plants_Physical") _core:MakeLoop(function() return _0x7ae931:GetConfigValue("AutoPlantSeeds") end, function() self:StartAutoPlanting() end) _core:MakeLoop(function() return _0x7ae931:GetConfigValue("AutoWateringPlants") end, function() self:AutoWateringPlants() end) _core:MakeLoop(function() return _0x7ae931:GetConfigValue("AutoHarvestPlants") end, function() self:StartAutoHarvesting() end) end function _0xb73f3b:GetPlantRegistry() local _0x69fcd6, seedRegistry = pcall(function() return require(_0xa090b6.ReplicatedStorage.Data.SeedData) end) if not _0x69fcd6 then warn("Failed to get seed registry:", seedRegistry) return {} end if not seedRegistry then warn("SeedData is nil or not found") return {} end local _0xa95b7e = {} for seedName, seedData in pairs(seedRegistry) do table.insert(_0xa95b7e, { seed = seedData.SeedName or seedName, plant = seedName, rarity = seedData.SeedRarity or "Unknown", }) end if #_0xa95b7e > 0 then table.sort(_0xa95b7e, function(a, b) if not a or not b or not a.plant or not b.plant then return false end return string.lower(tostring(a.plant)) < string.lower(tostring(b.plant)) end) end return _0xa95b7e end function _0xb73f3b:PlantSeed(_seedName, _numToPlant, _plantingPosition) if not _seedName or type(_seedName) ~= "string" then warn("FarmUtils:PlantSeed - Invalid seed name") return false end if #_0x216362:GetChildren() >= 800 then return false end local _0x32f8a4 local _0xc00842 = 0 for _, t in next, _0x38f402:GetAllTools() do local _0x5785ce = t:GetAttribute("b") local _0xabaaa5 = t:GetAttribute("Seed") if _0x5785ce == "n" and _0xabaaa5 == _seedName then _0x32f8a4 = t _0xc00842 = t:GetAttribute("Quantity") or 0 break end end if _0xc00842 < _numToPlant then _numToPlant = _0xc00842 end if not _0x32f8a4 then print("No seed tool found for seed:", _seedName) return false end local _0xc619c3 = _0x6b6668:GetFarmRandomPosition() if _plantingPosition == "Front Right" then _0xc619c3 = _0x6b6668:GetFarmFrontRightPosition() elseif _plantingPosition == "Front Left" then _0xc619c3 = _0x6b6668:GetFarmFrontLeftPosition() elseif _plantingPosition == "Back Right" then _0xc619c3 = _0x6b6668:GetFarmBackRightPosition() elseif _plantingPosition == "Back Left" then _0xc619c3 = _0x6b6668:GetFarmBackLeftPosition() end if not _0xc619c3 then warn("Failed to get farm position for planting") return false end local _0x422fcf = function(_numToPlant, _seedName, _position) for i = 1, _numToPlant do if #_0x216362:GetChildren() >= 800 then break end _0xa090b6.GameEvents.Plant_RE:FireServer(_position, _seedName) task.wait(0.15) end end _0x38f402:AddToQueue( _0x32f8a4, 3, function() _0x422fcf(_numToPlant, _seedName, _0xc619c3) end ) end function _0xb73f3b:FindPlants(plantName) if not plantName or type(plantName) ~= "string" then warn("Invalid plant name") return nil end if not _0x216362 then warn("PlantsPhysical not found") return nil end local _0xab8af4 = {} for _, plant in pairs(_0x216362:GetChildren()) do if plant.Name == plantName then table.insert(_0xab8af4, plant) end end return #_0xab8af4 > 0 and _0xab8af4 or nil end function _0xb73f3b:StartAutoPlanting() local _0x8b35d5 = _0x7ae931:GetConfigValue("SeedsToPlant") or {} local _0xfd68f2 = _0x7ae931:GetConfigValue("SeedsToPlantCount") or 1 local _0x63941c = _0x7ae931:GetConfigValue("PlantingPosition") or "Random" if #_0x216362:GetChildren() >= 800 then task.wait(30) return end local _0x28e608 = false for _, seedName in pairs(_0x8b35d5) do if #_0x216362:GetChildren() >= 800 then break end local _0x7e1007 = self:FindPlants(seedName) or {} local _0xc7e550 = #_0x7e1007 local _0x585d46 = math.max(0, _0xfd68f2 - _0xc7e550) if _0x585d46 > 0 then self:PlantSeed(seedName, _0x585d46, _0x63941c) _0x28e608 = true end end if not _0x28e608 then task.wait(60) else task.wait(15) end end function _0xb73f3b:AutoWateringPlants() local _0xc4f898 local _0xf3c6c0 = _0x7ae931:GetConfigValue("WateringDelay") or 2 local _0xdb67e9 = _0x7ae931:GetConfigValue("WateringEach") or 5 local _0x8f80f1 = _0x7ae931:GetConfigValue("WateringPosition") or "Front Right" local _0xc619c3 = _0x6b6668:GetFarmRandomPosition() if _0x8f80f1 == "Front Right" then _0xc619c3 = _0x6b6668:GetFarmFrontRightPosition() elseif _0x8f80f1 == "Front Left" then _0xc619c3 = _0x6b6668:GetFarmFrontLeftPosition() elseif _0x8f80f1 == "Back Right" then _0xc619c3 = _0x6b6668:GetFarmBackRightPosition() elseif _0x8f80f1 == "Back Left" then _0xc619c3 = _0x6b6668:GetFarmBackLeftPosition() end for _, Tool in next, _0x38f402:GetAllTools() do local _0x5785ce = Tool:GetAttribute("b") if _0x5785ce == "o" then _0xc4f898 = Tool break end end if not _0xc4f898 then warn("No watering can found in inventory") return end if #self:GetAllGrowingPlants() < 1 then task.wait(10) return end local _0x92b33b = _0x38f402:GetTaskByTool(_0xc4f898) if _0x92b33b and #_0x92b33b > 0 then task.wait(10) return end local _0xc8c301 = function(_0xc619c3, each) local _0x5b7945 = 0 for i = 1, each do local _0x69fcd6 = pcall(function() _0xa090b6.GameEvents.Water_RE:FireServer(Vector3.new(_0xc619c3.X, 0, _0xc619c3.Z)) end) if _0x69fcd6 then _0x5b7945 = _0x5b7945 + 1 end task.wait(1.5) end task.wait(0.5) end _0x38f402:AddToQueue( _0xc4f898, 99, function() _0xc8c301(_0xc619c3, _0xdb67e9) end ) task.wait(math.max(_0xf3c6c0, 5)) end function _0xb73f3b:EligibleToHarvest(plant) local _0x01d706 = plant:FindFirstChild("ProximityPrompt", true) if not _0x01d706 then return false end if not _0x01d706.Enabled then return false end return true end function _0xb73f3b:GetAllGrowingPlants() if not _0x216362 then warn("PlantsPhysical not found") return {} end local _0x007fed = {} for _, plant in pairs(_0x216362:GetChildren()) do local _0x6675c4 = plant:GetAttribute("DoneGrowTime") or 0 if _0x6675c4 > tick() then table.insert(_0x007fed, plant) end end return _0x007fed end function _0xb73f3b:IsMaxInventory() local _0x4a2fe9 = _0xa090b6.LocalPlayer local _0x55bbc2 = _0xa090b6:GetBackpack() if not _0x4a2fe9 or not _0x55bbc2 then warn("FarmUtils:IsMaxFruitInventory - Character or Backpack not found") return false end local _0x13e70a = _0x4a2fe9:GetAttribute("BonusBackpackSize") or 0 local _0xd6ab17 = 200 + _0x13e70a local _0xe08860 = 0 for _, item in pairs(_0x55bbc2:GetChildren()) do if item:GetAttribute("b") == "j" then _0xe08860 = _0xe08860 + 1 end end return _0xe08860 >= _0xd6ab17 end function _0xb73f3b:GetFruitPlant(plan) local _0xe6677a = {} for _, child in pairs(plan.Fruits:GetChildren()) do table.insert(_0xe6677a, child) end return _0xe6677a end function _0xb73f3b:GetPlantDetail(_plant) if not _plant or not _plant:IsA("Model") then warn("Invalid plant") return nil end local _0xefd2d1 = _plant:FindFirstChild("ProximityPrompt", true) local _0x072a5f = _0xefd2d1 and _0xefd2d1.Parent.Parent.Parent local _0xe6677a = {} if not _0xefd2d1 or not _0x072a5f then _0xe6677a = {} elseif _0x072a5f and _0x072a5f.Name == "Fruits" then for _, fruit in pairs(_0x072a5f:GetChildren()) do table.insert(_0xe6677a, fruit) end else _0xe6677a = { _plant } end local _0x6675c4 = _plant:GetAttribute("DoneGrowTime") or math.huge local _0xb23319 = { _0xa89595 = _plant.Name or "Unknown", _0xc619c3 = _plant:GetPivot().Position or Vector3.new(0,0,0), isGrowing = _0x6675c4 < tick() or false, _0xe6677a = {}, } for _, fruit in pairs(_0xe6677a) do local _0xab6c95 = {} for attributeName, attributeValue in pairs(fruit:GetAttributes()) do if attributeValue == true then table.insert(_0xab6c95, attributeName) end end table.insert(_0xb23319._0xe6677a, { isEligibleToHarvest = self:EligibleToHarvest(fruit), _0xab6c95 = _0xab6c95, model = fruit, }) end return _0xb23319 end function _0xb73f3b:HarvestFruit(_fruit) if not _fruit or not _fruit:IsA("Model") then warn("Invalid plant or fruit") return false end if not self:EligibleToHarvest(_fruit) then return false end if self:IsMaxInventory() then return false end local _0x69fcd6, err = pcall(function() _0xa090b6.GameEvents.Crops.Collect:FireServer({_fruit}) end) if not _0x69fcd6 then warn("Failed to harvest item:", _fruit.Name, "Error:", err) return false end return true end function _0xb73f3b:StartAutoHarvesting() if _0x7ae931:GetConfigValue("AutoHarvestPlants") ~= true then warn("Auto harvesting is disabled in config") return end if self:IsMaxInventory() then task.wait(10) return end local _0x760d87 = _0x7ae931:GetConfigValue("PlantsToHarvest") or {} if #_0x760d87 == 0 then warn("No plants selected for auto harvesting") task.wait(10) return end local _0xe09780 = 0 for _, plantName in pairs(_0x760d87) do local _0x764d31 = self:FindPlants(plantName) or {} for _, plant in pairs(_0x764d31) do if self:IsMaxInventory() then break end local _0x3d0111 = self:GetPlantDetail(plant) if not _0x3d0111 or not _0x3d0111.isGrowing then print("Skipping non-growing plant:", plant.Name) continue end for _, fruitDetail in pairs(_0x3d0111._0xe6677a) do if self:IsMaxInventory() then break end if not fruitDetail.isEligibleToHarvest then continue end local _0x69fcd6 = self:HarvestFruit(fruitDetail.model) if _0x69fcd6 then _0xe09780 = _0xe09780 + 1 task.wait(0.15) end end end if self:IsMaxInventory() then break end end if _0xe09780 > 0 then task.wait(0.5) else task.wait(15) end end return _0xb73f3b end _0xfbbdec["farm/ui.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0x38f402 local _0x6b6668 local _0xfd5fa8 function _0xb73f3b:init(_window, _player, _garden, _plant) _0x7ae931 = _window _0x38f402 = _player _0x6b6668 = _garden _0xfd5fa8 = _plant end function _0xb73f3b:CreateFarmTab() local _0x57486e = _0x7ae931:AddTab({ Name = "Farm", Icon = "🌾", }) self:AddPlantingSection(_0x57486e) self:AddWateringSection(_0x57486e) self:AddHarvestingSection(_0x57486e) end function _0xb73f3b:AddPlantingSection(_0x57486e) local _0x8625e7 = _0x57486e:AddAccordion({ Title = "Planting", Icon = "🌱", Expanded = false, }) _0x8625e7:AddLabel("Select seeds to auto plant:") _0x8625e7:AddSelectBox({ Name = "Seeds to Plant", Options = {"Loading..."}, Placeholder = "Select seeds...", MultiSelect = true, Flag = "SeedsToPlant", OnInit = function(currentOptions, updateOptions, _0x7e7266) local _0x258144 = _0xfd5fa8:GetPlantRegistry() local _0xa95b7e = {} for _, seedData in pairs(_0x258144) do table.insert(_0xa95b7e, { _0x1c31a7 = seedData.plant, _0x25d758 = seedData.plant }) end updateOptions(_0xa95b7e) end, }) _0x8625e7:AddLabel("Set the number of seeds to plant:") _0x8625e7:AddNumberBox({ Name = "Seeds to Plant", Placeholder = "Enter number of seeds...", Flag = "SeedsToPlantCount", Min = 0, Max = 800, Default = 1, Increment = 1, }) _0x8625e7:AddLabel("Position planting seeds:") _0x8625e7:AddSelectBox({ Name = "Planting Position", Flag = "PlantingPosition", Options = {"Random", "Front Right", "Front Left", "Back Right", "Back Left"}, Default = "Random", MultiSelect = false, Placeholder = "Select position...", }) _0x8625e7:AddButton("Save Planting Settings", function() local _0x430453 = _0x7ae931:GetConfigValue("SeedsToPlant") or {} local _0xc0cbf1 = _0x7ae931:GetConfigValue("SeedsToPlantCount") or 1 print("Selected Seeds:", _0x430453) print("Number of Seeds to Plant:", _0xc0cbf1) _0xfd5fa8:PlantSeed(_0x430453[1], _0xc0cbf1) end) _0x8625e7:AddToggle({ Name = "Enable Auto Planting", Flag = "AutoPlantSeeds", Default = false, Callback = function(state) if state then print("Auto Planting Enabled:", state) _0xfd5fa8:StartAutoPlanting() else print("Auto Planting Disabled:", state) end end, }) end function _0xb73f3b:AddWateringSection(_0x57486e) local _0x8625e7 = _0x57486e:AddAccordion({ Title = "Watering", Icon = "💧", Expanded = false, }) _0x8625e7:AddLabel("Watering Position:") _0x8625e7:AddSelectBox({ Name = "Watering Position", Flag = "WateringPosition", Options = {"Front Right", "Front Left", "Back Right", "Back Left"}, Default = "Front Right", MultiSelect = false, Placeholder = "Select position...", }) _0x8625e7:AddLabel("Set the Each Watering:") _0x8625e7:AddNumberBox({ Name = "Each Watering", Placeholder = "Enter number of waterings...", Flag = "WateringEach", Min = 1, Max = 100, Default = 1, Increment = 1, }) _0x8625e7:AddLabel("Set the number of waterings delay:") _0x8625e7:AddNumberBox({ Name = "Watering Delay", Placeholder = "Enter watering delay...", Flag = "WateringDelay", Min = 0, Max = 800, Default = 1, Increment = 1, }) _0x8625e7:AddToggle({ Name = "Enable Auto Watering", Flag = "AutoWateringPlants", Default = false, Callback = function(state) if state then print("Auto Watering Enabled:", state) _0xfd5fa8:AutoWateringPlants() else print("Auto Watering Disabled:", state) end end, }) end function _0xb73f3b:AddHarvestingSection(_0x57486e) local _0x8625e7 = _0x57486e:AddAccordion({ Title = "Harvest", Icon = "🌿", Expanded = false, }) _0x8625e7:AddLabel("Select plants to auto harvest:") _0x8625e7:AddSelectBox({ Name = "Plants to Harvest", Flag = "PlantsToHarvest", MultiSelect = true, Placeholder = "Select plants...", OnInit = function(currentOptions, updateOptions, _0x7e7266) local _0x764d31 = _0xfd5fa8:GetPlantRegistry() local _0x9a00df = {} for _, plantData in pairs(_0x764d31) do table.insert(_0x9a00df, { _0x1c31a7 = plantData.plant, _0x25d758 = plantData.plant, }) end updateOptions(_0x9a00df) end, }) _0x8625e7:AddToggle({ Name = "Auto Harvest Plants 🌿", Default = false, Flag = "AutoHarvestPlants", Callback = function(Value) if Value then _0xfd5fa8:StartAutoHarvesting() end end, }) end return _0xb73f3b end _0xfbbdec["event/chubby_chipmunk/ui.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0xfcb6e8 function _0xb73f3b:Init(_window, _quest) _0x7ae931 = _window _0xfcb6e8 = _quest end function _0xb73f3b:AddQuestSection(_0x57486e) local _0x3b9f3d = _0x57486e:AddAccordion({ Title = "Chubby Chipmunk Event", Icon = "🐿️", Default = false, }) _0x3b9f3d:AddToggle({ Name = "Auto Submit Chipmunk Fruit 🥜", Default = false, Flag = "AutoSubmitSeedStagePlants", Callback = function(Value) if Value then _0xfcb6e8:StartAutoSubmitEventPlants() else _0xfcb6e8:StopAutoSubmitEventPlants() end end, }) end return _0xb73f3b end _0xfbbdec["shop/egg.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0xa090b6 local _0x66cae3 local _0xde7c19 local _0xe14993 = "PetShop_UI" local _0x29fe84 = "Common Egg" function _0xb73f3b:Init(_window, _core, _shop) _0x7ae931 = _window _0xa090b6 = _core _0x66cae3 = _shop _core:MakeLoop(function() return _0x7ae931:GetConfigValue("AutoBuyEggs") end, function() self:BuyAllEggs() end) end function _0xb73f3b:BuyEgg(_0x49df6d) if not _0x49df6d or _0x49df6d == "" then warn("Invalid egg name") return end _0xa090b6.GameEvents.BuyPetEgg:FireServer(_0x49df6d) end function _0xb73f3b:BuyAllEggs() local _0xd3f83a = _0x66cae3:GetAvailableItems(_0xe14993) for _0x49df6d, _0x1bda19 in pairs(_0xd3f83a) do if _0x1bda19 < 1 then continue end for i = 1, _0x1bda19 do self:BuyEgg(_0x49df6d) task.wait(0.1) end end end function _0xb73f3b:StartEggAutomation() if not _0x7ae931:GetConfigValue("AutoBuyEggs") then return end self:BuyAllEggs() if _0xde7c19 then for _, _0xc5bdc5 in pairs(_0xde7c19) do _0xc5bdc5:Disconnect() end _0xde7c19 = nil end _0xde7c19 = {} for _, item in pairs(_0x66cae3:GetListItems(_0xe14993)) do local _0xc5bdc5 = _0x66cae3:ConnectToStock(item, function() if not _0x7ae931:GetConfigValue("AutoBuyEggs") then return end self:BuyAllEggs() end) table.insert(_0xde7c19, _0xc5bdc5) end end function _0xb73f3b:StopEggAutomation() if _0xde7c19 then for _, _0xc5bdc5 in pairs(_0xde7c19) do _0xc5bdc5:Disconnect() end _0xde7c19 = nil end end return _0xb73f3b end _0xfbbdec["shop/traveling.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0xa090b6 local _0x66cae3 local _0xde7c19 local _0xe14993 = "TravelingMerchantShop_UI" function _0xb73f3b:Init(_window, _core, _shop) _0x7ae931 = _window _0xa090b6 = _core _0x66cae3 = _shop _core:MakeLoop(function() return _0x7ae931:GetConfigValue("AutoBuyTravelingMerchant") end, function() self:BuyAllTravelingItems() end) end function _0xb73f3b:BuyTravelingItem(_0x659b55) if not _0x659b55 or _0x659b55 == "" then warn("Invalid traveling item name") return end _0xa090b6.GameEvents.BuyTravelingMerchantShopStock:FireServer(_0x659b55, 5) end function _0xb73f3b:BuyAllTravelingItems() local _0xd3f83a = _0x66cae3:GetAvailableItems(_0xe14993) for _0x659b55, _0x1bda19 in pairs(_0xd3f83a) do if _0x1bda19 < 1 then continue end for i = 1, _0x1bda19 do self:BuyTravelingItem(_0x659b55) task.wait(0.1) end end end return _0xb73f3b end _0xfbbdec["pet/egg.lua"] = function() local _0xb73f3b = {} local _0xa090b6 local _0x38f402 local _0x7ae931 local _0x6b6668 local _0xf9a473 local _0x89090f local _0xa8c107 local _0x434055 = false function _0xb73f3b:Init(_core, _player, _window, _garden, _pet, _webhook) _0xa090b6 = _core _0x38f402 = _player _0x7ae931 = _window _0x6b6668 = _garden _0xf9a473 = _pet _0x89090f = _webhook local _0x47bdd2 = _0xa090b6.GameEvents.EggReadyToHatch_RE _0xa8c107 = _0x47bdd2.OnClientEvent:Connect(function() self:StartAutoHatching() end) task.spawn(function() self:StartAutoHatching() end) end function _0xb73f3b:StartAutoHatching() if not _0x7ae931:GetConfigValue("AutoHatchEggs") then return end if _0x434055 then warn("Hatching already in progress, waiting...") return end _0x434055 = true self:HatchEgg() task.wait(1) _0x434055 = false end function _0xb73f3b:StopAutoHatching() if _0xa8c107 then _0xa8c107:Disconnect() _0xa8c107 = nil end end function _0xb73f3b:GetEggRegistry() local _0x69fcd6, petRegistry = pcall(function() return require(_0xa090b6.ReplicatedStorage.Data.PetRegistry) end) if not _0x69fcd6 then warn("Failed to get pet registry:", petRegistry) return {} end local _0x20d94a = petRegistry.PetEggs if not _0x20d94a then warn("PetEggs is nil or not found") return {} end return _0x20d94a end function _0xb73f3b:GetAllOwnedEggs() local _0xe1864f = {} for _, _0x32f8a4 in next, _0x38f402:GetAllTools() do local _0x5785ce = _0x32f8a4:GetAttribute("b") _0x5785ce = _0x5785ce and string.lower(_0x5785ce) or "" if _0x5785ce == "c" then table.insert(_0xe1864f, _0x32f8a4) end end return _0xe1864f end function _0xb73f3b:FindEggOwnedEgg(_0x49df6d) for _, _0x32f8a4 in next, self:GetAllOwnedEggs() do local _0x765396 = _0x32f8a4:GetAttribute("h") if _0x765396 == _0x49df6d then return _0x32f8a4 end end return nil end function _0xb73f3b:GetAllPlacedEggs() local _0x77621e = {} local _0x961abe = _0x6b6668:GetMyFarm() if not _0x961abe then warn("My farm not found!") return _0x77621e end local _0xa48185 = _0x961abe.Important.Objects_Physical if not _0xa48185 then warn("Objects_Physical not found!") return _0x77621e end for _, egg in pairs(_0xa48185:GetChildren()) do if egg.Name ~= "PetEgg" then continue end local _0xb52b34 = egg:GetAttribute("OWNER") if _0xb52b34 == _0xa090b6.LocalPlayer.Name then table.insert(_0x77621e, egg) end end return _0x77621e end function _0xb73f3b:GetPlacedEggDetail(_eggID) local _0x69fcd6, dataService = pcall(function() return require(_0xa090b6.ReplicatedStorage.Modules.DataService) end) if not _0x69fcd6 or not dataService then warn("Failed to get DataService:", dataService) return nil end local _0xe48740 = dataService:GetData() if not _0xe48740 then warn("No data available from DataService") return nil end local _0xb1232e = _0xe48740.SaveSlots if not _0xb1232e then warn("SaveSlots not found in data") return nil end local _0xd705d8 = _0xb1232e.AllSlots[_0xb1232e.SelectedSlot].SavedObjects if _0xd705d8 and _eggID and _0xd705d8[_eggID] then return _0xd705d8[_eggID].Data end warn("Falling back to ReplicationClass method") local _0xd5e97b = _0xa090b6.ReplicatedStorage.Modules.ReplicationClass local _0x263973 = _0xd5e97b.new("DataStreamReplicator") _0x263973:YieldUntilData() local _0x37ad65 = _0x263973:YieldUntilData().Table local _0xf29d2b = _0x37ad65[_0xa090b6.LocalPlayer.Name] or _0x37ad65[tostring(_0xa090b6.LocalPlayer.UserId)] if _0xf29d2b and _0xf29d2b[_eggID] then return _0xf29d2b[_eggID].Data end return nil end function _0xb73f3b:PlacingEgg() local _0x49df6d = _0x7ae931:GetConfigValue("EggPlacing") or "" local _0xd7be91 = _0x7ae931:GetConfigValue("MaxPlaceEggs") or 0 local _0xf4e9a8 = _0x7ae931:GetConfigValue("PositionToPlaceEggs") or "Random" local _0xc619c3 = _0x6b6668:GetFarmRandomPosition() if _0xf4e9a8 == "Front Right" then _0xc619c3 = _0x6b6668:GetFarmFrontRightPosition() elseif _0xf4e9a8 == "Front Left" then _0xc619c3 = _0x6b6668:GetFarmFrontLeftPosition() elseif _0xf4e9a8 == "Back Right" then _0xc619c3 = _0x6b6668:GetFarmBackRightPosition() elseif _0xf4e9a8 == "Back Left" then _0xc619c3 = _0x6b6668:GetFarmBackLeftPosition() end if _0x49df6d == "" then return end if _0xd7be91 < 1 then return end local _0x4c9e8d = self:FindEggOwnedEgg(_0x49df6d) if not _0x4c9e8d then return end local _0x31a5ff = _0x4c9e8d:GetAttribute("e") or 0 local _0x0fe858 = math.min(_0x31a5ff, _0xd7be91) print("🥚 Total egg will be placed:", _0x0fe858) local _0x86b411 = function(_maxEggCanPlace, _eggTool, _position, _positionType) print("🥚 Starting egg placement using queue system... already placed:", #self:GetAllPlacedEggs(), "Total to place:", _maxEggCanPlace) print("🔍 Debug - Function parameters:", _maxEggCanPlace, _eggTool and _eggTool.Name or "nil", _position, _positionType) local _0xb4c201 = 0 while #self:GetAllPlacedEggs() < _maxEggCanPlace do print("🔄 While loop iteration:", _0xb4c201, "Current eggs placed:", #self:GetAllPlacedEggs(), "Target:", _maxEggCanPlace) if _0x38f402:GetEquippedTool() ~= _eggTool then _0x38f402:EquipTool(_eggTool) task.wait(0.5) end local _0x8dc4bf = _0x6b6668:GetFarmRandomPosition() local _0x69fcd6, err = pcall(function() if string.find(_positionType, "Front") then local _0xbf8112 = _position.Z - (_0xb4c201 * 5) if _0x6b6668.MailboxPosition.Z > 0 then _0xbf8112 = _position.Z + (_0xb4c201 * 5) end _0x8dc4bf = Vector3.new(_position.X, _position.Y, _0xbf8112) elseif string.find(_positionType, "Back") then local _0xbf8112 = _position.Z + (_0xb4c201 * 5) if _0x6b6668.MailboxPosition.Z < 0 then _0xbf8112 = _position.Z - (_0xb4c201 * 5) end _0x8dc4bf = Vector3.new(_position.X, _position.Y, _0xbf8112) end end) print("🔍 Debug - New position calculation:", _0x69fcd6, err or "No error", _0x8dc4bf) print("🥚 Placing egg at:", _0x8dc4bf) _0xa090b6.GameEvents.PetEggService:FireServer("CreateEgg", _0x8dc4bf) task.wait(0.5) _0xb4c201 = _0xb4c201 + 1 end end _0x38f402:AddToQueue( _0x4c9e8d, 1, function() _0x86b411(_0x0fe858, _0x4c9e8d, _0xc619c3, _0xf4e9a8) end ) print("🎉 Egg placement completed! Total eggs:", #self:GetAllPlacedEggs()) end function _0xb73f3b:HatchEgg() print("Hatching eggs...") if #self:GetAllPlacedEggs() == 0 then self:PlacingEgg() while #self:GetAllPlacedEggs() < 1 do task.wait(1) end end print("⏳ Waiting for eggs to be ready to hatch...") while true do local _0x4ac732 = 0 local _0x4723c9 = 0 for _, egg in pairs(self:GetAllPlacedEggs()) do if not egg or not egg.Parent then continue end local _0x0b1e88 = egg:GetAttribute("TimeToHatch") or 0 if _0x0b1e88 > 0 then _0x4723c9 = math.max(_0x4723c9, _0x0b1e88) else _0x4ac732 = _0x4ac732 + 1 end end print("🥚 Ready eggs:", _0x4ac732, "/", #self:GetAllPlacedEggs()) if _0x4ac732 == #self:GetAllPlacedEggs() then print("✅ All eggs are ready to hatch!") break end task.wait(math.min(_0x4723c9, 5)) end local _0x4e5125 = _0x7ae931:GetConfigValue("HatchPetTeam") or nil local _0x151b95 = _0x7ae931:GetConfigValue("SpecialHatchPetTeam") or nil local _0x6a8d81 = _0x7ae931:GetConfigValue("SpecialHatchingPet") or {} local _0xbd3d2f = _0x7ae931:GetConfigValue("WeightThresholdSpecialHatching") or math.huge local _0x1bc1eb = _0x7ae931:GetConfigValue("AutoBoostBeforeHatch") or false local _0x4a5369 = _0x7ae931:GetConfigValue("AutoBoostBeforeSpecialHatch") or false if _0x4e5125 then _0xf9a473:ChangeTeamPets(_0x4e5125) task.wait(2) if _0x1bc1eb then _0xf9a473:BoostAllActivePets() end end local _0x58ab35 = {} for _, egg in pairs(self:GetAllPlacedEggs()) do local _0x98d302 = egg:GetAttribute("OBJECT_UUID") local _0x349002 = self:GetPlacedEggDetail(_0x98d302) local _0x0b455b = _0x349002 and _0x349002.BaseWeight or 1 local _0x2c7647 = _0x349002 and _0x349002.Type or "Unknown" local _0x246c75 = false for _, specialPet in ipairs(_0x6a8d81) do if _0x2c7647 == specialPet then table.insert(_0x58ab35, egg) _0x246c75 = true break end end if _0x246c75 then continue end if _0x0b455b > _0xbd3d2f then table.insert(_0x58ab35, egg) continue end _0xa090b6.GameEvents.PetEggService:FireServer("HatchPet", egg) end task.wait(1) if _0x151b95 and #_0x58ab35 > 0 then _0xf9a473:ChangeTeamPets(_0x151b95) task.wait(2) if _0x4a5369 then _0xf9a473:BoostAllActivePets() end end for _, egg in pairs(_0x58ab35) do local _0x98d302 = egg:GetAttribute("OBJECT_UUID") local _0x349002 = self:GetPlacedEggDetail(_0x98d302) local _0x0b455b = _0x349002 and _0x349002.BaseWeight or 1 local _0x2c7647 = _0x349002 and _0x349002.Type or "Unknown" print("Hatching special Pet:", _0x2c7647, "Weight:", _0x0b455b) _0xa090b6.GameEvents.PetEggService:FireServer("HatchPet", egg) task.wait(0.15) task.spawn(function() _0x89090f:HatchEgg(_0x2c7647, egg:GetAttribute("EggName") or "Unknown", _0x0b455b) end) end if #_0x58ab35 > 0 then task.wait(1) end local _0x7809bb = _0x7ae931:GetConfigValue("AutoSellPetsAfterHatching") or false local _0x87ad08 = _0x7ae931:GetConfigValue("CorePetTeam") or nil if _0x7809bb then _0xf9a473:SellPet() else _0xf9a473:ChangeTeamPets(_0x87ad08) end self:PlacingEgg() task.spawn(function() local _0x49df6d = _0x7ae931:GetConfigValue("EggPlacing") or "N/A" local _0xe7cb29 = self:FindEggOwnedEgg(_0x49df6d) local _0x31a5ff = _0xe7cb29 and (_0xe7cb29:GetAttribute("e") or 0) or 0 _0x89090f:Statistics(_0x49df6d, _0x31a5ff) end) end return _0xb73f3b end _0xfbbdec["../module/discord.lua"] = function() local _0xb73f3b = {} local HttpService = game:GetService("HttpService") function _0xb73f3b:SendMessage(webhookUrl, _0x05951f) local _0x753d08 = request or (syn and syn.request) or (http and http.request) or (fluxus and fluxus.request) or http_request if not _0x753d08 then return end local _0x22ff44 = HttpService:JSONEncode(_0x05951f) local _0x47b877 = { ['Content-Type'] = "application/json" } local _0x69fcd6, err = pcall(function() task.spawn(_0x753d08, { Url = webhookUrl, Body = _0x22ff44, Method = 'POST', Headers = _0x47b877 }) end) if _0x69fcd6 then print("Discord webhook sent successfully.") else warn("Failed to send Discord webhook:", err) end end return _0xb73f3b end _0xfbbdec["server/ui.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0xa090b6 local _0x38f402 local _0x6b6668 function _0xb73f3b:Init(_window, _core, _player, _garden) _0x7ae931 = _window _0xa090b6 = _core _0x38f402 = _player _0x6b6668 = _garden end function _0xb73f3b:CreateServerTab() local _0x57486e = _0x7ae931:AddTab({ Name = "Server", Icon = "🌐", }) _0x57486e:AddButton("Rejoin Server 🔄", function() _0xa090b6:Rejoin() end) _0x57486e:AddButton("Hop Server 🚀", function() _0xa090b6:HopServer() end) _0x57486e:AddSeparator() _0x57486e:AddButton("Debug Status Queue 🔍", function() local _0x3f8b80 = _0x38f402:GetQueueStatus() warn("Queue size:", _0x3f8b80.queueSize, "Current Task:", _0x3f8b80._0x473810) end) _0x57486e:AddSeparator() _0x57486e:AddButton("Front Right", function() local _0xc619c3 = _0x6b6668:GetFarmFrontRightPosition() if not _0xc619c3 then warn("Failed to get Front Right position") return end for i = 1, 10 do local _0x23743d = _0xc619c3.Z - (i * 3) if _0x6b6668.MailboxPosition and _0x6b6668.MailboxPosition.Z and _0x6b6668.MailboxPosition.Z > 0 then warn("Revert") _0x23743d = _0xc619c3.Z + (i * 3) end _0x38f402:TeleportToPosition(Vector3.new(_0xc619c3.X, _0xc619c3.Y, _0x23743d)) task.wait(.1) end end) _0x57486e:AddButton("Back Right", function() local _0xc619c3 = _0x6b6668:GetFarmBackRightPosition() if not _0xc619c3 then warn("Failed to get Back Right position") return end for i = 1, 10 do local _0x23743d = _0xc619c3.Z + (i * 3) if _0x6b6668.MailboxPosition and _0x6b6668.MailboxPosition.Z and _0x6b6668.MailboxPosition.Z > 0 then warn("Revert") _0x23743d = _0xc619c3.Z - (i * 3) end _0x38f402:TeleportToPosition(Vector3.new(_0xc619c3.X, _0xc619c3.Y, _0x23743d)) task.wait(.1) end end) _0x57486e:AddButton("Front Left", function() local _0xc619c3 = _0x6b6668:GetFarmFrontLeftPosition() if not _0xc619c3 then warn("Failed to get Front Left position") return end for i = 1, 10 do local _0x23743d = _0xc619c3.Z - (i * 3) if _0x6b6668.MailboxPosition and _0x6b6668.MailboxPosition.Z and _0x6b6668.MailboxPosition.Z > 0 then warn("Revert") _0x23743d = _0xc619c3.Z + (i * 3) end _0x38f402:TeleportToPosition(Vector3.new(_0xc619c3.X, _0xc619c3.Y, _0x23743d)) task.wait(.1) end end) _0x57486e:AddButton("Back Left", function() local _0xc619c3 = _0x6b6668:GetFarmBackLeftPosition() if not _0xc619c3 then warn("Failed to get Back Left position") return end for i = 1, 10 do local _0x23743d = _0xc619c3.Z + (i * 3) if _0x6b6668.MailboxPosition and _0x6b6668.MailboxPosition.Z and _0x6b6668.MailboxPosition.Z > 0 then warn("Revert") _0x23743d = _0xc619c3.Z - (i * 3) end _0x38f402:TeleportToPosition(Vector3.new(_0xc619c3.X, _0xc619c3.Y, _0x23743d)) task.wait(.1) end end) end return _0xb73f3b end _0xfbbdec["shop/seed.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0xa090b6 local _0x66cae3 local _0xde7c19 local _0xe14993 = "Seed_Shop" local _0x29fe84 = "Carrot" function _0xb73f3b:Init(_window, _core, _shop) _0x7ae931 = _window _0xa090b6 = _core _0x66cae3 = _shop _core:MakeLoop(function() return _0x7ae931:GetConfigValue("AutoBuySeeds") end, function() self:BuyAllSeeds() end) end function _0xb73f3b:BuySeed(seedName) if not seedName or seedName == "" then warn("Invalid seed name") return end _0xa090b6.GameEvents.BuySeedStock:FireServer("Tier 1", seedName) end function _0xb73f3b:BuyAllSeeds() local _0xd3f83a = _0x66cae3:GetAvailableItems(_0xe14993) for seedName, _0x1bda19 in pairs(_0xd3f83a) do if _0x1bda19 and _0x1bda19 < 1 then continue end for i = 1, _0x1bda19 do self:BuySeed(seedName) task.wait(0.1) end end end function _0xb73f3b:StartSeedAutomation() if not _0x7ae931:GetConfigValue("AutoBuySeeds") then return end self:BuyAllSeeds() if _0xde7c19 then for _, _0xc5bdc5 in pairs(_0xde7c19) do _0xc5bdc5:Disconnect() end _0xde7c19 = nil end _0xde7c19 = {} for _, item in pairs(_0x66cae3:GetListItems(_0xe14993)) do local _0xc5bdc5 = _0x66cae3:ConnectToStock(item, function() if _0x7ae931:GetConfigValue("AutoBuySeeds") then return end self:BuyAllSeeds() end) table.insert(_0xde7c19, _0xc5bdc5) end end function _0xb73f3b:StopSeedAutomation() if _0xde7c19 then for _, _0xc5bdc5 in pairs(_0xde7c19) do _0xc5bdc5:Disconnect() end _0xde7c19 = nil end end return _0xb73f3b end _0xfbbdec["shop/ui.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0xe9d079 local _0xa9769c local _0xbc4ca6 local _0x79c018 local _0x31259e function _0xb73f3b:Init(_window, _eggShop, _seedShop, _gearShop, _seasonPassShop, _travelingShop) _0x7ae931 = _window _0xe9d079 = _eggShop _0xa9769c = _seedShop _0xbc4ca6 = _gearShop _0x79c018 = _seasonPassShop _0x31259e = _travelingShop end function _0xb73f3b:CreateShopTab() local _0x57486e = _0x7ae931:AddTab({ Name = "Shop", Icon = "🛍️", }) _0x57486e:AddToggle({ Name = "Auto Buy Seeds 🌱", Default = false, Flag = "AutoBuySeeds", Callback = function(Value) if Value then _0xa9769c:BuyAllSeeds() end end, }) _0x57486e:AddToggle({ Name = "Auto Buy Gear 🛠️", Default = false, Flag = "AutoBuyGear", Callback = function(Value) if Value then _0xbc4ca6:BuyAllGear() end end, }) _0x57486e:AddToggle({ Name = "Auto Buy Eggs 🥚", Default = false, Flag = "AutoBuyEggs", Callback = function(Value) if Value then _0xe9d079:BuyAllEggs() end end, }) _0x57486e:AddToggle({ Name = "Auto Buy Traveling Items 🧳", Default = false, Flag = "AutoBuyTravelingMerchant", Callback = function(Value) if Value then _0x31259e:BuyAllTravelingItems() end end, }) _0x57486e:AddToggle({ Name = "Auto Buy Season Pass Items 🎟️", Default = false, Flag = "AutoBuySeasonPasses", Callback = function(Value) if Value then _0x79c018:BuyAllSeasonPassItems() end end, }) end return _0xb73f3b end _0xfbbdec["pet/team.lua"] = function() local _0xb73f3b = {} local _0xa090b6 local _0x38f402 local _0x7ae931 local _0xb52757 local _0x6b6668 function _0xb73f3b:Init(_core, _player, _window, _petConfig, _garden) _0xa090b6 = _core _0x38f402 = _player _0x7ae931 = _window _0xb52757 = _petConfig _0x6b6668 = _garden end function _0xb73f3b:SaveTeamPets(_teamName, _listPets) _0xb52757.SetValue(_teamName, _listPets) end function _0xb73f3b:GetAllPetTeams() return _0xb52757.GetAllKeys() end function _0xb73f3b:FindPetTeam(_teamName) return _0xb52757.GetValue(_teamName) end function _0xb73f3b:DeleteTeamPets(_teamName) _0xb52757.DeleteKey(_teamName) end return _0xb73f3b end _0xfbbdec["pet/pet.lua"] = function() local _0xb73f3b = {} local _0xa090b6 local _0x38f402 local _0x7ae931 local _0x6b6668 local _0x2ef14a function _0xb73f3b:Init(_core, _player, _window, _garden, _petTeam) _0xa090b6 = _core _0x38f402 = _player _0x7ae931 = _window _0x6b6668 = _garden _0x2ef14a = _petTeam end function _0xb73f3b:GetPetReplicationData() local _0xd5e97b = require(_0xa090b6.ReplicatedStorage.Modules.ReplicationClass) local _0x2c2e87 = _0xd5e97b.new("ActivePetsService_Replicator") return _0x2c2e87:YieldUntilData().Table end function _0xb73f3b:GetAllActivePets() local _0x69fcd6, _0x37ad65 = pcall(function() return self:GetPetReplicationData() end) if not _0x69fcd6 then warn("🐾 [GET ACTIVE] Failed to get replication data:", _0x37ad65) return nil end if not _0x37ad65 or not _0x37ad65.ActivePetStates then warn("🐾 [GET ACTIVE] Invalid replication data structure") return nil end local _0xe84484 = _0x37ad65.ActivePetStates local _0x6caf7e = _0xa090b6.LocalPlayer.Name local _0xa8223d = tostring(_0xa090b6.LocalPlayer.UserId) local _0x2c120b = _0xe84484[_0x6caf7e] or _0xe84484[_0xa8223d] or _0xe84484[tonumber(_0xa8223d)] if not _0x2c120b then print("🐾 [GET ACTIVE] No active pets found for player:", _0x6caf7e) print("🐾 [GET ACTIVE] Available keys in ActivePetStates:") for key, _ in pairs(_0xe84484) do print(" - Key:", key, "Type:", type(key)) end end return _0x2c120b end function _0xb73f3b:GetPlayerPetData() local _0x69fcd6, _0x37ad65 = pcall(self.GetPetReplicationData, self) if not _0x69fcd6 then warn("🐾 [GET DATA] Failed to get replication data:", _0x37ad65) return nil end if not _0x37ad65 or not _0x37ad65.PlayerPetData then warn("🐾 [GET DATA] Invalid PlayerPetData structure") return nil end local _0x222251 = _0x37ad65.PlayerPetData local _0x6caf7e = _0xa090b6.LocalPlayer.Name local _0xa8223d = tostring(_0xa090b6.LocalPlayer.UserId) local _0xf29d2b = _0x222251[_0x6caf7e] or _0x222251[_0xa8223d] or _0x222251[tonumber(_0xa8223d)] if not _0xf29d2b then print("🐾 [GET DATA] No pet data found for player:", _0x6caf7e) print("🐾 [GET DATA] Available keys in PlayerPetData:") for key, _ in pairs(_0x222251) do print(" - Key:", key, "Type:", type(key)) end end return _0xf29d2b end function _0xb73f3b:GetPetData(_petID) local _0xf29d2b = self:GetPlayerPetData() if _0xf29d2b and _0xf29d2b.PetInventory then return _0xf29d2b.PetInventory.Data[_petID] end return nil end function _0xb73f3b:EquipPet(_petID) if not _petID then warn("🐾 [EQUIP] Invalid pet ID provided") return false end local _0x69fcd6 = pcall(function() local _0xc619c3 = CFrame.new(_0x6b6668:GetFarmCenterPosition()) if not _0xc619c3 then error("Failed to get farm center position") end _0xa090b6.GameEvents.PetsService:FireServer( "EquipPet", _petID, _0xc619c3 ) end) if not _0x69fcd6 then warn("🐾 [EQUIP] Failed to equip pet:", _petID) return false end return true end function _0xb73f3b:UnequipPet(_petID) if not _petID then warn("🐾 [UNEQUIP] Invalid pet ID provided") return false end local _0x69fcd6 = pcall(function() _0xa090b6.GameEvents.PetsService:FireServer( "UnequipPet", _petID ) end) if not _0x69fcd6 then warn("🐾 [UNEQUIP] Failed to unequip pet:", _petID) return false end return true end function _0xb73f3b:ChangeTeamPets(_teamName) if not _teamName or _teamName == "" then return false end local _0x110936 = _0x2ef14a:FindPetTeam(_teamName) if not _0x110936 or #_0x110936 == 0 then warn("🐾 [CHANGE TEAM] No pets found in the team:", _teamName) return false end local _0x192281 = self:GetAllActivePets() or {} if not _0x192281 then print("🐾 [CHANGE TEAM] No active pets to unequip") end for _0xd00576, _ in pairs(_0x192281) do local _0x69fcd6 = pcall(function() self:UnequipPet(_0xd00576) end) if not _0x69fcd6 then warn("🐾 [CHANGE TEAM] Failed to unequip pet:", _0xd00576) end task.wait(0.25) end task.wait(1) for _, _0xd00576 in pairs(_0x110936) do local _0x69fcd6 = pcall(function() self:EquipPet(_0xd00576) end) if not _0x69fcd6 then warn("🐾 [CHANGE TEAM] Failed to equip pet:", _0xd00576) end task.wait(0.25) end return true end function _0xb73f3b:BoostPet(_petID) _0xa090b6.GameEvents.PetBoostService:FireServer( "ApplyBoost", _petID ) end function _0xb73f3b:EligiblePetUseBoost(_petID, _boostType, _boostAmount) local _0x89393d = self:GetPetData(_petID) local _0xaa704d = true if not _0x89393d or not _0x89393d.PetData then return false end for key, _0x25d758 in pairs(_0x89393d.PetData) do if type(_0x25d758) ~= "table" then continue end if key ~= "Boosts" and #_0x25d758 < 1 then continue end for i, boostInfo in ipairs(_0x25d758) do local _0x3037b3 = boostInfo.BoostType local _0xdf9855 = boostInfo.BoostAmount if _0x3037b3 == _boostType and _0xdf9855 == _boostAmount then _0xaa704d = false end end end return _0xaa704d end function _0xb73f3b:BoostAllActivePets() local _0xb7a1fa = {} for _, _0x32f8a4 in next, _0x38f402:GetAllTools() do local _0x5785ce = _0x32f8a4:GetAttribute("q") if _0x5785ce == "PASSIVE_BOOST" then table.insert(_0xb7a1fa, _0x32f8a4) end end if #_0xb7a1fa == 0 then print("No boost tool found in inventory.") return end for _, _0x32f8a4 in next, _0xb7a1fa do local _0x253847 = _0x32f8a4:GetAttribute("q") local _0xb3ac78 = _0x32f8a4:GetAttribute("o") local _0x1bfb10 = false local _0x6033a8 = function(_boostType, _boostAmount) print("🚀 Starting boost task for tool:", _0x32f8a4.Name) for _0xd00576, _ in pairs(self:GetAllActivePets()) do local _0xaa704d = self:EligiblePetUseBoost(_0xd00576, _boostType, _boostAmount) if not _0xaa704d then continue end print("🐾 Boosting pet:", _0xd00576, "with", _boostType, "amount:", _boostAmount) self:BoostPet(_0xd00576) task.wait(0.15) end end local _0x80b839 = function() print("🚀 Boost task completed for tool:", _0x32f8a4.Name) _0x1bfb10 = true end _0x38f402:AddToQueue( _0x32f8a4, 1, function() _0x6033a8(_0x253847, _0xb3ac78) end, function() _0x80b839() end ) while _0x1bfb10 == false do print("⏳ Waiting for boost task to complete...") task.wait(2) end print("✅ Boost task finished, moving to next tool") end end function _0xb73f3b:GetAllOwnedPets() local _0x28b380 = {} for _, _0x32f8a4 in next, _0x38f402:GetAllTools() do local _0x5785ce = _0x32f8a4:GetAttribute("b") _0x5785ce = _0x5785ce and string.lower(_0x5785ce) or "" if _0x5785ce == "l" then table.insert(_0x28b380, _0x32f8a4) end end return _0x28b380 end function _0xb73f3b:GetPetRegistry() local _0x69fcd6, petRegistry = pcall(function() return require(_0xa090b6.ReplicatedStorage.Data.PetRegistry) end) if not _0x69fcd6 then warn("Failed to get pet registry:", petRegistry) return {} end local _0x36c46a = petRegistry.PetList if not _0x36c46a then warn("PetList is nil or not found") return {} end local _0x8cd44e = {} for _0x2c7647, _0x89393d in pairs(_0x36c46a) do table.insert(_0x8cd44e, { _0x1c31a7 = _0x2c7647, _0x25d758 = _0x2c7647 }) end if #_0x8cd44e < 1 then return {} end table.sort(_0x8cd44e, function(a, b) if not a or not b or not a._0x1c31a7 or not b._0x1c31a7 then return false end return string.lower(tostring(a._0x1c31a7)) < string.lower(tostring(b._0x1c31a7)) end) return _0x8cd44e end function _0xb73f3b:SellPet() local _0x648d2b = _0x7ae931:GetConfigValue("PetToSell") or {} local _0xa63a69 = _0x7ae931:GetConfigValue("WeightThresholdSellPet") or 1 local _0x3cc617 = _0x7ae931:GetConfigValue("AgeThresholdSellPet") or 1 local _0x86c88c = _0x7ae931:GetConfigValue("SellPetTeam") or nil local _0x26b265 = _0x7ae931:GetConfigValue("AutoBoostBeforeSelling") or false local _0x87ad08 = _0x7ae931:GetConfigValue("CorePetTeam") or nil if #_0x648d2b == 0 then print("No pet selected for selling.") if _0x87ad08 then print("Reverting to Core Pet Team:", _0x87ad08) self:ChangeTeamPets(_0x87ad08) end return end for _, _0x32f8a4 in pairs(self:GetAllOwnedPets()) do local _0xb5612a = _0x32f8a4:GetAttribute("d") or false if _0xb5612a then continue end local _0xd00576 = _0x32f8a4:GetAttribute("PET_UUID") local _0x89393d = self:GetPetData(_0xd00576) if not _0x89393d then warn("Pet data not found for UUID:", _0xd00576) continue end local _0x2c7647 = _0x89393d.PetType or "Unknown" local _0x036908 = _0x89393d.PetData local _0x4cbf71 = _0x036908.BaseWeight or 20 local _0x8c4f84 = _0x036908.Level or math.huge local _0x078818 = false for _, selectedPet in ipairs(_0x648d2b) do if _0x2c7647 == selectedPet then _0x078818 = true break end end if _0x4cbf71 >= _0xa63a69 or _0x8c4f84 >= _0x3cc617 or not _0x078818 then print("Skipping pet (does not meet sell criteria):", _0x2c7647, "| Weight:", _0x4cbf71, "| Age:", _0x8c4f84, "| Is Name Matched:", tostring(_0x078818)) _0xa090b6.GameEvents.Favorite_Item:FireServer(_0x32f8a4) task.wait(0.15) end end task.wait(0.5) if _0x86c88c then self:ChangeTeamPets(_0x86c88c) task.wait(2) if _0x26b265 then self:BoostAllActivePets() end end task.wait(1) _0xa090b6.GameEvents.SellAllPets_RE:FireServer() task.wait(1) if _0x87ad08 then self:ChangeTeamPets(_0x87ad08) end end return _0xb73f3b end _0xfbbdec["https://raw.githubusercontent.com/alfin-efendy/ez-rbx-ui/refs/heads/main/ui.lua"] = function() local _0xcfc6bd = {} local HttpService = game:GetService("HttpService") local _0x5c4cf5 = "EzUI" local _0x6cb1f9 = _0x5c4cf5 .. "/Configurations" local _0xfab477 = ".json" _0xcfc6bd.Flags = {} _0xcfc6bd.Components = {} _0xcfc6bd.Configuration = { Enabled = false, FileName = "DefaultConfig", FolderName = "EzUI", AutoSave = true, AutoLoad = true } local function _0x13620f(_0xa326f0, componentAPI) if _0xa326f0 and componentAPI then if not _0xcfc6bd.Components[_0xa326f0] then _0xcfc6bd.Components[_0xa326f0] = {} end table.insert(_0xcfc6bd.Components[_0xa326f0], componentAPI) end end local function _0x3a40ad(_0xa326f0, _0x25d758) if _0xcfc6bd.Components[_0xa326f0] then for _, componentAPI in ipairs(_0xcfc6bd.Components[_0xa326f0]) do if componentAPI.Set then componentAPI.Set(_0x25d758) elseif componentAPI.SetValue then componentAPI.SetValue(_0x25d758) elseif componentAPI.SetText then componentAPI.SetText(_0x25d758) elseif componentAPI.SetSelected then componentAPI.SetSelected(_0x25d758) end end end end local function _0x4663fd(fileName) if not fileName then return false end local _0x73ccb6 = {} local _0x5d3bb5 = false for key, _0x25d758 in pairs(_0xcfc6bd.Flags) do _0x73ccb6[key] = _0x25d758 _0x5d3bb5 = true end if not _0x5d3bb5 then print("EzUI: No configuration data to save") return false end local _0xa390df = _0xcfc6bd.Configuration.FolderName or "EzUI" local _0xcf833a = _0xa390df .. "/Configurations" if writefile then if not isfolder then warn("EzUI: Configuration saving requires isfolder function") return false end if not isfolder(_0xa390df) then makefolder(_0xa390df) end if not isfolder(_0xcf833a) then makefolder(_0xcf833a) end local _0xf56be1 = _0xcf833a .. "/" .. fileName .. _0xfab477 local _0x69fcd6, _0x5f929f = pcall(function() writefile(_0xf56be1, HttpService:JSONEncode(_0x73ccb6)) end) if _0x69fcd6 then print("EzUI: Configuration saved to " .. _0xf56be1) return true else warn("EzUI: Failed to save configuration: " .. tostring(_0x5f929f)) return false end else warn("EzUI: Configuration saving requires writefile function") return false end end local function _0xa8a7eb(fileName) if not fileName or not readfile or not isfile then warn("EzUI: Configuration loading requires readfile and isfile functions") return false end local _0xa390df = _0xcfc6bd.Configuration.FolderName or "EzUI" local _0xcf833a = _0xa390df .. "/Configurations" local _0xf56be1 = _0xcf833a .. "/" .. fileName .. _0xfab477 if not isfile(_0xf56be1) then print("EzUI: No configuration file found at " .. _0xf56be1) return false end local _0x69fcd6, configData = pcall(function() return HttpService:JSONDecode(readfile(_0xf56be1)) end) if not _0x69fcd6 then warn("EzUI: Failed to load configuration file: " .. tostring(configData)) return false end local _0xb3ca71 = 0 for flagName, _0xf8c118 in pairs(configData) do _0xcfc6bd.Flags[flagName] = _0xf8c118 _0x3a40ad(flagName, _0xf8c118) _0xb3ca71 = _0xb3ca71 + 1 end print("EzUI: Configuration loaded from " .. _0xf56be1 .. " (" .. _0xb3ca71 .. " settings applied)") return true end function _0xcfc6bd.NewConfig(configName) if not configName or type(configName) ~= "string" then warn("EzUI.NewConfig: configName must be a string") return nil end local _0xb6674b = {} local function _0xd33835() local _0x1949cd = {} local _0x5d3bb5 = false for key, _0x25d758 in pairs(_0xb6674b) do if _0x25d758 ~= nil then _0x1949cd[key] = _0x25d758 _0x5d3bb5 = true end end if not _0x5d3bb5 then print("EzUI.CustomConfig: No valid data to save for " .. configName) return false end if not writefile or not isfolder or not makefolder then warn("EzUI.CustomConfig: File operations not available") return false end local _0xa390df = _0xcfc6bd.Configuration.FolderName or "EzUI" local _0xcf833a = _0xa390df .. "/Configurations" if not isfolder(_0xa390df) then makefolder(_0xa390df) end if not isfolder(_0xcf833a) then makefolder(_0xcf833a) end local _0xf56be1 = _0xcf833a .. "/" .. configName .. ".json" local _0x69fcd6, _0x5f929f = pcall(function() writefile(_0xf56be1, HttpService:JSONEncode(_0x1949cd)) end) if _0x69fcd6 then local _0x588391 = 0 for _ in pairs(_0x1949cd) do _0x588391 = _0x588391 + 1 end print("EzUI.CustomConfig: " .. configName .. " saved to " .. _0xf56be1 .. " (" .. _0x588391 .. " keys)") return true else warn("EzUI.CustomConfig: Failed to save " .. configName .. ": " .. tostring(_0x5f929f)) return false end end local function _0x7f074c() if not readfile or not isfile then warn("EzUI.CustomConfig: File operations not available") return false end local _0xa390df = _0xcfc6bd.Configuration.FolderName or "EzUI" local _0xcf833a = _0xa390df .. "/Configurations" local _0xf56be1 = _0xcf833a .. "/" .. configName .. ".json" if not isfile(_0xf56be1) then print("EzUI.CustomConfig: No file found for " .. configName .. " at " .. _0xf56be1) return false end local _0x69fcd6, configData = pcall(function() return HttpService:JSONDecode(readfile(_0xf56be1)) end) if not _0x69fcd6 then warn("EzUI.CustomConfig: Failed to load " .. configName .. ": " .. tostring(configData)) return false end local _0xb3ca71 = 0 for flagName, _0xf8c118 in pairs(configData) do _0xb6674b[flagName] = _0xf8c118 _0xb3ca71 = _0xb3ca71 + 1 end print("EzUI.CustomConfig: " .. configName .. " loaded (" .. _0xb3ca71 .. " settings applied)") return true end local function _0x4d9be4() if _0x7f074c() then for flagName, _0xf8c118 in pairs(_0xb6674b) do _0xcfc6bd.Flags[flagName] = _0xf8c118 _0x3a40ad(flagName, _0xf8c118) end end end task.defer(function() _0x4d9be4() end) return { GetValue = function(key) if not key then warn("EzUI.CustomConfig.GetValue: key parameter is required") return nil end return _0xb6674b[key] end, SetValue = function(key, _0x25d758) if not key then warn("EzUI.CustomConfig.SetValue: key parameter is required") return false end _0xb6674b[key] = _0x25d758 _0xd33835() return true end, GetAll = function() local _0x5f929f = {} for key, _0x25d758 in pairs(_0xb6674b) do if _0x25d758 ~= nil then _0x5f929f[key] = _0x25d758 end end return _0x5f929f end, GetAllKeys = function() local _0x53e277 = {} for key, _0x25d758 in pairs(_0xb6674b) do if _0x25d758 ~= nil then table.insert(_0x53e277, key) end end return _0x53e277 end, DeleteKey = function(key) if not key then warn("EzUI.CustomConfig.DeleteKey: key parameter is required") return false end if _0xb6674b[key] ~= nil then _0xb6674b[key] = nil _0xd33835() return true else warn("EzUI.CustomConfig.DeleteKey: key '" .. key .. "' not found") return false end end } end function _0xcfc6bd.CreateWindow(config) local _0x61b241 = config.Opacity or 1.0 _0x61b241 = math.max(0.1, math.min(1.0, _0x61b241)) local _0x38bd10 = config.AutoShow if _0x38bd10 == nil then _0x38bd10 = true end local _0xcdba25 = config.ConfigurationSaving or {} local _0xf4521e = _0xcdba25.Enabled or false local _0x7a6e41 = _0xcdba25.FileName or config.Name or "DefaultConfig" local _0x7e9d76 = _0xcdba25.FolderName or "EzUI" local _0x7baef2 = _0xcdba25.AutoSave if _0x7baef2 == nil then _0x7baef2 = true end local _0x7a6342 = _0xcdba25.AutoLoad if _0x7a6342 == nil then _0x7a6342 = true end _0xcfc6bd.Configuration.Enabled = _0xf4521e _0xcfc6bd.Configuration.FileName = _0x7a6e41 _0xcfc6bd.Configuration.FolderName = _0x7e9d76 _0xcfc6bd.Configuration.AutoSave = _0x7baef2 _0xcfc6bd.Configuration.AutoLoad = _0x7a6342 local function _0x40fc24() local _0x3225c2 = workspace.CurrentCamera if not _0x3225c2 then _0x3225c2 = workspace:WaitForChild("CurrentCamera", 5) end local _0x15897b = _0x3225c2.ViewportSize if _0x15897b.X <= 1 or _0x15897b.Y <= 1 then _0x15897b = Vector2.new(1366, 768) warn("EzUI: Using fallback viewport size:", _0x15897b) end return _0x15897b end local function _0xe3463c() local _0x15897b = _0x40fc24() local _0xcfd714 = config.Width or (_0x15897b.X * 0.7) local _0x5a8928 = config.Height or (_0x15897b.Y * 0.4) local _0xe95465 = 1 if _0x15897b.X >= 1920 then _0xe95465 = 1.2 elseif _0x15897b.X >= 1366 then _0xe95465 = 1.0 elseif _0x15897b.X >= 1024 then _0xe95465 = 0.9 else _0xe95465 = 0.8 end local _0x24a1d1 = math.max(300, math.min(_0x15897b.X * 0.8, _0xcfd714 * _0xe95465)) local _0x312199 = math.max(200, math.min(_0x15897b.Y * 0.8, _0x5a8928 * _0xe95465)) return _0x24a1d1, _0x312199 end local _0xdb22c1, windowHeight = _0xe3463c() local _0xe1ab6b = Instance.new("ScreenGui") _0xe1ab6b.Name = config.Name or "MyWindow" _0xe1ab6b.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui") local _0xdb2c75 = Instance.new("Frame") _0xdb2c75.Size = UDim2.new(0, _0xdb22c1, 0, windowHeight) _0xdb2c75.Position = UDim2.new(0.5, -_0xdb22c1 / 2, 0.5, -windowHeight / 2) _0xdb2c75.BackgroundColor3 = Color3.fromRGB(40, 40, 40) _0xdb2c75.BackgroundTransparency = 1 - _0x61b241 _0xdb2c75.BorderSizePixel = 0 _0xdb2c75.Active = true _0xdb2c75.ClipsDescendants = true _0xdb2c75.ZIndex = 1 _0xdb2c75.Visible = _0x38bd10 _0xdb2c75.Parent = _0xe1ab6b local _0xee4222 = Instance.new("ScrollingFrame") _0xee4222.Size = UDim2.new(1, -100, 1, -30) _0xee4222.Position = UDim2.new(0, 100, 0, 30) _0xee4222.BackgroundTransparency = 1 _0xee4222.BorderSizePixel = 0 _0xee4222.CanvasSize = UDim2.new(0, 0, 0, 0) _0xee4222.ScrollBarThickness = 8 _0xee4222.ClipsDescendants = false _0xee4222.ZIndex = 2 _0xee4222.Parent = _0xdb2c75 local _0x89cc9b = Instance.new("Frame") _0x89cc9b.Size = UDim2.new(0, 100, 1, -30) _0x89cc9b.Position = UDim2.new(0, 0, 0, 30) _0x89cc9b.BackgroundColor3 = Color3.fromRGB(30, 30, 30) _0x89cc9b.BackgroundTransparency = 1 - _0x61b241 _0x89cc9b.BorderSizePixel = 0 _0x89cc9b.ClipsDescendants = true _0x89cc9b.ZIndex = 2 _0x89cc9b.Parent = _0xdb2c75 local _0x1e2280 = Instance.new("ScrollingFrame") _0x1e2280.Size = UDim2.new(1, 0, 1, 0) _0x1e2280.Position = UDim2.new(0, 0, 0, 0) _0x1e2280.BackgroundTransparency = 1 _0x1e2280.BorderSizePixel = 0 _0x1e2280.CanvasSize = UDim2.new(0, 0, 0, 0) _0x1e2280.ScrollBarThickness = 6 _0x1e2280.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100) _0x1e2280.ScrollingDirection = Enum.ScrollingDirection.Y _0x1e2280.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar _0x1e2280.ZIndex = 3 _0x1e2280.Parent = _0x89cc9b local _0xe2261f = Instance.new("UIListLayout") _0xe2261f.SortOrder = Enum.SortOrder.LayoutOrder _0xe2261f.Padding = UDim.new(0, 4) _0xe2261f.Parent = _0x1e2280 _0xe2261f.Changed:Connect(function(property) if property == "AbsoluteContentSize" then _0x1e2280.CanvasSize = UDim2.new(0, 0, 0, _0xe2261f.AbsoluteContentSize.Y + 8) end end) local _0xc7ef29 = {} local _0x3849d1 = nil local _0xb786ff = nil local _0xbc73a4 = Instance.new("ImageButton") _0xbc73a4.Size = UDim2.new(0, 16, 0, 16) _0xbc73a4.Position = UDim2.new(1, -16, 1, -16) _0xbc73a4.BackgroundColor3 = Color3.fromRGB(80, 80, 80) _0xbc73a4.BorderSizePixel = 0 _0xbc73a4.Image = "rbxassetid://16898613613" _0xbc73a4.ImageRectOffset = Vector2.new(820,196) _0xbc73a4.ImageRectSize = Vector2.new(48, 48) _0xbc73a4.ZIndex = 27 _0xbc73a4.Parent = _0xdb2c75 local _0x81445a = false local _0x5adc7b, resizeStartSize, resizeInput local _0x079a25 = game:GetService("UserInputService") _0xbc73a4.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then _0x81445a = true _0x5adc7b = input.Position resizeStartSize = _0xdb2c75.Size resizeInput = input input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then _0x81445a = false end end) end end) _0xbc73a4.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then resizeInput = input end end) _0x079a25.InputChanged:Connect(function(input) if input == resizeInput and _0x81445a then local _0x09315c = input.Position - _0x5adc7b local _0xb9d630 = _0x40fc24() local _0x777dd1 = math.max(250, _0xb9d630.X * 0.15) local _0xa8da7a = math.max(150, _0xb9d630.Y * 0.2) local _0xf46616 = _0xb9d630.X * 0.9 local _0xc31420 = _0xb9d630.Y * 0.9 local _0xc93751 = math.max(_0x777dd1, math.min(_0xf46616, resizeStartSize.X.Offset + _0x09315c.X)) local _0x435644 = math.max(_0xa8da7a, math.min(_0xc31420, resizeStartSize.Y.Offset + _0x09315c.Y)) _0xdb2c75.Size = UDim2.new(0, _0xc93751, 0, _0x435644) _0xdb2c75.Position = UDim2.new(0.5, -_0xc93751 / 2, 0.5, -_0x435644 / 2) _0xee4222.Size = UDim2.new(1, -100, 1, -30) _0xbc73a4.Position = UDim2.new(1, -16, 1, -16) end end) local _0xc664f6 = Instance.new("Frame") _0xc664f6.Size = UDim2.new(1, 0, 0, 30) _0xc664f6.BackgroundColor3 = Color3.fromRGB(25, 25, 25) _0xc664f6.BackgroundTransparency = 1 - _0x61b241 _0xc664f6.BorderSizePixel = 0 _0xc664f6.ZIndex = 25 _0xc664f6.Parent = _0xdb2c75 local _0xdc3ccb = Instance.new("TextLabel") _0xdc3ccb.Size = UDim2.new(1, -100, 1, 0) _0xdc3ccb.Position = UDim2.new(0, 10, 0, 0) _0xdc3ccb.BackgroundTransparency = 1 _0xdc3ccb.Text = config.Name or "My Window" _0xdc3ccb.TextColor3 = Color3.fromRGB(255, 255, 255) _0xdc3ccb.TextXAlignment = Enum.TextXAlignment.Left _0xdc3ccb.Font = Enum.Font.SourceSansBold _0xdc3ccb.TextSize = 16 _0xdc3ccb.ZIndex = 26 _0xdc3ccb.Parent = _0xc664f6 local _0x9df249 = Instance.new("TextButton") _0x9df249.Size = UDim2.new(0, 30, 0, 30) _0x9df249.Position = UDim2.new(1, -60, 0, 0) _0x9df249.BackgroundColor3 = Color3.fromRGB(200, 170, 0) _0x9df249.Text = "-" _0x9df249.ZIndex = 26 _0x9df249.Parent = _0xc664f6 local _0x2a9e44 = Instance.new("TextButton") _0x2a9e44.Size = UDim2.new(0, 30, 0, 30) _0x2a9e44.Position = UDim2.new(1, -30, 0, 0) _0x2a9e44.BackgroundColor3 = Color3.fromRGB(200, 50, 50) _0x2a9e44.Text = "X" _0x2a9e44.TextColor3 = Color3.fromRGB(255, 255, 255) _0x2a9e44.Font = Enum.Font.SourceSansBold _0x2a9e44.TextSize = 18 _0x2a9e44.ZIndex = 26 _0x2a9e44.Parent = _0xc664f6 _0x2a9e44.MouseEnter:Connect(function() _0x2a9e44.BackgroundColor3 = Color3.fromRGB(255, 70, 70) end) _0x2a9e44.MouseLeave:Connect(function() _0x2a9e44.BackgroundColor3 = Color3.fromRGB(200, 50, 50) end) local _0x5a5dbd = Instance.new("TextButton") _0x5a5dbd.Size = UDim2.new(0, 120, 0, 35) _0x5a5dbd.Position = UDim2.new(0, 10, 0, 45) _0x5a5dbd.BackgroundColor3 = Color3.fromRGB(100, 150, 250) _0x5a5dbd.Text = "Open "..(config.Name or "UI") _0x5a5dbd.Visible = not _0x38bd10 _0x5a5dbd.ZIndex = 30 _0x5a5dbd.Parent = _0xe1ab6b local _0x079a25 = game:GetService("UserInputService") local _0x95f491, dragInput, dragStart, startPos local _0xf765a3 local function _0x180202(input) if _0xf765a3 then local _0x09315c = input.Position - dragStart _0xf765a3.Position = UDim2.new( startPos.X.Scale, startPos.X.Offset + _0x09315c.X, startPos.Y.Scale, startPos.Y.Offset + _0x09315c.Y ) end end _0xc664f6.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then _0x95f491 = true dragStart = input.Position startPos = _0xdb2c75.Position _0xf765a3 = _0xdb2c75 input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then _0x95f491 = false _0xf765a3 = nil end end) end end) _0xc664f6.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end end) _0x5a5dbd.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then _0x95f491 = true dragStart = input.Position startPos = _0x5a5dbd.Position _0xf765a3 = _0x5a5dbd input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then _0x95f491 = false _0xf765a3 = nil end end) end end) _0x5a5dbd.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end end) _0x079a25.InputChanged:Connect(function(input) if input == dragInput and _0x95f491 then _0x180202(input) end end) _0x9df249.MouseButton1Click:Connect(function() _0xdb2c75.Visible = false _0x5a5dbd.Visible = true end) _0x5a5dbd.MouseButton1Click:Connect(function() _0xdb2c75.Visible = true _0x5a5dbd.Visible = false end) local _0xe2e9c7 = {} local _0xa85246 = 10 local _0x9e3c4b = nil function _0xe2e9c7:UpdateWindowSize() if _0x9e3c4b then _0xee4222.CanvasSize = UDim2.new(0, 0, 0, _0xa85246 + 10) end end function _0xe2e9c7:AddTab(config) local _0x034103, tabIcon, tabVisible, tabCallback if type(config) == "string" then _0x034103 = config tabIcon = nil tabVisible = true tabCallback = nil else _0x034103 = config.Name or config.Title or "New Tab" tabIcon = config.Icon or nil tabVisible = config.Visible ~= nil and config.Visible or true tabCallback = config.Callback or nil end local _0x44a894 = Instance.new("TextButton") _0x44a894.Size = UDim2.new(1, -6, 0, 32) _0x44a894.BackgroundColor3 = Color3.fromRGB(50, 50, 50) _0x44a894.Text = "" _0x44a894.BorderSizePixel = 0 _0x44a894.ZIndex = 4 _0x44a894.Visible = tabVisible _0x44a894.Parent = _0x1e2280 local _0xef60fe = Instance.new("TextLabel") _0xef60fe.Size = UDim2.new(0, 30, 1, 0) _0xef60fe.Position = UDim2.new(0, 5, 0, 0) _0xef60fe.BackgroundTransparency = 1 _0xef60fe.Text = tabIcon or "" _0xef60fe.TextColor3 = Color3.fromRGB(255, 255, 255) _0xef60fe.Font = Enum.Font.SourceSansBold _0xef60fe.TextSize = 15 _0xef60fe.TextXAlignment = Enum.TextXAlignment.Left _0xef60fe.ZIndex = 5 _0xef60fe.Parent = _0x44a894 local _0x15da17 = Instance.new("TextLabel") _0x15da17.BackgroundTransparency = 1 _0x15da17.Text = _0x034103 _0x15da17.TextColor3 = Color3.fromRGB(255, 255, 255) _0x15da17.Font = Enum.Font.SourceSansBold _0x15da17.TextSize = 15 _0x15da17.TextTruncate = Enum.TextTruncate.AtEnd _0x15da17.ZIndex = 5 _0x15da17.Parent = _0x44a894 local function _0x1317b5() if tabIcon and tabIcon ~= "" then _0x15da17.Size = UDim2.new(1, -40, 1, 0) _0x15da17.Position = UDim2.new(0, 35, 0, 0) _0x15da17.TextXAlignment = Enum.TextXAlignment.Right _0xef60fe.Visible = true else _0x15da17.Size = UDim2.new(1, -10, 1, 0) _0x15da17.Position = UDim2.new(0, 5, 0, 0) _0x15da17.TextXAlignment = Enum.TextXAlignment.Left _0xef60fe.Visible = false end end _0x1317b5() local _0xda7e46 = Instance.new("Frame") _0xda7e46.Size = UDim2.new(1, 0, 1, 0) _0xda7e46.Position = UDim2.new(0, 0, 0, 0) _0xda7e46.BackgroundTransparency = 1 _0xda7e46.Visible = false _0xda7e46.ClipsDescendants = false _0xda7e46.ZIndex = 2 _0xda7e46.Parent = _0xee4222 _0xc7ef29[_0x034103] = _0xda7e46 local _0x167675 = 10 local function _0x6c1643(config, parentContainer, _0xa85246, updateSizeFunction, animateFunction, _0xa9bc1c, isForAccordion) local _0x7cdc18 = config.Options or {"Option 1", "Option 2", "Option 3"} local _0xa38e51 = config.Placeholder or "Select option..." local _0x4a1ba4 = config.MultiSelect or false local _0xd28ba7 = config.Callback or function() end local _0x171964 = config.OnDropdownOpen or function() end local _0x8ec9db = config.OnInit or function() end local _0xa326f0 = config.Flag local _0x830750 = {} for i, option in ipairs(_0x7cdc18) do if type(option) == "string" then table.insert(_0x830750, {_0x1c31a7 = option, _0x25d758 = option}) elseif type(option) == "table" and option._0x1c31a7 and option._0x25d758 then table.insert(_0x830750, {_0x1c31a7 = option._0x1c31a7, _0x25d758 = option._0x25d758}) else warn("SelectBox: Invalid option format at index " .. i .. ". Expected string or {text, value} object.") end end local _0xb6c3ab = {} local function _0xa4f0d1() if type(_0xb6c3ab) ~= "table" then _0xb6c3ab = _0xb6c3ab and {_0xb6c3ab} or {} end end if _0xa326f0 and _0xcfc6bd.Flags[_0xa326f0] ~= nil then local _0xf8c118 = _0xcfc6bd.Flags[_0xa326f0] if _0x4a1ba4 then if type(_0xf8c118) == "table" then _0xb6c3ab = _0xf8c118 else _0xb6c3ab = _0xf8c118 ~= "" and {_0xf8c118} or {} end else if type(_0xf8c118) == "table" then _0xb6c3ab = {_0xf8c118[1]} else _0xb6c3ab = _0xf8c118 ~= "" and {_0xf8c118} or {} end end else print("SelectBox Debug - No flag or flag is nil:", _0xa326f0, _0xcfc6bd.Flags[_0xa326f0]) end local _0xf88d4e = false local _0x0cb875 = false local _0x583619 = Instance.new("Frame") if isForAccordion then _0x583619.Size = UDim2.new(1, 0, 0, 25) _0x583619.Position = UDim2.new(0, 0, 0, _0xa85246) else _0x583619.Size = UDim2.new(1, -20, 0, 25) _0x583619.Position = UDim2.new(0, 10, 0, _0xa85246) _0x583619:SetAttribute("ComponentStartY", _0xa85246) end _0x583619.BackgroundTransparency = 1 _0x583619.ClipsDescendants = false _0x583619.ZIndex = isForAccordion and 6 or 3 _0x583619.Parent = parentContainer local _0xc5772b = Instance.new("TextButton") _0xc5772b.Size = UDim2.new(1, -25, 1, 0) _0xc5772b.Position = UDim2.new(0, 0, 0, 0) _0xc5772b.BackgroundColor3 = Color3.fromRGB(50, 50, 50) _0xc5772b.BorderColor3 = Color3.fromRGB(180, 180, 180) _0xc5772b.BorderSizePixel = 2 _0xc5772b.Text = " " .. _0xa38e51 _0xc5772b.TextColor3 = Color3.fromRGB(200, 200, 200) _0xc5772b.TextXAlignment = Enum.TextXAlignment.Left _0xc5772b.Font = Enum.Font.SourceSans _0xc5772b.TextSize = isForAccordion and 12 or 14 _0xc5772b.ZIndex = isForAccordion and 7 or 4 _0xc5772b.Parent = _0x583619 local _0xf650f0 = Instance.new("TextButton") _0xf650f0.Size = UDim2.new(0, 25, 1, 0) _0xf650f0.Position = UDim2.new(1, -25, 0, 0) _0xf650f0.BackgroundColor3 = Color3.fromRGB(80, 80, 80) _0xf650f0.BorderColor3 = Color3.fromRGB(180, 180, 180) _0xf650f0.BorderSizePixel = 2 _0xf650f0.Text = "▼" _0xf650f0.TextColor3 = Color3.fromRGB(200, 200, 200) _0xf650f0.TextXAlignment = Enum.TextXAlignment.Center _0xf650f0.Font = Enum.Font.SourceSans _0xf650f0.TextSize = 10 _0xf650f0.ZIndex = isForAccordion and 7 or 4 _0xf650f0.Parent = _0x583619 local _0x7297a3 = isForAccordion and math.min(#_0x830750 * 25 + 30, 150) or math.min(#_0x830750 * 30 + 30, 200) local _0xf68b23 = Instance.new("ScrollingFrame") _0xf68b23.Size = UDim2.new(1, 0, 0, _0x7297a3) _0xf68b23.Position = UDim2.new(0, 0, 1, 3) _0xf68b23.BackgroundColor3 = Color3.fromRGB(45, 45, 45) _0xf68b23.BorderColor3 = Color3.fromRGB(150, 150, 150) _0xf68b23.BorderSizePixel = 2 _0xf68b23.Visible = false _0xf68b23.CanvasSize = UDim2.new(0, 0, 0, isForAccordion and (#_0x830750 * 25 + 30) or (#_0x830750 * 30 + 30)) _0xf68b23.ScrollBarThickness = 6 _0xf68b23.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120) _0xf68b23.ZIndex = 25 _0xf68b23.ClipsDescendants = true _0xf68b23.Active = true _0xf68b23.Parent = _0xe1ab6b local _0xa7421a = Instance.new("TextBox") _0xa7421a.Size = UDim2.new(1, -10, 0, 20) _0xa7421a.Position = UDim2.new(0, 5, 0, 5) _0xa7421a.BackgroundColor3 = Color3.fromRGB(60, 60, 60) _0xa7421a.BorderColor3 = Color3.fromRGB(100, 100, 100) _0xa7421a.BorderSizePixel = 1 _0xa7421a.Text = "" _0xa7421a.PlaceholderText = "Search options..." _0xa7421a.TextColor3 = Color3.fromRGB(255, 255, 255) _0xa7421a.PlaceholderColor3 = Color3.fromRGB(150, 150, 150) _0xa7421a.Font = Enum.Font.Gotham _0xa7421a.TextSize = 10 _0xa7421a.ZIndex = 26 _0xa7421a.ClearTextOnFocus = false _0xa7421a.Parent = _0xf68b23 local _0xfcb254 = Instance.new("Frame") _0xfcb254.Size = UDim2.new(1, 0, 1, -30) _0xfcb254.Position = UDim2.new(0, 0, 0, 30) _0xfcb254.BackgroundTransparency = 1 _0xfcb254.ZIndex = 26 _0xfcb254.Parent = _0xf68b23 local _0x04388e = Instance.new("UIListLayout") _0x04388e.SortOrder = Enum.SortOrder.LayoutOrder _0x04388e.Parent = _0xfcb254 local function _0x95c178() if type(_0xb6c3ab) ~= "table" then _0xb6c3ab = {_0xb6c3ab} end if #_0xb6c3ab == 0 then _0xc5772b.Text = " " .. _0xa38e51 _0xc5772b.TextColor3 = Color3.fromRGB(200, 200, 200) elseif _0x4a1ba4 then if #_0xb6c3ab == 1 then local _0xfaacde = _0xb6c3ab[1] for _, option in ipairs(_0x830750) do if option._0x25d758 == _0xb6c3ab[1] then _0xfaacde = option._0x1c31a7 break end end _0xc5772b.Text = " " .. (_0xfaacde or "Unknown") elseif #_0xb6c3ab == 0 then _0xc5772b.Text = " None" else _0xc5772b.Text = " " .. #_0xb6c3ab .. " items selected" end _0xc5772b.TextColor3 = Color3.fromRGB(255, 255, 255) else local _0xfaacde = _0xb6c3ab[1] for _, option in ipairs(_0x830750) do if option._0x25d758 == _0xb6c3ab[1] then _0xfaacde = option._0x1c31a7 break end end _0xc5772b.Text = " " .. (_0xfaacde or "Unknown") _0xc5772b.TextColor3 = Color3.fromRGB(255, 255, 255) end end local function _0x5bb873() local _0x69a9e1 = _0x583619.AbsolutePosition local _0x10d408 = _0x583619.AbsoluteSize local _0x15897b = _0x40fc24() local _0x7297a3 = _0xf68b23.Size.Y.Offset local _0x90bd4a = _0x10d408.X local _0x2bfa42 = _0x15897b.Y - (_0x69a9e1.Y + _0x10d408.Y) local _0x95e630 = _0x69a9e1.Y local _0x3ac1bd local _0x0bae67 = _0x69a9e1.X local _0x7ede60 = _0x69a9e1.Y if _0x0bae67 + _0x90bd4a > _0x15897b.X then _0x0bae67 = _0x15897b.X - _0x90bd4a - 10 end if _0x0bae67 < 0 then _0x0bae67 = 10 end if _0x2bfa42 >= _0x7297a3 + 10 then _0x7ede60 = _0x69a9e1.Y + _0x10d408.Y + 3 elseif _0x95e630 >= _0x7297a3 + 10 then _0x7ede60 = _0x69a9e1.Y - _0x7297a3 - 3 else if _0x2bfa42 > _0x95e630 then _0x7ede60 = _0x69a9e1.Y + _0x10d408.Y + 3 local _0xc31420 = _0x2bfa42 - 10 if _0x7297a3 > _0xc31420 and _0xc31420 > 100 then _0x7297a3 = _0xc31420 _0xf68b23.Size = UDim2.new(0, _0x90bd4a, 0, _0x7297a3) end else local _0xc31420 = _0x95e630 - 10 if _0x7297a3 > _0xc31420 and _0xc31420 > 100 then _0x7297a3 = _0xc31420 _0xf68b23.Size = UDim2.new(0, _0x90bd4a, 0, _0x7297a3) end _0x7ede60 = _0x69a9e1.Y - _0x7297a3 - 3 end end if _0x7ede60 + _0x7297a3 > _0x15897b.Y then _0x7ede60 = _0x15897b.Y - _0x7297a3 - 10 end if _0x7ede60 < 0 then _0x7ede60 = 10 end _0x3ac1bd = UDim2.new(0, _0x0bae67, 0, _0x7ede60) _0xf68b23.Position = _0x3ac1bd end local function _0xa3b91d() for _, child in pairs(_0xfcb254:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end for i, option in ipairs(_0x830750) do local _0x233115 = isForAccordion and 25 or 30 local _0x47fd9b = Instance.new("TextButton") _0x47fd9b.Size = UDim2.new(1, -10, 0, _0x233115) _0x47fd9b.Position = UDim2.new(0, 5, 0, (i-1) * _0x233115) _0x47fd9b.BackgroundColor3 = Color3.fromRGB(50, 50, 50) _0x47fd9b.BorderSizePixel = 0 _0x47fd9b.Text = " " .. (option._0x1c31a7 or "Unknown") _0x47fd9b.TextColor3 = Color3.fromRGB(255, 255, 255) _0x47fd9b.TextXAlignment = Enum.TextXAlignment.Left _0x47fd9b.Font = Enum.Font.SourceSans _0x47fd9b.TextSize = isForAccordion and 10 or 12 _0x47fd9b.ZIndex = 27 _0x47fd9b.Parent = _0xfcb254 _0x47fd9b:SetAttribute("OptionIndex", i) _0x47fd9b:SetAttribute("OptionValue", option._0x25d758) _0x47fd9b:SetAttribute("OptionText", option._0x1c31a7) local _0x018d29 = Instance.new("TextLabel") _0x018d29.Size = UDim2.new(0, 20, 1, 0) _0x018d29.Position = UDim2.new(1, -20, 0, 0) _0x018d29.BackgroundTransparency = 1 _0x018d29.Text = "" _0x018d29.TextColor3 = Color3.fromRGB(100, 255, 100) _0x018d29.TextXAlignment = Enum.TextXAlignment.Center _0x018d29.Font = Enum.Font.SourceSansBold _0x018d29.TextSize = 12 _0x018d29.ZIndex = 28 _0x018d29.Parent = _0x47fd9b _0x018d29.Visible = _0x4a1ba4 local _0xde1531 = false if type(_0xb6c3ab) ~= "table" then _0xb6c3ab = {_0xb6c3ab} end local _0x5c5f68 = tostring(option._0x25d758) for _, _0x25d758 in ipairs(_0xb6c3ab) do if tostring(_0x25d758) == _0x5c5f68 then _0xde1531 = true break end end if _0xde1531 then _0x018d29.Text = "✓" _0x47fd9b.BackgroundColor3 = Color3.fromRGB(70, 120, 70) else _0x018d29.Text = "" _0x47fd9b.BackgroundColor3 = Color3.fromRGB(50, 50, 50) end _0x47fd9b.MouseButton1Click:Connect(function() _0x0cb875 = true if _0x4a1ba4 then local _0xdee70a = false local _0x99bd4a = nil if type(_0xb6c3ab) ~= "table" then _0xb6c3ab = {_0xb6c3ab} end for j, _0x25d758 in ipairs(_0xb6c3ab) do if _0x25d758 == option._0x25d758 then _0xdee70a = true _0x99bd4a = j break end end if _0xdee70a then table.remove(_0xb6c3ab, _0x99bd4a) _0x018d29.Text = "" _0x47fd9b.BackgroundColor3 = Color3.fromRGB(50, 50, 50) else table.insert(_0xb6c3ab, option._0x25d758) _0x018d29.Text = "✓" _0x47fd9b.BackgroundColor3 = Color3.fromRGB(70, 120, 70) end else _0xb6c3ab = {option._0x25d758} _0x95c178() _0xf88d4e = false _0xf68b23.Visible = false _0xf650f0.Text = "▼" end _0x95c178() if _0xa326f0 then if _0x4a1ba4 then _0xcfc6bd.Flags[_0xa326f0] = _0xb6c3ab else _0xcfc6bd.Flags[_0xa326f0] = _0xb6c3ab[1] or "" end if _0xcfc6bd.Configuration.Enabled and _0xcfc6bd.Configuration.AutoSave then _0x4663fd(_0xcfc6bd.Configuration.FileName) end end if _0xd28ba7 then _0xd28ba7(_0xb6c3ab, option._0x25d758) end _0x0cb875 = false end) _0x47fd9b.MouseEnter:Connect(function() if _0x47fd9b.BackgroundColor3 ~= Color3.fromRGB(70, 120, 70) then _0x47fd9b.BackgroundColor3 = Color3.fromRGB(70, 70, 70) end end) _0x47fd9b.MouseLeave:Connect(function() local _0xdee70a = false local _0x5c5f68 = _0x47fd9b:GetAttribute("OptionValue") if type(_0xb6c3ab) ~= "table" then _0xb6c3ab = {_0xb6c3ab} end for _, val in ipairs(_0xb6c3ab) do if tostring(val) == tostring(_0x5c5f68) then _0xdee70a = true break end end if not _0xdee70a then _0x47fd9b.BackgroundColor3 = Color3.fromRGB(50, 50, 50) end end) end local _0x233115 = isForAccordion and 25 or 30 _0xf68b23.CanvasSize = UDim2.new(0, 0, 0, #_0x830750 * _0x233115 + 30) wait() for _, child in pairs(_0xfcb254:GetChildren()) do if child:IsA("TextButton") then local _0x5c5f68 = child:GetAttribute("OptionValue") local _0x018d29 = child:FindFirstChild("TextLabel") local _0xdee70a = false if type(_0xb6c3ab) ~= "table" then _0xb6c3ab = {_0xb6c3ab} end for _, _0x25d758 in ipairs(_0xb6c3ab) do if tostring(_0x25d758) == tostring(_0x5c5f68) then _0xdee70a = true break end end if _0xdee70a then if _0x018d29 then _0x018d29.Text = "✓" end child.BackgroundColor3 = Color3.fromRGB(70, 120, 70) else if _0x018d29 then _0x018d29.Text = "" end child.BackgroundColor3 = Color3.fromRGB(50, 50, 50) end end end end local _0x8f6e43 = nil local _0x2cd347 = nil local _0x8136ed = nil local _0x47134a = nil local function _0xb2e9ff() if _0xf88d4e and _0xf68b23.Visible then _0x5bb873() end end local function _0x3d9d05() if _0x8f6e43 then _0x8f6e43:Disconnect() end local _0xf4f413 = game:GetService("RunService") _0x8f6e43 = _0xf4f413.Heartbeat:Connect(function() if _0xf88d4e and _0xf68b23.Visible then local _0x7bfebd = _0x583619.AbsolutePosition local _0x2beed4 = _0x583619.AbsoluteSize local _0x2d1fe5 = _0x40fc24() if not _0x2cd347 or _0x7bfebd.X ~= _0x2cd347.X or _0x7bfebd.Y ~= _0x2cd347.Y or _0x2beed4.X ~= _0x8136ed.X or _0x2beed4.Y ~= _0x8136ed.Y or (_0x47134a and ( _0x2d1fe5.X ~= _0x47134a.X or _0x2d1fe5.Y ~= _0x47134a.Y )) then _0x2cd347 = _0x7bfebd _0x8136ed = _0x2beed4 _0x47134a = _0x2d1fe5 local _0x7297a3 = isForAccordion and math.min(#_0x830750 * 25 + 30, 150) or math.min(#_0x830750 * 30 + 30, 200) _0xf68b23.Size = UDim2.new(0, _0x2beed4.X, 0, _0x7297a3) _0xb2e9ff() end end end) end local function _0x36cc51() if _0x8f6e43 then _0x8f6e43:Disconnect() _0x8f6e43 = nil end _0x2cd347 = nil _0x8136ed = nil _0x47134a = nil end local function _0x2ce0ec() _0xf88d4e = not _0xf88d4e _0xf68b23.Visible = _0xf88d4e _0xf650f0.Text = _0xf88d4e and "▲" or "▼" if _0xf88d4e then _0x3d9d05() else _0x36cc51() end if _0xf88d4e and _0x171964 then _0x171964(_0x830750, function(newOptions) if newOptions and type(newOptions) == "table" then _0x7cdc18 = newOptions _0x830750 = {} for i, option in ipairs(_0x7cdc18) do if type(option) == "string" then table.insert(_0x830750, {_0x1c31a7 = option, _0x25d758 = option}) elseif type(option) == "table" and option._0x1c31a7 and option._0x25d758 then table.insert(_0x830750, {_0x1c31a7 = option._0x1c31a7, _0x25d758 = option._0x25d758}) end end _0xa3b91d() end end) end if _0xf88d4e then local _0x7297a3 = isForAccordion and math.min(#_0x830750 * 25 + 30, 150) or math.min(#_0x830750 * 30 + 30, 200) _0xf68b23.Size = UDim2.new(0, _0x583619.AbsoluteSize.X, 0, _0x7297a3) _0x5bb873() _0x2cd347 = _0x583619.AbsolutePosition _0x8136ed = _0x583619.AbsoluteSize _0xf68b23.ZIndex = 25 _0xa7421a.ZIndex = 26 _0xfcb254.ZIndex = 26 for _, child in pairs(_0xfcb254:GetChildren()) do if child:IsA("TextButton") then child.ZIndex = 27 local _0x018d29 = child:FindFirstChild("TextLabel") if _0x018d29 then _0x018d29.ZIndex = 28 end end end end end _0xa3b91d() local function _0x02e358(searchText) searchText = searchText or "" local _0x95bc97 = searchText searchText = string.lower(string.gsub(searchText, "^%s*(.-)%s*$", "%1")) local _0x589ce0 = 0 local _0x233115 = isForAccordion and 25 or 30 local _0x5b19ef = _0xfcb254:GetChildren() local _0x00c787 = false for i, child in ipairs(_0x5b19ef) do if child:IsA("TextButton") then local _0xd271fb = child:GetAttribute("OptionText") or "" local _0x5c5f68 = child:GetAttribute("OptionValue") or "" local _0x347f2c = false local _0x1b34c0 = false if _0xd271fb ~= "" then local _0x2012a5 = string.lower(_0xd271fb) if searchText == "" then _0x347f2c = true child.Text = " " .. _0xd271fb else local _0x1c0965 = {} for word in string.gmatch(searchText, "%S+") do table.insert(_0x1c0965, word) end local _0xa9f572 = false if #_0x1c0965 == 1 then _0xa9f572 = string.find(_0x2012a5, searchText, 1, true) ~= nil _0x1b34c0 = _0x2012a5 == searchText else _0xa9f572 = true for _, word in ipairs(_0x1c0965) do if not string.find(_0x2012a5, word, 1, true) then _0xa9f572 = false break end end end _0x347f2c = _0xa9f572 if _0xa9f572 and searchText ~= "" then if _0x1b34c0 then _0x00c787 = true end end end end if _0x347f2c then child.Visible = true child.Position = UDim2.new(0, 5, 0, _0x589ce0 * _0x233115) if _0x1b34c0 then child.Position = UDim2.new(0, 5, 0, 0) elseif _0x00c787 then child.Position = UDim2.new(0, 5, 0, (_0x589ce0 + 1) * _0x233115) end _0x589ce0 = _0x589ce0 + 1 else child.Visible = false end end end local _0x108043 = math.max(_0x589ce0 * _0x233115 + 30, 60) _0xf68b23.CanvasSize = UDim2.new(0, 0, 0, _0x108043) _0x15301f = 0 end local _0x41db19 = 0.2 local _0xd5165d = 0 _0xa7421a.Changed:Connect(function(property) if property == "Text" then local _0xf791bc = tick() _0xd5165d = _0xf791bc wait(_0x41db19) if _0xd5165d == _0xf791bc then _0x02e358(_0xa7421a.Text) end end end) local _0x079a25 = game:GetService("UserInputService") local _0x15301f = 0 local function _0xda9dfe() local _0xd28a9b = {} for _, child in ipairs(_0xfcb254:GetChildren()) do if child:IsA("TextButton") and child.Visible then table.insert(_0xd28a9b, child) end end return _0xd28a9b end local function _0xc795e9() local _0xd28a9b = _0xda9dfe() for i, _0x47fd9b in ipairs(_0xd28a9b) do if i == _0x15301f then _0x47fd9b.BackgroundColor3 = Color3.fromRGB(70, 120, 200) else local _0xde1531 = false local _0x5c5f68 = _0x47fd9b:GetAttribute("OptionValue") for _, _0x25d758 in ipairs(_0xb6c3ab or {}) do if tostring(_0x5c5f68) == tostring(_0x25d758) then _0xde1531 = true break end end _0x47fd9b.BackgroundColor3 = _0xde1531 and Color3.fromRGB(70, 120, 70) or Color3.fromRGB(50, 50, 50) end end end _0xa7421a.Focused:Connect(function() local _0x83da25 _0x83da25 = _0x079a25.InputBegan:Connect(function(input, gameProcessed) if gameProcessed then return end local _0xd28a9b = _0xda9dfe() if #_0xd28a9b == 0 then return end if input.KeyCode == Enum.KeyCode.Down then _0x15301f = math.min(_0x15301f + 1, #_0xd28a9b) _0xc795e9() elseif input.KeyCode == Enum.KeyCode.Up then _0x15301f = math.max(_0x15301f - 1, 1) _0xc795e9() elseif input.KeyCode == Enum.KeyCode.Return then if _0x15301f > 0 and _0x15301f <= #_0xd28a9b then local _0x90e79e = _0xd28a9b[_0x15301f] local _0xe8954c = _0x90e79e:GetAttribute("OptionValue") _0x0cb875 = true if _0x4a1ba4 then local _0xde1531 = false local _0x99bd4a = nil if type(_0xb6c3ab) ~= "table" then _0xb6c3ab = {_0xb6c3ab} end for j, _0x25d758 in ipairs(_0xb6c3ab) do if _0x25d758 == _0xe8954c then _0xde1531 = true _0x99bd4a = j break end end if _0xde1531 then table.remove(_0xb6c3ab, _0x99bd4a) local _0x018d29 = _0x90e79e:FindFirstChild("TextLabel") if _0x018d29 then _0x018d29.Text = "" end _0x90e79e.BackgroundColor3 = Color3.fromRGB(50, 50, 50) else table.insert(_0xb6c3ab, _0xe8954c) local _0x018d29 = _0x90e79e:FindFirstChild("TextLabel") if _0x018d29 then _0x018d29.Text = "✓" end _0x90e79e.BackgroundColor3 = Color3.fromRGB(70, 120, 70) end else _0xb6c3ab = {_0xe8954c} _0x95c178() _0xf88d4e = false _0xf68b23.Visible = false _0xf650f0.Text = "▼" _0x36cc51() _0xa7421a:ReleaseFocus() end _0x95c178() if _0xd28ba7 then _0xd28ba7(_0xb6c3ab, _0xe8954c) end if _0xa326f0 then if _0x4a1ba4 then _0xcfc6bd.Flags[_0xa326f0] = _0xb6c3ab else _0xcfc6bd.Flags[_0xa326f0] = _0xb6c3ab[1] or "" end if _0xcfc6bd.Configuration.Enabled and _0xcfc6bd.Configuration.AutoSave then _0x4663fd(_0xcfc6bd.Configuration.FileName) end end _0x0cb875 = false end elseif input.KeyCode == Enum.KeyCode.Escape then _0xa7421a:ReleaseFocus() _0x2ce0ec() end end) _0xa7421a.FocusLost:Connect(function() if _0x83da25 then _0x83da25:Disconnect() end _0x15301f = 0 _0xc795e9() end) end) local _0x91c21c = _0x2ce0ec _0x2ce0ec = function() _0x91c21c() if not _0xf88d4e then _0xa7421a.Text = "" _0x02e358("") end end _0xc5772b.MouseButton1Click:Connect(function() _0x2ce0ec() end) _0xf650f0.MouseButton1Click:Connect(function() _0x2ce0ec() end) local _0x7e7266 = { GetSelected = function() return _0xb6c3ab end, SetSelected = function(values) if values == "" then _0xb6c3ab = {} else _0xb6c3ab = values or {} end _0x95c178() if _0xa326f0 then if _0x4a1ba4 then _0xcfc6bd.Flags[_0xa326f0] = _0xb6c3ab else _0xcfc6bd.Flags[_0xa326f0] = _0xb6c3ab[1] or "" end if _0xcfc6bd.Configuration.Enabled and _0xcfc6bd.Configuration.AutoSave then _0x4663fd(_0xcfc6bd.Configuration.FileName) end end for _, child in pairs(_0xfcb254:GetChildren()) do if child:IsA("TextButton") then local _0x247a7d = nil local _0x4a7833 = nil for i, option in ipairs(_0x830750) do local _0x080782 = _0xfcb254:GetChildren()[i] if _0x080782 == child then _0x247a7d = option _0x4a7833 = i break end end local _0xe4c52c = child:FindFirstChild("TextLabel") if _0xe4c52c and _0x247a7d then local _0xde1531 = false if type(_0xb6c3ab) ~= "table" then _0xb6c3ab = {_0xb6c3ab} end for _, val in ipairs(_0xb6c3ab) do if val == _0x247a7d._0x25d758 then _0xde1531 = true break end end _0xe4c52c.Text = _0xde1531 and "✓" or "" child.BackgroundColor3 = _0xde1531 and Color3.fromRGB(70, 120, 70) or Color3.fromRGB(50, 50, 50) end end end end, Clear = function() _0xb6c3ab = {} _0x95c178() if _0xa326f0 then if _0x4a1ba4 then _0xcfc6bd.Flags[_0xa326f0] = {} else _0xcfc6bd.Flags[_0xa326f0] = "" end if _0xcfc6bd.Configuration.Enabled and _0xcfc6bd.Configuration.AutoSave then _0x4663fd(_0xcfc6bd.Configuration.FileName) end end for _, child in pairs(_0xfcb254:GetChildren()) do if child:IsA("TextButton") then local _0x018d29 = child:FindFirstChild("TextLabel") if _0x018d29 then _0x018d29.Text = "" end child.BackgroundColor3 = Color3.fromRGB(50, 50, 50) end end end, Refresh = function(newOptions) for _, child in pairs(_0xfcb254:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end _0x7cdc18 = newOptions _0x830750 = {} for i, option in ipairs(_0x7cdc18) do if type(option) == "string" then table.insert(_0x830750, {_0x1c31a7 = option, _0x25d758 = option}) elseif type(option) == "table" and option._0x1c31a7 and option._0x25d758 then table.insert(_0x830750, {_0x1c31a7 = option._0x1c31a7, _0x25d758 = option._0x25d758}) end end for i, option in ipairs(_0x830750) do local _0x233115 = isForAccordion and 25 or 30 local _0x47fd9b = Instance.new("TextButton") _0x47fd9b.Size = UDim2.new(1, -10, 0, _0x233115) _0x47fd9b.Position = UDim2.new(0, 5, 0, (i-1) * _0x233115) _0x47fd9b.BackgroundColor3 = Color3.fromRGB(50, 50, 50) _0x47fd9b.BorderSizePixel = 0 _0x47fd9b.Text = " " .. (option._0x1c31a7 or "Unknown") _0x47fd9b.TextColor3 = Color3.fromRGB(255, 255, 255) _0x47fd9b.TextXAlignment = Enum.TextXAlignment.Left _0x47fd9b.Font = Enum.Font.SourceSans _0x47fd9b.TextSize = isForAccordion and 10 or 12 _0x47fd9b.ZIndex = 27 _0x47fd9b.Parent = _0xfcb254 local _0x018d29 = Instance.new("TextLabel") _0x018d29.Size = UDim2.new(0, 20, 1, 0) _0x018d29.Position = UDim2.new(1, -20, 0, 0) _0x018d29.BackgroundTransparency = 1 _0x018d29.Text = "" _0x018d29.TextColor3 = Color3.fromRGB(100, 255, 100) _0x018d29.TextXAlignment = Enum.TextXAlignment.Center _0x018d29.Font = Enum.Font.SourceSansBold _0x018d29.TextSize = 12 _0x018d29.ZIndex = 28 _0x018d29.Parent = _0x47fd9b _0x018d29.Visible = _0x4a1ba4 _0x47fd9b.MouseButton1Click:Connect(function() _0x0cb875 = true local _0xe8954c = _0x47fd9b:GetAttribute("OptionValue") local _0x87b59f = _0x47fd9b:GetAttribute("OptionText") if _0x4a1ba4 then local _0xde1531 = false local _0x99bd4a = nil if type(_0xb6c3ab) ~= "table" then _0xb6c3ab = {_0xb6c3ab} end for j, _0x25d758 in ipairs(_0xb6c3ab) do if _0x25d758 == _0xe8954c then _0xde1531 = true _0x99bd4a = j break end end if _0xde1531 then table.remove(_0xb6c3ab, _0x99bd4a) _0x018d29.Text = "" _0x47fd9b.BackgroundColor3 = Color3.fromRGB(50, 50, 50) else table.insert(_0xb6c3ab, _0xe8954c) _0x018d29.Text = "✓" _0x47fd9b.BackgroundColor3 = Color3.fromRGB(70, 120, 70) end else _0xb6c3ab = {_0xe8954c} _0x95c178() _0xf88d4e = false _0xf68b23.Visible = false _0xf650f0.Text = "▼" _0x36cc51() end _0x95c178() if _0xd28ba7 then _0xd28ba7(_0xb6c3ab, _0xe8954c) end if _0xa326f0 then if _0x4a1ba4 then _0xcfc6bd.Flags[_0xa326f0] = _0xb6c3ab else _0xcfc6bd.Flags[_0xa326f0] = _0xb6c3ab[1] or "" end if _0xcfc6bd.Configuration.Enabled and _0xcfc6bd.Configuration.AutoSave then _0x4663fd(_0xcfc6bd.Configuration.FileName) end end if not _0x4a1ba4 and not _0x0cb875 then spawn(function() wait(0.1) _0xf88d4e = false _0xf68b23.Visible = false _0xf650f0.Text = "▼" _0x36cc51() end) end _0x0cb875 = false end) _0x47fd9b.MouseEnter:Connect(function() if _0x47fd9b.BackgroundColor3 ~= Color3.fromRGB(70, 120, 70) then _0x47fd9b.BackgroundColor3 = Color3.fromRGB(70, 70, 70) end end) _0x47fd9b.MouseLeave:Connect(function() local _0xde1531 = false local _0x5c5f68 = _0x47fd9b:GetAttribute("OptionValue") if type(_0xb6c3ab) ~= "table" then _0xb6c3ab = {_0xb6c3ab} end for _, val in ipairs(_0xb6c3ab) do if val == _0x5c5f68 then _0xde1531 = true break end end if not _0xde1531 then _0x47fd9b.BackgroundColor3 = Color3.fromRGB(50, 50, 50) end end) end local _0x233115 = isForAccordion and 25 or 30 _0xf68b23.CanvasSize = UDim2.new(0, 0, 0, #_0x830750 * _0x233115 + 30) _0xb6c3ab = {} _0x95c178() end, Set = function(values) if values == "" then _0xb6c3ab = {} else _0xb6c3ab = values or {} end _0x95c178() end } _0x7e7266.Cleanup = function() _0x36cc51() if _0xf88d4e then _0xf88d4e = false _0xf68b23.Visible = false _0xf650f0.Text = "▼" end if _0x583619 and _0x583619.Parent then _0x583619:Destroy() end end _0x583619.AncestryChanged:Connect(function() if not _0x583619.Parent then _0x36cc51() end end) _0x13620f(_0xa326f0, _0x7e7266) if _0x8ec9db then local _0x35ded1 = _0xb6c3ab _0x8ec9db(_0x830750, function(newOptions) if newOptions and type(newOptions) == "table" then _0x7cdc18 = newOptions _0x830750 = {} for i, option in ipairs(_0x7cdc18) do if type(option) == "string" then table.insert(_0x830750, {_0x1c31a7 = option, _0x25d758 = option}) elseif type(option) == "table" and option._0x1c31a7 and option._0x25d758 then table.insert(_0x830750, {_0x1c31a7 = option._0x1c31a7, _0x25d758 = option._0x25d758}) end end _0xb6c3ab = _0x35ded1 _0xa3b91d() _0x95c178() end end, _0x7e7266) end _0x95c178() return _0x7e7266 end local function _0xb88676(_0x1c31a7, parentContainer, _0xa85246, updateSizeFunction, animateFunction, _0xa9bc1c, isForAccordion) local _0x6c90ac = Instance.new("TextLabel") if isForAccordion then _0x6c90ac.Size = UDim2.new(1, 0, 0, 25) _0x6c90ac.Position = UDim2.new(0, 0, 0, _0xa85246) _0x6c90ac.TextSize = 14 _0x6c90ac.ZIndex = 5 else _0x6c90ac.Size = UDim2.new(1, -20, 0, 30) _0x6c90ac.Position = UDim2.new(0, 10, 0, _0xa85246) _0x6c90ac.TextSize = 16 _0x6c90ac.ZIndex = 3 _0x6c90ac:SetAttribute("ComponentStartY", _0xa85246) end _0x6c90ac.BackgroundTransparency = 1 _0x6c90ac.Text = _0x1c31a7 _0x6c90ac.TextColor3 = Color3.fromRGB(255, 255, 255) _0x6c90ac.TextXAlignment = Enum.TextXAlignment.Left _0x6c90ac.Font = Enum.Font.SourceSans _0x6c90ac.Parent = parentContainer return _0x6c90ac end local function _0xe3ccbc(_0x1c31a7, _0xd28ba7, parentContainer, _0xa85246, updateSizeFunction, animateFunction, _0xa9bc1c, isForAccordion) local _0xdd4ec4 = Instance.new("TextButton") if isForAccordion then _0xdd4ec4.Size = UDim2.new(0, 100, 0, 25) _0xdd4ec4.Position = UDim2.new(0, 0, 0, _0xa85246) _0xdd4ec4.BorderColor3 = Color3.fromRGB(255, 255, 255) _0xdd4ec4.BorderSizePixel = 2 _0xdd4ec4.TextSize = 12 _0xdd4ec4.ZIndex = 5 local _0x685ea4 = Instance.new("UICorner") _0x685ea4.CornerRadius = UDim.new(0, 4) _0x685ea4.Parent = _0xdd4ec4 _0xdd4ec4.MouseEnter:Connect(function() _0xdd4ec4.BackgroundColor3 = Color3.fromRGB(120, 170, 255) end) _0xdd4ec4.MouseLeave:Connect(function() _0xdd4ec4.BackgroundColor3 = Color3.fromRGB(100, 150, 250) end) else _0xdd4ec4.Size = UDim2.new(0, 120, 0, 30) _0xdd4ec4.Position = UDim2.new(0, 10, 0, _0xa85246) _0xdd4ec4.BorderSizePixel = 0 _0xdd4ec4.TextSize = 14 _0xdd4ec4.ZIndex = 3 _0xdd4ec4:SetAttribute("ComponentStartY", _0xa85246) end _0xdd4ec4.BackgroundColor3 = Color3.fromRGB(100, 150, 250) _0xdd4ec4.Text = _0x1c31a7 _0xdd4ec4.TextColor3 = Color3.fromRGB(255, 255, 255) _0xdd4ec4.Font = Enum.Font.SourceSans _0xdd4ec4.Parent = parentContainer if _0xd28ba7 then _0xdd4ec4.MouseButton1Click:Connect(_0xd28ba7) end return _0xdd4ec4 end local function _0x79b766(parentContainer, _0xa85246, updateSizeFunction, animateFunction, _0xa9bc1c, isForAccordion) local _0x7a0785 = Instance.new("Frame") if isForAccordion then _0x7a0785.Size = UDim2.new(1, 0, 0, 1) _0x7a0785.Position = UDim2.new(0, 0, 0, _0xa85246 + 5) _0x7a0785.ZIndex = 5 else _0x7a0785.Size = UDim2.new(1, -20, 0, 1) _0x7a0785.Position = UDim2.new(0, 10, 0, _0xa85246 + 5) _0x7a0785.ZIndex = 3 _0x7a0785:SetAttribute("ComponentStartY", _0xa85246) end _0x7a0785.BackgroundColor3 = Color3.fromRGB(80, 80, 80) _0x7a0785.BorderSizePixel = 0 _0x7a0785.Parent = parentContainer return _0x7a0785 end local function _0x6f38cb(config, parentContainer, _0xa85246, updateSizeFunction, animateFunction, _0xa9bc1c, isForAccordion) local _0x1c31a7 = config.Name or config.Text or "Toggle" local _0x739cd2 = config.Default or false local _0xd28ba7 = config.Callback or function() end local _0xa326f0 = config.Flag local _0xd4244f = _0x739cd2 if _0xa326f0 and _0xcfc6bd.Flags[_0xa326f0] ~= nil then _0xd4244f = _0xcfc6bd.Flags[_0xa326f0] end local _0x7c3c8b = Instance.new("Frame") if isForAccordion then _0x7c3c8b.Size = UDim2.new(1, -10, 0, 25) _0x7c3c8b.Position = UDim2.new(0, 5, 0, _0xa85246) _0x7c3c8b.ZIndex = 6 else _0x7c3c8b.Size = UDim2.new(1, -20, 0, 30) _0x7c3c8b.Position = UDim2.new(0, 10, 0, _0xa85246) _0x7c3c8b.ZIndex = 3 _0x7c3c8b:SetAttribute("ComponentStartY", _0xa85246) end _0x7c3c8b.BackgroundTransparency = 1 _0x7c3c8b.Parent = parentContainer local _0x52c121 = Instance.new("TextLabel") if isForAccordion then _0x52c121.Size = UDim2.new(1, -45, 1, 0) _0x52c121.TextSize = 12 _0x52c121.ZIndex = 7 else _0x52c121.Size = UDim2.new(1, -60, 1, 0) _0x52c121.TextSize = 16 _0x52c121.ZIndex = 4 end _0x52c121.Position = UDim2.new(0, 0, 0, 0) _0x52c121.BackgroundTransparency = 1 _0x52c121.Text = _0x1c31a7 _0x52c121.TextColor3 = Color3.fromRGB(255, 255, 255) _0x52c121.TextXAlignment = Enum.TextXAlignment.Left _0x52c121.Font = Enum.Font.SourceSans _0x52c121.Parent = _0x7c3c8b local _0x0e3b2b = Instance.new("Frame") if isForAccordion then _0x0e3b2b.Size = UDim2.new(0, 40, 0, 20) _0x0e3b2b.Position = UDim2.new(1, -40, 0.5, -10) _0x0e3b2b.ZIndex = 7 else _0x0e3b2b.Size = UDim2.new(0, 50, 0, 24) _0x0e3b2b.Position = UDim2.new(1, -50, 0.5, -12) _0x0e3b2b.ZIndex = 4 end _0x0e3b2b.BackgroundColor3 = _0xd4244f and Color3.fromRGB(76, 175, 80) or Color3.fromRGB(100, 100, 100) _0x0e3b2b.BorderSizePixel = 0 _0x0e3b2b.Parent = _0x7c3c8b local _0x35a812 = Instance.new("UICorner") _0x35a812.CornerRadius = UDim.new(0, isForAccordion and 10 or 12) _0x35a812.Parent = _0x0e3b2b local _0x8c1bd8 = Instance.new("TextButton") if isForAccordion then _0x8c1bd8.Size = UDim2.new(0, 16, 0, 16) _0x8c1bd8.Position = _0xd4244f and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8) _0x8c1bd8.ZIndex = 8 else _0x8c1bd8.Size = UDim2.new(0, 20, 0, 20) _0x8c1bd8.Position = _0xd4244f and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10) _0x8c1bd8.ZIndex = 5 end _0x8c1bd8.BackgroundColor3 = Color3.fromRGB(255, 255, 255) _0x8c1bd8.BorderSizePixel = 0 _0x8c1bd8.Text = "" _0x8c1bd8.Parent = _0x0e3b2b local _0xbb27bb = Instance.new("UICorner") _0xbb27bb.CornerRadius = UDim.new(0, isForAccordion and 8 or 10) _0xbb27bb.Parent = _0x8c1bd8 local function _0x1720cd() local _0xd9c5e1 = _0xd4244f and Color3.fromRGB(76, 175, 80) or Color3.fromRGB(100, 100, 100) local _0xea9f24 if isForAccordion then _0xea9f24 = _0xd4244f and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8) else _0xea9f24 = _0xd4244f and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10) end local _0x6af648 = game:GetService("TweenService"):Create( _0x0e3b2b, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundColor3 = _0xd9c5e1} ) _0x6af648:Play() local _0x8be631 = game:GetService("TweenService"):Create( _0x8c1bd8, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = _0xea9f24} ) _0x8be631:Play() end _0x8c1bd8.MouseButton1Click:Connect(function() _0xd4244f = not _0xd4244f _0x1720cd() if _0xa326f0 then _0xcfc6bd.Flags[_0xa326f0] = _0xd4244f if _0xcfc6bd.Configuration.Enabled and _0xcfc6bd.Configuration.AutoSave then _0x4663fd(_0xcfc6bd.Configuration.FileName) end end local _0x69fcd6, errorMsg = pcall(function() _0xd28ba7(_0xd4244f) end) if not _0x69fcd6 then warn("Toggle callback error:", errorMsg) end end) _0x0e3b2b.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then _0xd4244f = not _0xd4244f _0x1720cd() if _0xa326f0 then _0xcfc6bd.Flags[_0xa326f0] = _0xd4244f if _0xcfc6bd.Configuration.Enabled and _0xcfc6bd.Configuration.AutoSave then _0x4663fd(_0xcfc6bd.Configuration.FileName) end end local _0x69fcd6, errorMsg = pcall(function() _0xd28ba7(_0xd4244f) end) if not _0x69fcd6 then warn("Toggle callback error:", errorMsg) end end end) _0x8c1bd8.MouseEnter:Connect(function() _0x8c1bd8.BackgroundColor3 = Color3.fromRGB(245, 245, 245) end) _0x8c1bd8.MouseLeave:Connect(function() _0x8c1bd8.BackgroundColor3 = Color3.fromRGB(255, 255, 255) end) local _0xece53a = {} _0xece53a.SetValue = function(newValue) if type(newValue) == "boolean" and newValue ~= _0xd4244f then _0xd4244f = newValue _0x1720cd() if _0xa326f0 then _0xcfc6bd.Flags[_0xa326f0] = _0xd4244f if _0xcfc6bd.Configuration.Enabled and _0xcfc6bd.Configuration.AutoSave then _0x4663fd(_0xcfc6bd.Configuration.FileName) end end end end _0xece53a.GetValue = function() return _0xd4244f end _0xece53a.SetText = function(newText) _0x1c31a7 = newText _0x52c121.Text = newText end _0xece53a.SetCallback = function(newCallback) _0xd28ba7 = newCallback or function() end end _0xece53a.Set = _0xece53a.SetValue _0x13620f(_0xa326f0, _0xece53a) return _0xece53a end local function _0x21f098(config, parentContainer, _0xa85246, updateSizeFunction, animateFunction, _0xa9bc1c, isForAccordion) local _0xa38e51 = config.Placeholder or "Enter text..." local _0x54a9a0 = config.Default or "" local _0xd28ba7 = config.Callback or function() end local _0x208837 = config.MaxLength or 100 local _0xc3682f = config.Multiline or false local _0xa326f0 = config.Flag local _0x26166b = _0x54a9a0 if _0xa326f0 and _0xcfc6bd.Flags[_0xa326f0] ~= nil then _0x26166b = _0xcfc6bd.Flags[_0xa326f0] _0x54a9a0 = _0x26166b end local _0x5ce2a9 = Instance.new("Frame") if isForAccordion then _0x5ce2a9.Size = UDim2.new(1, -10, 0, _0xc3682f and 60 or 25) _0x5ce2a9.Position = UDim2.new(0, 5, 0, _0xa85246) _0x5ce2a9.ZIndex = 6 else _0x5ce2a9.Size = UDim2.new(1, -20, 0, _0xc3682f and 80 or 30) _0x5ce2a9.Position = UDim2.new(0, 10, 0, _0xa85246) _0x5ce2a9.ZIndex = 3 _0x5ce2a9:SetAttribute("ComponentStartY", _0xa85246) end _0x5ce2a9.BackgroundTransparency = 1 _0x5ce2a9.Parent = parentContainer local _0x5ac20c = Instance.new("TextBox") _0x5ac20c.Size = UDim2.new(1, 0, 1, 0) _0x5ac20c.Position = UDim2.new(0, 0, 0, 0) _0x5ac20c.BackgroundColor3 = Color3.fromRGB(60, 60, 60) _0x5ac20c.BorderColor3 = Color3.fromRGB(100, 100, 100) _0x5ac20c.BorderSizePixel = 1 _0x5ac20c.Text = _0x54a9a0 _0x5ac20c.PlaceholderText = _0xa38e51 _0x5ac20c.TextColor3 = Color3.fromRGB(255, 255, 255) _0x5ac20c.PlaceholderColor3 = Color3.fromRGB(150, 150, 150) _0x5ac20c.Font = Enum.Font.SourceSans _0x5ac20c.TextSize = isForAccordion and 12 or 14 _0x5ac20c.TextXAlignment = Enum.TextXAlignment.Left _0x5ac20c.TextYAlignment = _0xc3682f and Enum.TextYAlignment.Top or Enum.TextYAlignment.Center _0x5ac20c.MultiLine = _0xc3682f _0x5ac20c.TextWrapped = _0xc3682f _0x5ac20c.ClearTextOnFocus = false _0x5ac20c.ZIndex = isForAccordion and 7 or 4 _0x5ac20c.Parent = _0x5ce2a9 local _0x0cdfbd = Instance.new("UICorner") _0x0cdfbd.CornerRadius = UDim.new(0, 4) _0x0cdfbd.Parent = _0x5ac20c local _0x40fd16 = nil if _0x208837 and _0x208837 > 0 then _0x40fd16 = Instance.new("TextLabel") _0x40fd16.Size = UDim2.new(0, 50, 0, 15) _0x40fd16.Position = UDim2.new(1, -55, 1, -18) _0x40fd16.BackgroundTransparency = 1 _0x40fd16.Text = string.len(_0x26166b) .. "/" .. _0x208837 _0x40fd16.TextColor3 = Color3.fromRGB(150, 150, 150) _0x40fd16.Font = Enum.Font.SourceSans _0x40fd16.TextSize = isForAccordion and 10 or 12 _0x40fd16.TextXAlignment = Enum.TextXAlignment.Right _0x40fd16.ZIndex = isForAccordion and 8 or 5 _0x40fd16.Parent = _0x5ce2a9 end local function _0x6f76bf() if _0x40fd16 then local _0xe1edb2 = string.len(_0x5ac20c.Text) _0x40fd16.Text = _0xe1edb2 .. "/" .. _0x208837 if _0xe1edb2 >= _0x208837 then _0x40fd16.TextColor3 = Color3.fromRGB(255, 100, 100) elseif _0xe1edb2 >= _0x208837 * 0.8 then _0x40fd16.TextColor3 = Color3.fromRGB(255, 200, 100) else _0x40fd16.TextColor3 = Color3.fromRGB(150, 150, 150) end end end _0x5ac20c.Changed:Connect(function(property) if property == "Text" then if _0x208837 and _0x208837 > 0 and string.len(_0x5ac20c.Text) > _0x208837 then _0x5ac20c.Text = string.sub(_0x5ac20c.Text, 1, _0x208837) end _0x26166b = _0x5ac20c.Text _0x6f76bf() if _0xa326f0 then _0xcfc6bd.Flags[_0xa326f0] = _0x26166b if _0xcfc6bd.Configuration.Enabled and _0xcfc6bd.Configuration.AutoSave then _0x4663fd(_0xcfc6bd.Configuration.FileName) end end local _0x69fcd6, errorMsg = pcall(function() _0xd28ba7(_0x26166b) end) if not _0x69fcd6 then warn("TextBox callback error:", errorMsg) end end end) _0x5ac20c.Focused:Connect(function() _0x5ac20c.BorderColor3 = Color3.fromRGB(100, 150, 250) end) _0x5ac20c.FocusLost:Connect(function() _0x5ac20c.BorderColor3 = Color3.fromRGB(100, 100, 100) end) local _0x6513f7 = { GetText = function() return _0x26166b end, SetText = function(newText) _0x5ac20c.Text = tostring(newText or "") _0x26166b = _0x5ac20c.Text _0x6f76bf() if _0xa326f0 then _0xcfc6bd.Flags[_0xa326f0] = _0x26166b if _0xcfc6bd.Configuration.Enabled and _0xcfc6bd.Configuration.AutoSave then _0x4663fd(_0xcfc6bd.Configuration.FileName) end end end, Clear = function() _0x5ac20c.Text = "" _0x26166b = "" _0x6f76bf() if _0xa326f0 then _0xcfc6bd.Flags[_0xa326f0] = _0x26166b if _0xcfc6bd.Configuration.Enabled and _0xcfc6bd.Configuration.AutoSave then _0x4663fd(_0xcfc6bd.Configuration.FileName) end end end, SetPlaceholder = function(newPlaceholder) _0x5ac20c.PlaceholderText = tostring(newPlaceholder or "") end, Focus = function() _0x5ac20c:CaptureFocus() end, Blur = function() _0x5ac20c:ReleaseFocus() end, SetCallback = function(newCallback) _0xd28ba7 = newCallback or function() end end, Set = function(newText) _0x5ac20c.Text = tostring(newText or "") _0x26166b = _0x5ac20c.Text _0x6f76bf() end } _0x13620f(_0xa326f0, _0x6513f7) return _0x6513f7 end local function _0x364f57(config, parentContainer, _0xa85246, updateSizeFunction, animateFunction, _0xa9bc1c, isForAccordion) local _0xa38e51 = config.Placeholder or "Enter number..." local _0x739cd2 = config.Default or 0 local _0xd28ba7 = config.Callback or function() end local _0xff3a12 = config.Min or -math.huge local _0xc3e4d0 = config.Max or math.huge local _0x07445d = config.Increment or 1 local _0xa12143 = config.Decimals or 0 local _0xa326f0 = config.Flag local _0x65fb2f = _0x739cd2 if _0xa326f0 and _0xcfc6bd.Flags[_0xa326f0] ~= nil then _0x65fb2f = _0xcfc6bd.Flags[_0xa326f0] _0x739cd2 = _0x65fb2f end local _0xa4a861 = Instance.new("Frame") if isForAccordion then _0xa4a861.Size = UDim2.new(1, -10, 0, 25) _0xa4a861.Position = UDim2.new(0, 5, 0, _0xa85246) _0xa4a861.ZIndex = 6 else _0xa4a861.Size = UDim2.new(1, -20, 0, 30) _0xa4a861.Position = UDim2.new(0, 10, 0, _0xa85246) _0xa4a861.ZIndex = 3 _0xa4a861:SetAttribute("ComponentStartY", _0xa85246) end _0xa4a861.BackgroundTransparency = 1 _0xa4a861.Parent = parentContainer local _0xbac0d9 = Instance.new("TextBox") if isForAccordion then _0xbac0d9.Size = UDim2.new(1, -45, 1, 0) _0xbac0d9.TextSize = 12 _0xbac0d9.ZIndex = 7 else _0xbac0d9.Size = UDim2.new(1, -60, 1, 0) _0xbac0d9.TextSize = 14 _0xbac0d9.ZIndex = 4 end _0xbac0d9.Position = UDim2.new(0, 0, 0, 0) _0xbac0d9.BackgroundColor3 = Color3.fromRGB(60, 60, 60) _0xbac0d9.BorderColor3 = Color3.fromRGB(100, 100, 100) _0xbac0d9.BorderSizePixel = 1 _0xbac0d9.Text = _0xa12143 > 0 and string.format("%." .. _0xa12143 .. "f", _0x739cd2) or tostring(_0x739cd2) _0xbac0d9.PlaceholderText = _0xa38e51 _0xbac0d9.TextColor3 = Color3.fromRGB(255, 255, 255) _0xbac0d9.PlaceholderColor3 = Color3.fromRGB(150, 150, 150) _0xbac0d9.Font = Enum.Font.SourceSans _0xbac0d9.TextXAlignment = Enum.TextXAlignment.Center _0xbac0d9.TextYAlignment = Enum.TextYAlignment.Center _0xbac0d9.ClearTextOnFocus = false _0xbac0d9.Parent = _0xa4a861 local _0x12273a = Instance.new("UICorner") _0x12273a.CornerRadius = UDim.new(0, 4) _0x12273a.Parent = _0xbac0d9 local _0x565db7 = Instance.new("TextButton") if isForAccordion then _0x565db7.Size = UDim2.new(0, 20, 0, 12) _0x565db7.Position = UDim2.new(1, -22, 0, 1) _0x565db7.TextSize = 8 _0x565db7.ZIndex = 7 else _0x565db7.Size = UDim2.new(0, 25, 0, 14) _0x565db7.Position = UDim2.new(1, -30, 0, 1) _0x565db7.TextSize = 10 _0x565db7.ZIndex = 4 end _0x565db7.BackgroundColor3 = Color3.fromRGB(80, 80, 80) _0x565db7.BorderColor3 = Color3.fromRGB(100, 100, 100) _0x565db7.BorderSizePixel = 1 _0x565db7.Text = "▲" _0x565db7.TextColor3 = Color3.fromRGB(200, 200, 200) _0x565db7.Font = Enum.Font.SourceSans _0x565db7.Parent = _0xa4a861 local _0x3ed765 = Instance.new("TextButton") if isForAccordion then _0x3ed765.Size = UDim2.new(0, 20, 0, 12) _0x3ed765.Position = UDim2.new(1, -22, 0, 13) _0x3ed765.TextSize = 8 _0x3ed765.ZIndex = 7 else _0x3ed765.Size = UDim2.new(0, 25, 0, 14) _0x3ed765.Position = UDim2.new(1, -30, 0, 15) _0x3ed765.TextSize = 10 _0x3ed765.ZIndex = 4 end _0x3ed765.BackgroundColor3 = Color3.fromRGB(80, 80, 80) _0x3ed765.BorderColor3 = Color3.fromRGB(100, 100, 100) _0x3ed765.BorderSizePixel = 1 _0x3ed765.Text = "▼" _0x3ed765.TextColor3 = Color3.fromRGB(200, 200, 200) _0x3ed765.Font = Enum.Font.SourceSans _0x3ed765.Parent = _0xa4a861 local function _0x2f0c34(newValue) newValue = math.max(_0xff3a12, math.min(_0xc3e4d0, newValue)) if _0xa12143 > 0 then local _0xf1d0b7 = 10 ^ _0xa12143 newValue = math.floor(newValue * _0xf1d0b7 + 0.5) / _0xf1d0b7 else newValue = math.floor(newValue + 0.5) end _0x65fb2f = newValue if _0xa12143 > 0 then _0xbac0d9.Text = string.format("%." .. _0xa12143 .. "f", newValue) else _0xbac0d9.Text = tostring(newValue) end if _0xa326f0 then _0xcfc6bd.Flags[_0xa326f0] = _0x65fb2f if _0xcfc6bd.Configuration.Enabled and _0xcfc6bd.Configuration.AutoSave then _0x4663fd(_0xcfc6bd.Configuration.FileName) end end local _0x69fcd6, errorMsg = pcall(function() _0xd28ba7(_0x65fb2f) end) if not _0x69fcd6 then warn("NumberBox callback error:", errorMsg) end return newValue end _0xbac0d9.FocusLost:Connect(function() local _0x98e737 = _0xbac0d9.Text local _0xc8738d = tonumber(_0x98e737) if _0xc8738d then _0x2f0c34(_0xc8738d) else if _0xa12143 > 0 then _0xbac0d9.Text = string.format("%." .. _0xa12143 .. "f", _0x65fb2f) else _0xbac0d9.Text = tostring(_0x65fb2f) end end end) _0x565db7.MouseButton1Click:Connect(function() _0x2f0c34(_0x65fb2f + _0x07445d) end) _0x3ed765.MouseButton1Click:Connect(function() _0x2f0c34(_0x65fb2f - _0x07445d) end) _0x565db7.MouseEnter:Connect(function() _0x565db7.BackgroundColor3 = Color3.fromRGB(100, 100, 100) end) _0x565db7.MouseLeave:Connect(function() _0x565db7.BackgroundColor3 = Color3.fromRGB(80, 80, 80) end) _0x3ed765.MouseEnter:Connect(function() _0x3ed765.BackgroundColor3 = Color3.fromRGB(100, 100, 100) end) _0x3ed765.MouseLeave:Connect(function() _0x3ed765.BackgroundColor3 = Color3.fromRGB(80, 80, 80) end) _0xbac0d9.Focused:Connect(function() _0xbac0d9.BorderColor3 = Color3.fromRGB(100, 150, 250) end) _0xbac0d9.FocusLost:Connect(function() _0xbac0d9.BorderColor3 = Color3.fromRGB(100, 100, 100) end) local _0xdae5df = { GetValue = function() return _0x65fb2f end, SetValue = function(newValue) local _0xc8738d = tonumber(newValue) if _0xc8738d then _0x2f0c34(_0xc8738d) else warn("NumberBox SetValue: Expected number, got " .. type(newValue)) end end, SetMin = function(newMin) _0xff3a12 = tonumber(newMin) or -math.huge _0x2f0c34(_0x65fb2f) end, SetMax = function(newMax) _0xc3e4d0 = tonumber(newMax) or math.huge _0x2f0c34(_0x65fb2f) end, SetIncrement = function(newIncrement) _0x07445d = tonumber(newIncrement) or 1 end, Clear = function() _0x2f0c34(0) end, Focus = function() _0xbac0d9:CaptureFocus() end, Blur = function() _0xbac0d9:ReleaseFocus() end, SetCallback = function(newCallback) _0xd28ba7 = newCallback or function() end end, Set = function(newValue) local _0xc8738d = tonumber(newValue) if _0xc8738d then _0x2f0c34(_0xc8738d) end end } _0x13620f(_0xa326f0, _0xdae5df) return _0xdae5df end local _0x6e6a14 = {} function _0x6e6a14:AddLabel(_0x1c31a7) local _0x6c90ac = _0xb88676(_0x1c31a7, _0xda7e46, _0x167675, nil, nil, nil, false) _0x167675 = _0x167675 + 35 if _0xda7e46 == _0x3849d1 then _0xa85246 = _0x167675 _0xe2e9c7:UpdateWindowSize() end return { SetText = function(newText) _0x6c90ac.Text = newText end, SetColor = function(color) _0x6c90ac.TextColor3 = color end, GetText = function() return _0x6c90ac.Text end } end function _0x6e6a14:AddButton(_0x1c31a7, _0xd28ba7) local _0xdd4ec4 = _0xe3ccbc(_0x1c31a7, _0xd28ba7, _0xda7e46, _0x167675, nil, nil, nil, false) _0x167675 = _0x167675 + 35 if _0xda7e46 == _0x3849d1 then _0xa85246 = _0x167675 _0xe2e9c7:UpdateWindowSize() end end function _0x6e6a14:AddSelectBox(config) local _0x7e7266 = _0x6c1643( config, _0xda7e46, _0x167675, function() if _0xda7e46 == _0x3849d1 then _0xa85246 = _0x167675 _0xe2e9c7:UpdateWindowSize() end end, nil, true, false ) _0x167675 = _0x167675 + 40 if _0xda7e46 == _0x3849d1 then _0xa85246 = _0x167675 _0xe2e9c7:UpdateWindowSize() end return _0x7e7266 end function _0x6e6a14:AddToggle(config) local _0xece53a = _0x6f38cb(config, _0xda7e46, _0x167675, nil, nil, nil, false) _0x167675 = _0x167675 + 35 if _0xda7e46 == _0x3849d1 then _0xa85246 = _0x167675 _0xe2e9c7:UpdateWindowSize() end return _0xece53a end function _0x6e6a14:AddTextBox(config) local _0x6513f7 = _0x21f098(config, _0xda7e46, _0x167675, nil, nil, nil, false) local _0xc3682f = config.Multiline or false _0x167675 = _0x167675 + (_0xc3682f and 90 or 40) if _0xda7e46 == _0x3849d1 then _0xa85246 = _0x167675 _0xe2e9c7:UpdateWindowSize() end return _0x6513f7 end function _0x6e6a14:AddNumberBox(config) local _0xdae5df = _0x364f57(config, _0xda7e46, _0x167675, nil, nil, nil, false) _0x167675 = _0x167675 + 40 if _0xda7e46 == _0x3849d1 then _0xa85246 = _0x167675 _0xe2e9c7:UpdateWindowSize() end return _0xdae5df end function _0x6e6a14:AddSeparator() local _0x7a0785 = _0x79b766(_0xda7e46, _0x167675, nil, nil, nil, false) _0x167675 = _0x167675 + 15 if _0xda7e46 == _0x3849d1 then _0xa85246 = _0x167675 _0xe2e9c7:UpdateWindowSize() end end function _0x6e6a14:AddAccordion(config) local _0xdc3ccb = config.Title or config.Name or "Accordion" local _0x1305fc = config.Expanded ~= nil and config.Expanded or false local _0xd28ba7 = config.Callback or function() end local _0x365861 = config.Icon or "📁" local _0xa9bc1c = _0x1305fc local _0xafceaa = 0 local _0x9b6899 = _0x167675 local _0x4f9196 = Instance.new("Frame") _0x4f9196.Size = UDim2.new(1, -20, 0, 30) _0x4f9196.Position = UDim2.new(0, 10, 0, _0x167675) _0x4f9196.BackgroundTransparency = 1 _0x4f9196.ClipsDescendants = false _0x4f9196.ZIndex = 3 _0x4f9196.Parent = _0xda7e46 _0x4f9196:SetAttribute("AccordionStartY", _0x167675) _0x4f9196:SetAttribute("IsAccordion", true) local _0x3db8d8 = Instance.new("TextButton") _0x3db8d8.Size = UDim2.new(1, 0, 0, 30) _0x3db8d8.Position = UDim2.new(0, 0, 0, 0) _0x3db8d8.BackgroundColor3 = Color3.fromRGB(60, 60, 60) _0x3db8d8.BorderColor3 = Color3.fromRGB(100, 100, 100) _0x3db8d8.BorderSizePixel = 1 _0x3db8d8.Text = "" _0x3db8d8.ZIndex = 4 _0x3db8d8.Parent = _0x4f9196 local _0x1fc342 = Instance.new("TextLabel") _0x1fc342.Size = UDim2.new(0, 30, 1, 0) _0x1fc342.Position = UDim2.new(0, 5, 0, 0) _0x1fc342.BackgroundTransparency = 1 _0x1fc342.Text = _0xa9bc1c and "▼" or "▶" _0x1fc342.TextColor3 = Color3.fromRGB(200, 200, 200) _0x1fc342.TextXAlignment = Enum.TextXAlignment.Center _0x1fc342.Font = Enum.Font.SourceSans _0x1fc342.TextSize = 14 _0x1fc342.ZIndex = 5 _0x1fc342.Parent = _0x3db8d8 local _0x9dfdee = Instance.new("TextLabel") _0x9dfdee.Size = UDim2.new(0, 25, 1, 0) _0x9dfdee.Position = UDim2.new(0, 35, 0, 0) _0x9dfdee.BackgroundTransparency = 1 _0x9dfdee.Text = _0x365861 _0x9dfdee.TextColor3 = Color3.fromRGB(255, 255, 255) _0x9dfdee.TextXAlignment = Enum.TextXAlignment.Center _0x9dfdee.Font = Enum.Font.SourceSans _0x9dfdee.TextSize = 16 _0x9dfdee.ZIndex = 5 _0x9dfdee.Parent = _0x3db8d8 local _0xd03bba = Instance.new("TextLabel") _0xd03bba.Size = UDim2.new(1, -70, 1, 0) _0xd03bba.Position = UDim2.new(0, 65, 0, 0) _0xd03bba.BackgroundTransparency = 1 _0xd03bba.Text = _0xdc3ccb _0xd03bba.TextColor3 = Color3.fromRGB(255, 255, 255) _0xd03bba.TextXAlignment = Enum.TextXAlignment.Left _0xd03bba.Font = Enum.Font.SourceSansBold _0xd03bba.TextSize = 16 _0xd03bba.ZIndex = 5 _0xd03bba.Parent = _0x3db8d8 local _0x382189 = Instance.new("ScrollingFrame") _0x382189.Size = UDim2.new(1, 0, 0, 0) _0x382189.Position = UDim2.new(0, 0, 0, 35) _0x382189.BackgroundColor3 = Color3.fromRGB(45, 45, 45) _0x382189.BorderColor3 = Color3.fromRGB(80, 80, 80) _0x382189.BorderSizePixel = 1 _0x382189.Visible = _0xa9bc1c _0x382189.CanvasSize = UDim2.new(0, 0, 0, 0) _0x382189.ScrollBarThickness = 6 _0x382189.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120) _0x382189.ScrollingDirection = Enum.ScrollingDirection.Y _0x382189.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar _0x382189.ZIndex = 4 _0x382189.Parent = _0x4f9196 local _0x6c9cfe = Instance.new("UICorner") _0x6c9cfe.CornerRadius = UDim.new(0, 4) _0x6c9cfe.Parent = _0x382189 local _0x73221a = Instance.new("UIPadding") _0x73221a.PaddingTop = UDim.new(0, 8) _0x73221a.PaddingBottom = UDim.new(0, 8) _0x73221a.PaddingLeft = UDim.new(0, 8) _0x73221a.PaddingRight = UDim.new(0, 8) _0x73221a.Parent = _0x382189 local _0xf3ff1e = Instance.new("UIListLayout") _0xf3ff1e.SortOrder = Enum.SortOrder.LayoutOrder _0xf3ff1e.Padding = UDim.new(0, 5) _0xf3ff1e.Parent = _0x382189 local _0x79842d = 10 local function _0xdae0ce() local _0x4dcf76 = _0x4f9196.Position.Y.Offset + _0x4f9196.Size.Y.Offset local _0xc5b74c = _0x4f9196.Size.Y.Offset - 35 for _, child in pairs(_0xda7e46:GetChildren()) do if child:IsA("GuiObject") and child ~= _0x4f9196 then local _0x2334e5 = child.Position.Y.Offset local _0xbc95e7 = _0x9b6899 + 35 if _0x2334e5 > _0xbc95e7 then local _0x1cc194 = _0x9b6899 + _0x4f9196.Size.Y.Offset + 5 + (_0x2334e5 - _0xbc95e7 - 5) child.Position = UDim2.new(child.Position.X.Scale, child.Position.X.Offset, 0, _0x1cc194) end end end end local function _0xbd32f2() local _0x75577e = 10 for _, child in pairs(_0xda7e46:GetChildren()) do if child:IsA("GuiObject") then local _0x7b05c7 = child.Position.Y.Offset + child.Size.Y.Offset _0x75577e = math.max(_0x75577e, _0x7b05c7) end end _0x167675 = _0x75577e + 10 if _0xda7e46 == _0x3849d1 then _0xa85246 = _0x167675 _0xe2e9c7:UpdateWindowSize() end end local function _0x7f1472() _0x382189.CanvasSize = UDim2.new(0, 0, 0, _0x79842d + 10) _0xafceaa = math.min(_0x79842d + 20, 150) local _0x47890b = 35 + (_0xa9bc1c and _0xafceaa or 0) _0x4f9196.Size = UDim2.new(1, -20, 0, _0x47890b) if _0xa9bc1c then _0x382189.Size = UDim2.new(1, 0, 0, _0xafceaa) end _0xdae0ce() _0xbd32f2() end local function _0x0c224b() local _0x821687 = game:GetService("TweenService") local _0x837bbc = _0x4f9196.Size.Y.Offset local _0xcd21d9 = _0xa9bc1c and _0xafceaa or 0 local _0xf04aa8 = 35 + _0xcd21d9 local _0xfc0bda = _0xf04aa8 - _0x837bbc local _0xc6b531 = {} local _0xd9b418 = _0x4f9196.Position.Y.Offset + _0x837bbc for _, child in pairs(_0xda7e46:GetChildren()) do if child:IsA("GuiObject") and child ~= _0x4f9196 then local _0x8cc893 = child.Position.Y.Offset if _0x8cc893 > _0xd9b418 then table.insert(_0xc6b531, { component = child, _0xa85246 = _0x8cc893, targetY = _0x8cc893 + _0xfc0bda }) end end end _0x1fc342.Text = _0xa9bc1c and "▼" or "▶" if _0xa9bc1c then _0x382189.Visible = true end local _0xb172b5 = _0x821687:Create( _0x4f9196, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, -20, 0, _0xf04aa8)} ) local _0x6697bf = _0x821687:Create( _0x382189, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, _0xcd21d9)} ) for _, componentData in ipairs(_0xc6b531) do local _0xfff7c7 = _0x821687:Create( componentData.component, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(componentData.component.Position.X.Scale, componentData.component.Position.X.Offset, 0, componentData.targetY)} ) _0xfff7c7:Play() end _0xb172b5:Play() _0x6697bf:Play() if not _0xa9bc1c then _0xb172b5.Completed:Connect(function() _0x382189.Visible = false end) end _0xb172b5.Completed:Connect(function() _0xbd32f2() end) end _0x3db8d8.MouseButton1Click:Connect(function() _0xa9bc1c = not _0xa9bc1c local _0x69fcd6, errorMsg = pcall(function() _0xd28ba7(_0xa9bc1c) end) if not _0x69fcd6 then warn("Accordion callback error:", errorMsg) end _0x0c224b() end) _0x3db8d8.MouseEnter:Connect(function() _0x3db8d8.BackgroundColor3 = Color3.fromRGB(70, 70, 70) end) _0x3db8d8.MouseLeave:Connect(function() _0x3db8d8.BackgroundColor3 = Color3.fromRGB(55, 55, 55) end) _0x167675 = _0x167675 + 40 local _0x6107b2 = {} function _0x6107b2:AddLabel(_0x1c31a7) local _0x6c90ac = _0xb88676(_0x1c31a7, _0x382189, _0x79842d, _0x7f1472, _0x0c224b, _0xa9bc1c, true) _0x79842d = _0x79842d + 30 _0x7f1472() if _0xa9bc1c then _0x0c224b() end return { SetText = function(newText) _0x6c90ac.Text = newText end, SetColor = function(color) _0x6c90ac.TextColor3 = color end, GetText = function() return _0x6c90ac.Text end } end function _0x6107b2:AddButton(_0x1c31a7, buttonCallback) local _0xdd4ec4 = _0xe3ccbc(_0x1c31a7, buttonCallback, _0x382189, _0x79842d, _0x7f1472, _0x0c224b, _0xa9bc1c, true) _0x79842d = _0x79842d + 30 _0x7f1472() if _0xa9bc1c then _0x0c224b() end end function _0x6107b2:AddSelectBox(config) local _0x7e7266 = _0x6c1643( config, _0x382189, _0x79842d, _0x7f1472, _0x0c224b, _0xa9bc1c, true ) _0x79842d = _0x79842d + 35 _0x7f1472() if _0xa9bc1c then _0x0c224b() end return _0x7e7266 end function _0x6107b2:AddSeparator() local _0x7a0785 = _0x79b766(_0x382189, _0x79842d, _0x7f1472, _0x0c224b, _0xa9bc1c, true) _0x79842d = _0x79842d + 15 _0x7f1472() if _0xa9bc1c then _0x0c224b() end end function _0x6107b2:AddToggle(config) local _0xece53a = _0x6f38cb(config, _0x382189, _0x79842d, _0x7f1472, _0x0c224b, _0xa9bc1c, true) _0x79842d = _0x79842d + 30 _0x7f1472() if _0xa9bc1c then _0x0c224b() end return _0xece53a end function _0x6107b2:AddTextBox(config) local _0x6513f7 = _0x21f098(config, _0x382189, _0x79842d, _0x7f1472, _0x0c224b, _0xa9bc1c, true) local _0xc3682f = config.Multiline or false _0x79842d = _0x79842d + (_0xc3682f and 70 or 35) _0x7f1472() if _0xa9bc1c then _0x0c224b() end return _0x6513f7 end function _0x6107b2:AddNumberBox(config) local _0xdae5df = _0x364f57(config, _0x382189, _0x79842d, _0x7f1472, _0x0c224b, _0xa9bc1c, true) _0x79842d = _0x79842d + 35 _0x7f1472() if _0xa9bc1c then _0x0c224b() end return _0xdae5df end if _0xa9bc1c then _0x7f1472() _0x0c224b() end return { Expand = function() if not _0xa9bc1c then _0xa9bc1c = true _0x0c224b() local _0x69fcd6, errorMsg = pcall(function() _0xd28ba7(_0xa9bc1c) end) if not _0x69fcd6 then warn("Accordion callback error:", errorMsg) end end end, Collapse = function() if _0xa9bc1c then _0xa9bc1c = false _0x0c224b() local _0x69fcd6, errorMsg = pcall(function() _0xd28ba7(_0xa9bc1c) end) if not _0x69fcd6 then warn("Accordion callback error:", errorMsg) end end end, Toggle = function() _0xa9bc1c = not _0xa9bc1c _0x0c224b() local _0x69fcd6, errorMsg = pcall(function() _0xd28ba7(_0xa9bc1c) end) if not _0x69fcd6 then warn("Accordion callback error:", errorMsg) end return _0xa9bc1c end, IsExpanded = function() return _0xa9bc1c end, SetTitle = function(newTitle) _0xdc3ccb = newTitle _0xd03bba.Text = newTitle end, SetIcon = function(newIcon) _0x365861 = newIcon _0x9dfdee.Text = newIcon end, AddLabel = _0x6107b2.AddLabel, AddButton = _0x6107b2.AddButton, AddSelectBox = _0x6107b2.AddSelectBox, AddSeparator = _0x6107b2.AddSeparator, AddToggle = _0x6107b2.AddToggle, AddTextBox = _0x6107b2.AddTextBox, AddNumberBox = _0x6107b2.AddNumberBox } end _0x44a894.MouseButton1Click:Connect(function() for _, content in pairs(_0xc7ef29) do content.Visible = false end for _, btn in pairs(_0x1e2280:GetChildren()) do if btn:IsA("TextButton") then btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50) end end _0xda7e46.Visible = true _0x44a894.BackgroundColor3 = Color3.fromRGB(70, 70, 70) _0x3849d1 = _0xda7e46 _0xb786ff = _0x034103 _0x9e3c4b = _0xda7e46 _0xa85246 = _0x167675 _0xe2e9c7:UpdateWindowSize() if tabCallback then local _0x69fcd6, errorMsg = pcall(function() tabCallback(_0x034103, true) end) if not _0x69fcd6 then warn("Tab callback error:", errorMsg) end end end) if not _0x3849d1 then _0xda7e46.Visible = true _0x3849d1 = _0xda7e46 _0xb786ff = _0x034103 _0x9e3c4b = _0xda7e46 _0xa85246 = _0x167675 _0x44a894.BackgroundColor3 = Color3.fromRGB(70, 70, 70) _0xe2e9c7:UpdateWindowSize() end local _0x42e723 = {} for key, _0x25d758 in pairs(_0x6e6a14) do _0x42e723[key] = _0x25d758 end function _0x42e723:SetVisible(visible) _0x44a894.Visible = visible tabVisible = visible end function _0x42e723:GetVisible() return tabVisible end function _0x42e723:SetTitle(newTitle) _0x034103 = newTitle _0x15da17.Text = newTitle end function _0x42e723:GetTitle() return _0x034103 end function _0x42e723:SetIcon(newIcon) tabIcon = newIcon _0xef60fe.Text = newIcon or "" _0x1317b5() end function _0x42e723:GetIcon() return tabIcon end function _0x42e723:Activate() for _, content in pairs(_0xc7ef29) do content.Visible = false end for _, btn in pairs(_0x1e2280:GetChildren()) do if btn:IsA("TextButton") then btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50) end end _0xda7e46.Visible = true _0x44a894.BackgroundColor3 = Color3.fromRGB(70, 70, 70) _0x3849d1 = _0xda7e46 _0xb786ff = _0x034103 _0x9e3c4b = _0xda7e46 _0xa85246 = _0x167675 _0xe2e9c7:UpdateWindowSize() if tabCallback then local _0x69fcd6, errorMsg = pcall(function() tabCallback(_0x034103, true) end) if not _0x69fcd6 then warn("Tab callback error:", errorMsg) end end end function _0x42e723:IsActive() return _0x3849d1 == _0xda7e46 end function _0x42e723:SetCallback(newCallback) tabCallback = newCallback end return _0x42e723 end function _0xe2e9c7:SetOpacity(opacity) _0x61b241 = math.max(0.1, math.min(1.0, opacity)) local _0xb05d7f = 1 - _0x61b241 _0xdb2c75.BackgroundTransparency = _0xb05d7f _0x89cc9b.BackgroundTransparency = _0xb05d7f _0xc664f6.BackgroundTransparency = _0xb05d7f end function _0xe2e9c7:GetOpacity() return _0x61b241 end function _0xe2e9c7:FadeIn(duration) duration = duration or 0.3 local _0x821687 = game:GetService("TweenService") local _0xebf55b = 1 - _0x61b241 _0xdb2c75.BackgroundTransparency = 1 _0x89cc9b.BackgroundTransparency = 1 _0xc664f6.BackgroundTransparency = 1 local _0x6ce39b = TweenInfo.new(duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out) local _0xfcb8aa = _0x821687:Create(_0xdb2c75, _0x6ce39b, {BackgroundTransparency = _0xebf55b}) local _0xddcd89 = _0x821687:Create(_0x89cc9b, _0x6ce39b, {BackgroundTransparency = _0xebf55b}) local _0xfd7b6f = _0x821687:Create(_0xc664f6, _0x6ce39b, {BackgroundTransparency = _0xebf55b}) _0xfcb8aa:Play() _0xddcd89:Play() _0xfd7b6f:Play() end function _0xe2e9c7:FadeOut(duration) duration = duration or 0.3 local _0x821687 = game:GetService("TweenService") local _0x6ce39b = TweenInfo.new(duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out) local _0xfcb8aa = _0x821687:Create(_0xdb2c75, _0x6ce39b, {BackgroundTransparency = 1}) local _0xddcd89 = _0x821687:Create(_0x89cc9b, _0x6ce39b, {BackgroundTransparency = 1}) local _0xfd7b6f = _0x821687:Create(_0xc664f6, _0x6ce39b, {BackgroundTransparency = 1}) _0xfcb8aa:Play() _0xddcd89:Play() _0xfd7b6f:Play() end function _0xe2e9c7:Show() _0xe1ab6b.Enabled = true _0x5a5dbd.Visible = false end function _0xe2e9c7:Hide() _0xe1ab6b.Enabled = false _0x5a5dbd.Visible = true end function _0xe2e9c7:IsVisible() return _0xe1ab6b.Enabled end function _0xe2e9c7:ToggleVisibility() _0xe1ab6b.Enabled = not _0xe1ab6b.Enabled _0x5a5dbd.Visible = not _0xe1ab6b.Enabled return _0xe1ab6b.Enabled end function _0xe2e9c7:AdaptToViewport() local _0xb9d630 = _0x40fc24() local _0xcfd714 = config.Width or (_0xb9d630.X * 0.3) local _0x5a8928 = config.Height or (_0xb9d630.Y * 0.4) local _0xe95465 = 1 if _0xb9d630.X >= 1920 then _0xe95465 = 1.2 elseif _0xb9d630.X >= 1366 then _0xe95465 = 1.0 elseif _0xb9d630.X >= 1024 then _0xe95465 = 0.9 else _0xe95465 = 0.8 end local _0xc93751 = math.max(250, math.min(_0xb9d630.X * 0.8, _0xcfd714 * _0xe95465)) local _0x435644 = math.max(150, math.min(_0xb9d630.Y * 0.8, _0x5a8928 * _0xe95465)) _0xdb2c75.Size = UDim2.new(0, _0xc93751, 0, _0x435644) _0xdb2c75.Position = UDim2.new(0.5, -_0xc93751 / 2, 0.5, -_0x435644 / 2) end function _0xe2e9c7:GetDynamicSize() local _0xb9d630 = _0x40fc24() return { Width = _0xdb2c75.Size.X.Offset, Height = _0xdb2c75.Size.Y.Offset, ViewportWidth = _0xb9d630.X, ViewportHeight = _0xb9d630.Y } end function _0xe2e9c7:SetSize(width, height) local _0x15897b = _0x40fc24() width = math.max(300, math.min(width, _0x15897b.X * 0.9)) height = math.max(200, math.min(height, _0x15897b.Y * 0.9)) _0xdb2c75.Size = UDim2.new(0, width, 0, height) if _0x9e3c4b then _0xee4222.CanvasSize = UDim2.new(0, 0, 0, _0xa85246 + 10) end return {Width = width, Height = height} end workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function() if config.AutoAdapt ~= false then wait(0.1) _0xe2e9c7:AdaptToViewport() end end) local _0x0430dc = nil function _0xe2e9c7:SetCloseCallback(_0xd28ba7) _0x0430dc = _0xd28ba7 end function _0xe2e9c7:Close() if _0x0430dc then local _0x69fcd6, errorMsg = pcall(function() _0x0430dc() end) if not _0x69fcd6 then warn("Close callback error:", errorMsg) end end if _0xe1ab6b then _0xe1ab6b:Destroy() end end function _0xe2e9c7:SaveConfiguration() if _0xf4521e then _0x4663fd(_0x7a6e41) else warn("EzUI: Configuration saving is not enabled for this window") end end function _0xe2e9c7:LoadConfiguration() if _0xf4521e then return _0xa8a7eb(_0x7a6e41) else warn("EzUI: Configuration saving is not enabled for this window") return false end end function _0xe2e9c7:GetConfigurationStatus() return { Enabled = _0xf4521e, FileName = _0x7a6e41, FolderName = _0x7e9d76, AutoSave = _0x7baef2, AutoLoad = _0x7a6342, FlagsCount = #_0xcfc6bd.Flags } end function _0xe2e9c7:SetConfigValue(key, _0x25d758) if not key then warn("EzUI: SetConfigValue requires a key parameter") return false end _0xcfc6bd.Flags[key] = _0x25d758 if _0xf4521e and _0x7baef2 then _0x4663fd(_0x7a6e41) end _0x3a40ad(key, _0x25d758) return true end function _0xe2e9c7:GetConfigValue(key, _0x739cd2) if not key then warn("EzUI: GetConfigValue requires a key parameter") return _0x739cd2 end local _0x25d758 = _0xcfc6bd.Flags[key] return _0x25d758 ~= nil and _0x25d758 or _0x739cd2 end function _0xe2e9c7:DeleteConfigValue(key) if not key then warn("EzUI: DeleteConfigValue requires a key parameter") return false end if _0xcfc6bd.Flags[key] ~= nil then _0xcfc6bd.Flags[key] = nil if _0xf4521e and _0x7baef2 then _0x4663fd(_0x7a6e41) end return true end return false end function _0xe2e9c7:HasConfigValue(key) if not key then warn("EzUI: HasConfigValue requires a key parameter") return false end return _0xcfc6bd.Flags[key] ~= nil end function _0xe2e9c7:GetAllConfigValues() local _0x9f3d69 = {} for key, _0x25d758 in pairs(_0xcfc6bd.Flags) do _0x9f3d69[key] = _0x25d758 end return _0x9f3d69 end function _0xe2e9c7:ClearAllConfigValues() for key in pairs(_0xcfc6bd.Flags) do _0xcfc6bd.Flags[key] = nil end if _0xf4521e and _0x7baef2 then _0x4663fd(_0x7a6e41) end return true end function _0xe2e9c7:SetMultipleConfigValues(keyValuePairs) if type(keyValuePairs) ~= "table" then warn("EzUI: SetMultipleConfigValues requires a table parameter") return false end local _0x09b3d4 = {} for key, _0x25d758 in pairs(keyValuePairs) do if type(key) == "string" then _0xcfc6bd.Flags[key] = _0x25d758 table.insert(_0x09b3d4, key) _0x3a40ad(key, _0x25d758) end end if _0xf4521e and _0x7baef2 then _0x4663fd(_0x7a6e41) end return _0x09b3d4 end _0x2a9e44.MouseButton1Click:Connect(function() _0xe2e9c7:Close() end) local _0x693be5 = _0x079a25.InputBegan:Connect(function(input, gameProcessed) if not gameProcessed and input.KeyCode == Enum.KeyCode.Escape then _0xe2e9c7:Close() end end) local function _0xf671a3() if _0x693be5 then _0x693be5:Disconnect() _0x693be5 = nil end end local _0x163b8f = _0xe2e9c7.Close _0xe2e9c7.Close = function(self) _0xf671a3() _0x163b8f(self) end if _0xf4521e and _0x7a6342 then task.defer(function() local _0x1ffc0d = _0xa8a7eb(_0x7a6e41) if _0x1ffc0d then print("EzUI: Auto-loaded configuration for " .. _0x7a6e41) end end) end return _0xe2e9c7 end return _0xcfc6bd end _0xfbbdec["../module/player.lua"] = function() local _0xb73f3b = {} local _0xa090b6 local _0x3972ce local _0x3effd9 = { Queue = {}, IsProcessing = false, CurrentTask = nil } function _0xb73f3b:Init(_core) if not _core then error("Player:Init - Core module is required") end _0xa090b6 = _core _0x3972ce = _core.LocalPlayer.Idled:Connect(function() _core.VirtualUser:CaptureController() _core.VirtualUser:ClickButton2(Vector2.new()) print("Anti-AFK: Clicked to prevent idle kick") end) _0x3effd9.Queue = {} _0x3effd9.IsProcessing = false _0x3effd9.CurrentTask = nil end function _0xb73f3b:RemoveAntiAFK() if _0x3972ce then _0x3972ce:Disconnect() _0x3972ce = nil print("Anti-AFK: Disconnected idle connection") else print("Anti-AFK: No connection to disconnect") end end function _0xb73f3b:AddToQueue(_tool, _priority, _taskFunction, _callback) _priority = _priority or 5 if not _tool or not _tool:IsA("Tool") then warn("Player:AddToQueue - Invalid tool provided") if _callback then _callback(false, "Invalid tool") end return false end local task = { Id = tick(), Tool = _tool, Priority = _priority, TaskFunction = _taskFunction, Callback = _callback, Timestamp = tick() } table.insert(_0x3effd9.Queue, task) print("🔧 Added tool to queue:", _tool.Name, "Priority:", _priority, "Queue size:", #_0x3effd9.Queue) if not _0x3effd9.IsProcessing then print("🔧 Queue is already processing or empty, skipping...", self:GetQueueStatus()) self:ProcessQueue() end return true end function _0xb73f3b:ProcessQueue() if _0x3effd9.IsProcessing or #_0x3effd9.Queue == 0 then print("🔧 Queue is already processing or empty, skipping...", self:GetQueueStatus()) return end _0x3effd9.IsProcessing = true while #_0x3effd9.Queue > 0 do table.sort(_0x3effd9.Queue, function(a, b) if a.Priority == b.Priority then return a.Timestamp < b.Timestamp end return a.Priority < b.Priority end) local _0x473810 = table.remove(_0x3effd9.Queue, 1) _0x3effd9.CurrentTask = _0x473810 print("🔧 Processing tool queue task:", _0x473810.Tool.Name) if self:GetEquippedTool() ~= _0x473810.Tool then self:EquipTool(_0x473810.Tool) task.wait(0.5) end local _0x69fcd6, _0x5f929f = pcall(function() return _0x473810.TaskFunction() end) if _0x473810.Callback then local _0x5de1fe, callbackErr = pcall(_0x473810.Callback, _0x69fcd6, _0x5f929f) if not _0x5de1fe then warn("Callback error for tool:", _0x473810.Tool.Name, "Error:", callbackErr) end end print("Task execution finished") self:UnequipTool() _0x3effd9.CurrentTask = nil task.wait(0.1) end _0x3effd9.IsProcessing = false print("🔧 Queue processing completed") end function _0xb73f3b:GetQueueStatus() return { queueSize = #_0x3effd9.Queue, isProcessing = _0x3effd9.IsProcessing, _0x473810 = _0x3effd9.CurrentTask and _0x3effd9.CurrentTask.Tool.Name or nil } end function _0xb73f3b:ClearQueue() _0x3effd9.Queue = {} _0x3effd9.IsProcessing = false _0x3effd9.CurrentTask = nil print("🔧 Tool queue cleared") end function _0xb73f3b:RemoveFromQueue(_toolName) if not _toolName then return false end for i = #_0x3effd9.Queue, 1, -1 do if _0x3effd9.Queue[i].Tool.Name == _toolName then table.remove(_0x3effd9.Queue, i) print("🔧 Removed from queue:", _toolName) return true end end return false end function _0xb73f3b:GetTaskByTool(_tool) local _0x92b33b = {} if not _tool then return nil end for _, task in ipairs(_0x3effd9.Queue) do if task.Tool == _tool then table.insert(_0x92b33b, task) end end return #_0x92b33b > 0 and _0x92b33b or nil end function _0xb73f3b:EquipTool(_tool) if not _tool or not _tool:IsA("Tool") then warn("Player:EquipTool - Invalid tool provided") return false end local _0x47be9f = _0xa090b6:GetHumanoid() local _0x55bbc2 = _0xa090b6:GetBackpack() if not _0x47be9f then warn("Player:EquipTool - Humanoid not found") return false end if not _0x55bbc2 then warn("Player:EquipTool - Backpack not found") return false end if _tool.Parent ~= _0x55bbc2 then warn("Player:EquipTool - Tool not in backpack") return false end local _0x69fcd6, err = pcall(function() _0x47be9f:EquipTool(_tool) end) if not _0x69fcd6 then warn("Player:EquipTool - Failed to equip:", err) return false end return true end function _0xb73f3b:UnequipTool() local _0x47be9f = _0xa090b6:GetHumanoid() if not _0x47be9f then warn("Player:UnequipTool - Humanoid not found") return false end local _0x69fcd6, err = pcall(function() _0x47be9f:UnequipTools() end) if not _0x69fcd6 then warn("Player:UnequipTool - Failed to unequip:", err) return false end return true end function _0xb73f3b:GetEquippedTool() local _0x4a2fe9 = _0xa090b6:GetCharacter() if not _0x4a2fe9 then warn("Player:GetEquippedTool - Character not found") return nil end for _, item in ipairs(_0x4a2fe9:GetChildren()) do if item:IsA("Tool") then return item end end return nil end function _0xb73f3b:MoveToPosition(_position) local _0x47be9f = _0xa090b6:GetHumanoid() if _0x47be9f then _0x47be9f:MoveTo(_position) else warn("Player:MoveToPosition - Humanoid not found") end end function _0xb73f3b:TeleportToPosition(_position) local _0xe92674 = _0xa090b6:GetHumanoidRootPart() if _0xe92674 then _0xe92674.CFrame = CFrame.new(_position) return true end return false end function _0xb73f3b:GetPosition() local _0xe92674 = _0xa090b6:GetHumanoidRootPart() return _0xe92674 and _0xe92674.Position or Vector3.new(0, 0, 0) end function _0xb73f3b:GetAllTools() local _0x55bbc2 = _0xa090b6:GetBackpack() if not _0x55bbc2 then warn("Player:GetAllTools - Backpack not found") return {} end local _0x26029e = {} local _0x69fcd6, err = pcall(function() for _, item in ipairs(_0x55bbc2:GetChildren()) do if item:IsA("Tool") then table.insert(_0x26029e, item) end end end) if not _0x69fcd6 then warn("Player:GetAllTools - Error getting tools:", err) return {} end return _0x26029e end function _0xb73f3b:GetTool(_toolName) if not _toolName or type(_toolName) ~= "string" then warn("Player:GetTool - Invalid tool name") return nil end local _0x55bbc2 = _0xa090b6:GetBackpack() if not _0x55bbc2 then warn("Player:GetTool - Backpack not found") return nil end local _0x32f8a4 = nil local _0x69fcd6, err = pcall(function() _0x32f8a4 = _0x55bbc2:FindFirstChild(_toolName) if _0x32f8a4 and not _0x32f8a4:IsA("Tool") then _0x32f8a4 = nil end end) if not _0x69fcd6 then warn("Player:GetTool - Error finding tool:", err) return nil end if not _0x32f8a4 then warn("Player:GetTool - Tool not found:", _toolName) end return _0x32f8a4 end return _0xb73f3b end _0xfbbdec["farm/garden.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0xa090b6 local _0x38f402 local _0xf516a1 local _0xd6b297 = false local _0x34733f local _0xefc1ee local _0x7bfc64 local _0x914fbd _0xb73f3b.MailboxPosition = Vector3.new(0, 0, 0) function _0xb73f3b:Init(_window, _core, _player) _0x7ae931 = _window _0xa090b6 = _core _0x38f402 = _player local _0x27951d = self:GetMyFarm():FindFirstChild("Important") _0x914fbd = _0x27951d:FindFirstChild("Plant_Locations") local _0x7d3590 = self:GetMyFarm():FindFirstChild("Mailbox") if _0x7d3590 then _0xb73f3b.MailboxPosition = _0x7d3590:GetPivot().Position end end function _0xb73f3b:GetMyFarm() local _0xe77a09 = _0xa090b6.Workspace.Farm:GetChildren() for _, farm in next, _0xe77a09 do local _0x27951d = farm.Important local _0x05951f = _0x27951d.Data local _0xb52b34 = _0x05951f.Owner if _0xb52b34.Value == _0xa090b6.LocalPlayer.Name then return farm end end end function _0xb73f3b:GetArea(_base) local _0x70cfed = _base:GetPivot() local _0xe81345 = _base.Size local _0x98beb5 = math.ceil(_0x70cfed.X - (_0xe81345.X/2)) local _0x4d1587 = math.ceil(_0x70cfed.Z - (_0xe81345.Z/2)) local _0x8bf730 = math.floor(_0x70cfed.X + (_0xe81345.X/2)) local _0xae3527 = math.floor(_0x70cfed.Z + (_0xe81345.Z/2)) return _0x98beb5, _0x4d1587, _0x8bf730, _0xae3527 end function _0xb73f3b:GetFarmCenterPosition() local _0x1caae7 = _0x914fbd:GetChildren() if #_0x1caae7 < 1 then return Vector3.new(0, 4, 0) end local _0xc83fef, totalZ = 0, 0 local _0x019022 = 4 local _0xe903f5 = 0 for _, part in pairs(_0x1caae7) do if part:IsA("BasePart") then local _0x01e097 = part.Position _0xc83fef = _0xc83fef + _0x01e097.X totalZ = totalZ + _0x01e097.Z _0x019022 = math.max(_0x019022, _0x01e097.Y + part.Size.Y/2) _0xe903f5 = _0xe903f5 + 1 end end if _0xe903f5 > 0 then local _0xe0b110 = _0xc83fef / _0xe903f5 local _0xa83915 = totalZ / _0xe903f5 return Vector3.new(_0xe0b110, _0x019022, _0xa83915) end end function _0xb73f3b:GetFarmFrontRightPosition() local _0x1caae7 = _0x914fbd:GetChildren() if #_0x1caae7 < 1 then return Vector3.new(0, 4, 0) end local _0x4c1604 = _0x1caae7[1] if _0xb73f3b.MailboxPosition.Z > 0 then if _0x1caae7[1]:GetPivot().X > _0x1caae7[2]:GetPivot().X then _0x4c1604 = _0x1caae7[2] end else if _0x1caae7[1]:GetPivot().X < _0x1caae7[2]:GetPivot().X then _0x4c1604 = _0x1caae7[2] end end local _0x98beb5, _0x4d1587, _0x8bf730, _0xae3527 = self:GetArea(_0x4c1604) local _0x15f11a = math.max(_0x98beb5, _0x8bf730) local _0x23743d = math.max(_0x4d1587, _0xae3527) if _0xb73f3b.MailboxPosition.Z > 0 then _0x15f11a = math.min(_0x98beb5, _0x8bf730) _0x23743d = math.min(_0x4d1587, _0xae3527) end return Vector3.new(_0x15f11a, 4, _0x23743d) end function _0xb73f3b:GetFarmFrontLeftPosition() local _0x1caae7 = _0x914fbd:GetChildren() if #_0x1caae7 < 1 then return Vector3.new(0, 4, 0) end local _0x4c1604 = _0x1caae7[1] if _0xb73f3b.MailboxPosition.Z > 0 then if _0x1caae7[1]:GetPivot().X < _0x1caae7[2]:GetPivot().X then _0x4c1604 = _0x1caae7[2] end else if _0x1caae7[1]:GetPivot().X > _0x1caae7[2]:GetPivot().X then _0x4c1604 = _0x1caae7[2] end end local _0x98beb5, _0x4d1587, _0x8bf730, _0xae3527 = self:GetArea(_0x4c1604) local _0x15f11a = math.min(_0x98beb5, _0x8bf730) local _0x23743d = math.max(_0x4d1587, _0xae3527) if _0xb73f3b.MailboxPosition.Z > 0 then _0x15f11a = math.max(_0x98beb5, _0x8bf730) _0x23743d = math.min(_0x4d1587, _0xae3527) end return Vector3.new(_0x15f11a, 4, _0x23743d) end function _0xb73f3b:GetFarmBackRightPosition() local _0x1caae7 = _0x914fbd:GetChildren() if #_0x1caae7 < 1 then return Vector3.new(0, 4, 0) end local _0x4c1604 = _0x1caae7[1] if _0xb73f3b.MailboxPosition.Z > 0 then if _0x1caae7[1]:GetPivot().X > _0x1caae7[2]:GetPivot().X then _0x4c1604 = _0x1caae7[2] end else if _0x1caae7[1]:GetPivot().X < _0x1caae7[2]:GetPivot().X then _0x4c1604 = _0x1caae7[2] end end local _0x98beb5, _0x4d1587, _0x8bf730, _0xae3527 = self:GetArea(_0x4c1604) local _0x15f11a = math.max(_0x98beb5, _0x8bf730) local _0x23743d = math.min(_0x4d1587, _0xae3527) if _0xb73f3b.MailboxPosition.Z > 0 then _0x15f11a = math.min(_0x98beb5, _0x8bf730) _0x23743d = math.max(_0x4d1587, _0xae3527) end return Vector3.new(_0x15f11a, 4, _0x23743d) end function _0xb73f3b:GetFarmBackLeftPosition() local _0x1caae7 = _0x914fbd:GetChildren() if #_0x1caae7 < 1 then return Vector3.new(0, 4, 0) end local _0x4c1604 = _0x1caae7[1] if _0xb73f3b.MailboxPosition.Z > 0 then if _0x1caae7[1]:GetPivot().X < _0x1caae7[2]:GetPivot().X then _0x4c1604 = _0x1caae7[2] end else if _0x1caae7[1]:GetPivot().X > _0x1caae7[2]:GetPivot().X then _0x4c1604 = _0x1caae7[2] end end local _0x98beb5, _0x4d1587, _0x8bf730, _0xae3527 = self:GetArea(_0x4c1604) local _0x15f11a = math.min(_0x98beb5, _0x8bf730) local _0x23743d = math.min(_0x4d1587, _0xae3527) if _0xb73f3b.MailboxPosition.Z > 0 then _0x15f11a = math.max(_0x98beb5, _0x8bf730) _0x23743d = math.max(_0x4d1587, _0xae3527) end return Vector3.new(_0x15f11a, 4, _0x23743d) end function _0xb73f3b:GetFarmRandomPosition() local _0x1caae7 = _0x914fbd:GetChildren() if #_0x1caae7 < 1 then return Vector3.new(0, 4, 0) end local _0xed0fd0 = _0x1caae7[math.random(1, #_0x1caae7)] local _0x98beb5, _0x4d1587, _0x8bf730, _0xae3527 = self:GetArea(_0xed0fd0) local _0x15f11a = math.random(_0x98beb5, _0x8bf730) local _0x23743d = math.random(_0x4d1587, _0xae3527) return Vector3.new(_0x15f11a, 4, _0x23743d) end return _0xb73f3b end _0xfbbdec["shop/shop.lua"] = function() local _0xb73f3b = {} local _0xa090b6 function _0xb73f3b:Init(_core) _0xa090b6 = _core end function _0xb73f3b:ConnectToStock(item, buyFunction) task.wait(0.1) local _0x1cb1b1 = item:FindFirstChild("Main_Frame") if not _0x1cb1b1 then return end local _0x367a8d = _0x1cb1b1:FindFirstChild("Stock_Text") if not _0x367a8d then return end print("Connecting to stock changes for", item.Name) local _0x83da25 = _0x367a8d:GetPropertyChangedSignal("Text"):Connect(function() print("Stock changed for", item.Name, "New stock:", _0x367a8d.Text) local _0x1bda19 = tonumber(_0x367a8d.Text:match("%d+")) if _0x1bda19 and _0x1bda19 > 0 then pcall(buyFunction) end end) return _0x83da25 end function _0xb73f3b:GetListItems(_shopUI) local _0xb3c852 = _0xa090b6:GetPlayerGui():FindFirstChild(_shopUI) if not _0xb3c852 then warn("Shop UI not found") return nil end local _0x437f83 = _0xb3c852.Frame.ScrollingFrame:GetChildren() if not _0x437f83 then warn("Item frame not found in Shop") return nil end local _0x06a9a2 = {} for _, item in pairs(_0x437f83) do if item:FindFirstChild("Main_Frame") then table.insert(_0x06a9a2, item) end end return _0x06a9a2 end function _0xb73f3b:GetItemDetail(_item) if not _item then warn("Invalid item") return nil end local _0x1cb1b1 = _item:FindFirstChild("Main_Frame") if not _0x1cb1b1 then warn("Main frame not found in item") return nil end local _0x565864 = _0x1cb1b1:FindFirstChild("Price_Text") if not _0x565864 then warn("Price text not found in item") return nil end local _0x367a8d = _0x1cb1b1:FindFirstChild("Stock_Text") if not _0x367a8d then warn("Stock text not found in item") return nil end local _0xa89595 = _item.Name local _0x672348 = tonumber(_0x565864.Text:match("%d+")) local _0x1bda19 = tonumber(_0x367a8d.Text:match("%d+")) return { Name = _0xa89595, Price = _0x672348, Stock = _0x1bda19 } end function _0xb73f3b:GetUIItem(_shopUI, _itemName) local _0xb3c852 = _0xa090b6:GetPlayerGui():FindFirstChild(_shopUI) if not _0xb3c852 then warn("Shop UI not found") return nil end local _0xc66827 = _0xb3c852:FindFirstChild(_itemName, true) if not _0xc66827 then warn("Item frame not found in Shop") return nil end return _0xc66827 end function _0xb73f3b:GetAvailableItems(_shopUI) local _0x44f987 = {} if not _shopUI then warn("Invalid shop UI") return _0x44f987 end local _0xb3c852 = _0xa090b6:GetPlayerGui():FindFirstChild(_shopUI) if not _0xb3c852 then warn("Shop UI not found") return _0x44f987 end local _0xd3f83a = _0xb3c852.Frame.ScrollingFrame:GetChildren() if not _0xd3f83a then warn("No items found in the shop UI") return _0x44f987 end for _, _0xc66827 in pairs(_0xd3f83a) do local _0x8e92e4 = _0xc66827:FindFirstChild("Main_Frame") if not _0x8e92e4 then continue end local _0x095e94 = _0x8e92e4.Stock_Text.Text local _0xa5edfc = tonumber(_0x095e94:match("%d+")) _0x44f987[_0xc66827.Name] = _0xa5edfc end return _0x44f987 end return _0xb73f3b end _0xfbbdec["shop/gear.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0xa090b6 local _0x66cae3 local _0xde7c19 local _0xe14993 = "Gear_Shop" local _0x29fe84 = "Watering Can" function _0xb73f3b:Init(_window, _core, _shop) _0x7ae931 = _window _0xa090b6 = _core _0x66cae3 = _shop _core:MakeLoop(function() return _0x7ae931:GetConfigValue("AutoBuyGear") end, function() self:BuyAllGear() end) end function _0xb73f3b:BuyGear(gearName) if not gearName or gearName == "" then warn("Invalid gear name") return end _0xa090b6.GameEvents.BuyGearStock:FireServer(gearName) end function _0xb73f3b:BuyAllGear() local _0xd3f83a = _0x66cae3:GetAvailableItems(_0xe14993) for gearName, _0x1bda19 in pairs(_0xd3f83a) do if _0x1bda19 < 1 then continue end for i = 1, _0x1bda19 do self:BuyGear(gearName) task.wait(0.1) end end end function _0xb73f3b:StartGearAutomation() if not _0x7ae931:GetConfigValue("AutoBuyGear") then return end self:BuyAllGear() if _0xde7c19 then for _, _0xc5bdc5 in pairs(_0xde7c19) do _0xc5bdc5:Disconnect() end _0xde7c19 = nil end _0xde7c19 = {} for _, item in pairs(_0x66cae3:GetListItems(_0xe14993)) do local _0xc5bdc5 = _0x66cae3:ConnectToStock(item, function() if not _0x7ae931:GetConfigValue("AutoBuyGear") then return end self:BuyAllGear() end) table.insert(_0xde7c19, _0xc5bdc5) end end function _0xb73f3b:StopGearAutomation() if _0xde7c19 then for _, _0xc5bdc5 in pairs(_0xde7c19) do _0xc5bdc5:Disconnect() end _0xde7c19 = nil end end return _0xb73f3b end _0xfbbdec["shop/season_pass.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0xa090b6 function _0xb73f3b:Init(_window, _core) _0x7ae931 = _window _0xa090b6 = _core _core:MakeLoop(function() return _0x7ae931:GetConfigValue("AutoBuySeasonPasses") end, function() self:BuyAllSeasonPassItems() end) end function _0xb73f3b:GetAvailableSeasonPassesItems() local _0x44f987 = {} local _0xb3c852 = _0xa090b6:GetPlayerGui():FindFirstChild("SeasonPassUI", true) if not _0xb3c852 then return _0x44f987 end local _0xd3f83a = _0xb3c852.SeasonPassFrame.Main.Store.ScrollingFrame.Content:GetChildren() for _, _0xc66827 in pairs(_0xd3f83a) do local _0x8e92e4 = _0xc66827:FindFirstChild("Main_Frame") if not _0x8e92e4 then continue end local _0x095e94 = _0x8e92e4.Stock_Text.Text local _0xa5edfc = tonumber(_0x095e94:match("%d+")) _0x44f987[_0xc66827.Name] = _0xa5edfc end return _0x44f987 end function _0xb73f3b:BuySeasonPassItem(_0x659b55) if not _0x659b55 or _0x659b55 == "" then warn("Invalid item name") return end _0xa090b6.GameEvents.SeasonPass.BuySeasonPassStock:FireServer(_0x659b55) end function _0xb73f3b:BuyAllSeasonPassItems() local _0xd3f83a = self:GetAvailableSeasonPassesItems() for _0x659b55, _0x1bda19 in pairs(_0xd3f83a) do if _0x1bda19 < 1 then continue end for i = 1, _0x1bda19 do self:BuySeasonPassItem(_0x659b55) task.wait(0.1) end end end return _0xb73f3b end _0xfbbdec["pet/webhook.lua"] = function() local _0xb73f3b = {} local _0x7ae931 local _0xa090b6 local _0x1c683b local _0x69f247 local _0x665af9 = 0 function _0xb73f3b:Init(_window, _core, _discord) _0x7ae931 = _window _0xa090b6 = _core _0x1c683b = _discord _0x69f247 = _0xa090b6.LocalPlayer.Name or "Unknown" _0x665af9 = tick() end function _0xb73f3b:HatchEgg(_petName, _eggName, _baseWeight) local _0x623f5c = _0x7ae931:GetConfigValue("DiscordWebhookURL") or "" local _0xe19513 = _0x7ae931:GetConfigValue("DiscordPingID") or "" if _0x623f5c == "" then return end local _0xc3e358 = ( (_baseWeight >= 9 and "Godly") or (_baseWeight >= 8 and _baseWeight < 9 and "Titanic") or (_baseWeight >= 3 and _baseWeight < 8 and "Huge") or "Small" ) local _0x45d743 = { content = _0xe19513 ~= "" and ("<@".._0xe19513..">") or nil, embeds = {{ _0xdc3ccb = "**EzGarden**", type = 'rich', color = tonumber("0xfa0c0c"), fields = {{ _0xa89595 = '** -> Profile : ** \n', _0x25d758 = '> Username : ||'.._0x69f247.."||", inline = false }, { _0xa89595 = "** -> Hatched : **", _0x25d758 = "> Pet Name: ``".._petName.."``".. "\n> Hatched From: ``"..(_eggName or"N/A").."``".. '\n> Weight: ``'..(tostring(_baseWeight).." KG" or 'N/A')..'``'.. "\n> Weight Status: ``".._0xc3e358.."``", inline = false }} }} } _0x1c683b:SendMessage(_0x623f5c, _0x45d743) end function _0xb73f3b:Statistics(_eggName, _amount) local _0x623f5c = _0x7ae931:GetConfigValue("DiscordWebhookURL") or "" if _0x623f5c == "" then return end local _0x45d743 = { content = "", embeds = {{ _0xdc3ccb = "**EzGarden**", type = 'rich', color = tonumber("0xFFFF00"), fields = {{ _0xa89595 = '** -> Profile : ** \n', _0x25d758 = '> Username : ||'.._0x69f247.."||", inline = false }, { _0xa89595 = "** -> Hatch Statistics : **", _0x25d758 = "> Egg Name: ``"..(_eggName or"N/A").."``".. '\n> Amount: ``'..(tostring(_amount) or 'N/A')..'``'.. '\n> Duration: ``'..string.format("%d Minutes %d Seconds", math.floor((tick() - _0x665af9) / 60), math.floor((tick() - _0x665af9) % 60))..'``', inline = false }} }} } _0x665af9 = tick() _0x1c683b:SendMessage(_0x623f5c, _0x45d743) end return _0xb73f3b end local function _0xb2125b(_0x623f5c) if _0xfbbdec[_0x623f5c] then return _0xfbbdec[_0x623f5c]() end return require(_0x623f5c) end local _0xcfc6bd = _0xb2125b("https://raw.githubusercontent.com/alfin-efendy/ez-rbx-ui/refs/heads/main/ui.lua") local _0xda75f3 = _0xb2125b("../module/core.lua") local _0x3ab0ef = _0xb2125b("../module/player.lua") local _0x1c683b = _0xb2125b("../module/discord.lua") local _0x5cfa45 = _0xb2125b("server/ui.lua") local _0xfb9d60 = _0xb2125b("farm/garden.lua") local _0x28f9c2 = _0xb2125b("farm/plant.lua") local _0x91a9d3 = _0xb2125b("farm/ui.lua") local _0x45c29f = _0xb2125b("quest/ascension.lua") local _0xe560bd = _0xb2125b("quest/ui.lua") local _0xe22a01 = _0xb2125b("event/chubby_chipmunk/quest.lua") local _0x97e0db = _0xb2125b("event/chubby_chipmunk/ui.lua") local _0xc67233 = _0xb2125b("shop/shop.lua") local _0x7ffb8b = _0xb2125b("shop/seed.lua") local _0xadb1df = _0xb2125b("shop/gear.lua") local _0x7a6d9c = _0xb2125b("shop/egg.lua") local _0xedb4c3 = _0xb2125b("shop/season_pass.lua") local _0x31259e = _0xb2125b("shop/traveling.lua") local _0xe14993 = _0xb2125b("shop/ui.lua") local _0x0f81c4 = _0xb2125b("pet/team.lua") local _0x382da4 = _0xb2125b("pet/webhook.lua") local _0x510bcf = _0xb2125b("pet/egg.lua") local _0xa89a1b = _0xb2125b("pet/pet.lua") local _0xb71995 = _0xb2125b("pet/ui.lua") local _0xdc825b = _0xb2125b("inventory/inventory.lua") local _0xcd9e2b = _0xb2125b("inventory/ui.lua") local _0x0e069d = _0xb2125b("notification/ui.lua") local _0x0efdb6 = _0xcfc6bd.CreateWindow({ Name = "EzGarden", Width = 700, Height = 400, Opacity = 0.9, AutoAdapt = true, AutoShow = false, ConfigurationSaving = { Enabled = true, FolderName = "EzGarden", FileName = "settings", AutoLoad = true, AutoSave = true, }, }) _0x0efdb6:SetCloseCallback(function() print("window is closing! Performing cleanup...") _0x3ab0ef:RemoveAntiAFK() _0x3ab0ef:ClearQueue() print("Cleanup completed!") end) task.wait(1) _0x3ab0ef:Init(_0xda75f3) _0xfb9d60:Init(_0x0efdb6, _0xda75f3, _0x3ab0ef) _0x28f9c2:Init(_0x0efdb6, _0xda75f3, _0x3ab0ef, _0xfb9d60) _0x91a9d3:init(_0x0efdb6, _0x3ab0ef, _0xfb9d60, _0x28f9c2) _0x91a9d3:CreateFarmTab() print("Farm initialized") _0x0f81c4:Init(_0xda75f3, _0x3ab0ef, _0x0efdb6, _0xcfc6bd.NewConfig("PetTeamConfig"), _0xfb9d60) _0x382da4:Init(_0x0efdb6, _0xda75f3, _0x1c683b) _0xa89a1b:Init(_0xda75f3, _0x3ab0ef, _0x0efdb6, _0xfb9d60, _0x0f81c4) _0x510bcf:Init(_0xda75f3, _0x3ab0ef, _0x0efdb6, _0xfb9d60, _0xa89a1b, _0x382da4) _0xb71995:Init(_0x0efdb6, _0x0f81c4, _0x510bcf, _0xa89a1b, _0xfb9d60, _0x3ab0ef) _0xb71995:CreatePetTab() print("Pet initialized") _0xc67233:Init(_0xda75f3) _0x7ffb8b:Init(_0x0efdb6, _0xda75f3, _0xc67233) _0xadb1df:Init(_0x0efdb6, _0xda75f3, _0xc67233) _0x7a6d9c:Init(_0x0efdb6, _0xda75f3, _0xc67233) _0x31259e:Init(_0x0efdb6, _0xda75f3, _0xc67233) _0xedb4c3:Init(_0x0efdb6, _0xda75f3, _0xc67233) _0xe14993:Init(_0x0efdb6, _0x7a6d9c, _0x7ffb8b, _0xadb1df, _0xedb4c3, _0x31259e) _0xe14993:CreateShopTab() print("Shop initialized") _0xe22a01:Init(_0x0efdb6, _0xda75f3) _0x97e0db:Init(_0x0efdb6, _0xe22a01) _0x45c29f:Init(_0x0efdb6, _0xda75f3, _0x28f9c2, _0x3ab0ef) _0xe560bd:Init(_0x0efdb6, _0xda75f3, _0x45c29f, _0x97e0db) _0xe560bd:CreateQuestTab() print("Quest initialized") _0xdc825b:Init(_0xda75f3, _0x3ab0ef, _0x0efdb6) _0xcd9e2b:Init(_0x0efdb6, _0xdc825b, _0xa89a1b) _0xcd9e2b:CreateTab() print("Inventory initialized") _0x5cfa45:Init(_0x0efdb6, _0xda75f3, _0x3ab0ef, _0xfb9d60) _0x5cfa45:CreateServerTab() print("Server initialized") _0x0e069d:Init(_0x0efdb6, _0x382da4) _0x0e069d:CreateNotificationTab()
+-- Bundled Lua Script
+-- Generated by Lua Bundler
+-- https://github.com/alfin-efendy/lua-bundler
+
+local EmbeddedModules = {}
+
+-- Module: inventory/inventory.lua
+EmbeddedModules["inventory/inventory.lua"] = function()
+    local m = {}
+
+    local Core
+    local Player
+    local Window
+
+    local InventoryConnection
+
+    function m:Init(_core, _player, _window)
+        Core = _core
+        Player = _player
+        Window = _window
+
+        InventoryConnection = Core:GetBackpack().ChildAdded:Connect(function(child)
+            self:AutoFavoritePet(child)
+        end)
+    end
+
+    function m:GetAllPets()
+        local myPets = {}
+
+        for _, tool in next, Player:GetAllTools() do
+            local toolType = tool:GetAttribute("b")
+            toolType = toolType and string.lower(toolType) or ""
+            if toolType == "l" then
+                table.insert(myPets, tool)
+            end
+        end
+
+        return myPets
+    end
+
+    function m:FavoriteItem(item)
+        Core.GameEvents.Favorite_Item:FireServer(item)
+        task.wait(0.15)
+    end
+
+    function m:AutoFavoritePet(item)
+        if not item or not item:IsA("Tool") then
+            return
+        end 
+
+        local isAutoFavoriting = Window:GetConfigValue("AutoFavoritePets") or false
+        if not isAutoFavoriting then return end
+
+        local petType = item:GetAttribute("b")
+        if not petType or string.lower(petType) ~= "l" then
+            return
+        end
+
+        local isFavorited = item:GetAttribute("d") or false
+        if isFavorited then
+            return
+        end
+
+        local petNames = Window:GetConfigValue("AutoFavoritePetName") or {}
+        local weightThreshold = Window:GetConfigValue("AutoFavoritePetWeight") or 0.0
+        local ageThreshold = Window:GetConfigValue("AutoFavoritePetAge") or 0
+
+        -- Parse pet name, weight, and age from item.Name
+        -- Example format: "Golden Goose [2.19 KG] [Age 2]"
+        local petName, weightStr, ageStr = item.Name:match("^(.-)%s*%[(.-)%s*KG%]%s*%[Age%s*(%d+)%]")
+
+        if not petName then
+            -- Fallback if parsing fails
+            petName = item.Name
+            weightStr = nil
+            ageStr = nil
+        end
+
+        local weight = weightStr and tonumber(weightStr:match("%d+%.?%d*")) or 0
+        local age = ageStr and tonumber(ageStr) or 0
+
+        print(string.format("Checking pet: %s | Weight: %.2f | Age: %d", petName, weight, age))
+
+        for _, name in ipairs(petNames) do
+            if petName == name then
+                print("Auto-favoriting pet by name:", petName)
+                self:FavoriteItem(item)
+                return
+            end
+        end
+
+        if weight >= weightThreshold or age >= ageThreshold then
+            self:FavoriteItem(item)
+        end
+    end
+
+    function m:FavoriteAllPets()
+        for _, tool in pairs(self:GetAllPets()) do
+            self:AutoFavoritePet(tool)
+        end
+    end
+
+    return m
+end
+
+-- Module: ../module/player.lua
+EmbeddedModules["../module/player.lua"] = function()
+    local m = {}
+
+    -- Load Core module with error handling
+    local Core
+    local AntiAFKConnection -- Store the connection reference
+
+    -- Queue system for tool equipping
+    local ToolQueue = {
+        Queue = {},
+        IsProcessing = false,
+        CurrentTask = nil
+    }
+
+    function m:Init(_core)
+        if not _core then
+            error("Player:Init - Core module is required")
+        end
+        Core = _core
+
+        -- Store the connection so we can disconnect it later
+        AntiAFKConnection = _core.LocalPlayer.Idled:Connect(function()
+            _core.VirtualUser:CaptureController()
+            _core.VirtualUser:ClickButton2(Vector2.new())
+            print("Anti-AFK: Clicked to prevent idle kick")
+        end)
+
+        -- Initialize queue system
+        ToolQueue.Queue = {}
+        ToolQueue.IsProcessing = false
+        ToolQueue.CurrentTask = nil
+    end
+
+    function m:RemoveAntiAFK()
+        -- Disconnect the stored connection
+        if AntiAFKConnection then
+            AntiAFKConnection:Disconnect()
+            AntiAFKConnection = nil
+            print("Anti-AFK: Disconnected idle connection")
+        else
+            print("Anti-AFK: No connection to disconnect")
+        end
+    end
+
+    -- ===== QUEUE SYSTEM =====
+
+    -- Add task to queue
+    -- tool: Tool object to equip
+    -- priority: Number (lower = higher priority, default = 5)
+    -- taskFunction: Function to execute after tool is equipped (optional)
+    -- callback: Function to call when task is complete (optional)
+    function m:AddToQueue(_tool, _priority, _taskFunction, _callback)
+        _priority = _priority or 5
+
+        if not _tool or not _tool:IsA("Tool") then
+            warn("Player:AddToQueue - Invalid tool provided")
+            if _callback then _callback(false, "Invalid tool") end
+            return false
+        end
+
+        local task = {
+            Id = tick(), -- Unique identifier
+            Tool = _tool,
+            Priority = _priority,
+            TaskFunction = _taskFunction,
+            Callback = _callback,
+            Timestamp = tick()
+        }
+
+        -- Insert task into queue
+        table.insert(ToolQueue.Queue, task)
+
+        print("🔧 Added tool to queue:", _tool.Name, "Priority:", _priority, "Queue size:", #ToolQueue.Queue)
+
+        -- Start processing if not already processing
+        if not ToolQueue.IsProcessing then
+            print("🔧 Queue is already processing or empty, skipping...", self:GetQueueStatus())
+
+            self:ProcessQueue()
+        end
+
+        return true
+    end
+
+    -- Process the queue
+    function m:ProcessQueue()
+        if ToolQueue.IsProcessing or #ToolQueue.Queue == 0 then
+            print("🔧 Queue is already processing or empty, skipping...", self:GetQueueStatus())
+            return -- Already processing or queue is empty
+        end
+
+        ToolQueue.IsProcessing = true
+
+        while #ToolQueue.Queue > 0 do
+            -- Sort queue by priority and timestamp to ensure correct order
+            table.sort(ToolQueue.Queue, function(a, b)
+                if a.Priority == b.Priority then
+                    return a.Timestamp < b.Timestamp -- Earlier added first
+                end
+                return a.Priority < b.Priority -- Lower priority number first
+            end)
+            local currentTask = table.remove(ToolQueue.Queue, 1) -- Take first (highest priority) task
+            ToolQueue.CurrentTask = currentTask
+
+            print("🔧 Processing tool queue task:", currentTask.Tool.Name)
+
+            -- Equip the tool, ensure it is equipped before proceeding
+            if self:GetEquippedTool() ~= currentTask.Tool then
+                self:EquipTool(currentTask.Tool)
+                task.wait(0.5) -- Small delay to ensure tool is equipped
+            end
+
+            -- Execute task function if provided and wait for completion
+            local success, result = pcall(function()
+                return currentTask.TaskFunction()
+            end)
+
+            if currentTask.Callback then
+                local callbackSuccess, callbackErr = pcall(currentTask.Callback, success, result)
+                if not callbackSuccess then
+                    warn("Callback error for tool:", currentTask.Tool.Name, "Error:", callbackErr)
+                end
+            end
+
+            print("Task execution finished")
+            -- task.wait(0.5)
+            self:UnequipTool() -- Unequip after task
+
+            ToolQueue.CurrentTask = nil
+            task.wait(0.1) -- Small delay between tasks
+        end
+
+        ToolQueue.IsProcessing = false
+        print("🔧 Queue processing completed")
+    end
+
+    -- Get current queue status
+    function m:GetQueueStatus()
+        return {
+            queueSize = #ToolQueue.Queue,
+            isProcessing = ToolQueue.IsProcessing,
+            currentTask = ToolQueue.CurrentTask and ToolQueue.CurrentTask.Tool.Name or nil
+        }
+    end
+
+    -- Clear the queue
+    function m:ClearQueue()
+        ToolQueue.Queue = {}
+        ToolQueue.IsProcessing = false
+        ToolQueue.CurrentTask = nil
+        print("🔧 Tool queue cleared")
+    end
+
+    -- Remove specific task from queue by tool name
+    function m:RemoveFromQueue(_toolName)
+        if not _toolName then return false end
+
+        for i = #ToolQueue.Queue, 1, -1 do
+            if ToolQueue.Queue[i].Tool.Name == _toolName then
+                table.remove(ToolQueue.Queue, i)
+                print("🔧 Removed from queue:", _toolName)
+                return true
+            end
+        end
+
+        return false
+    end
+
+    function m:GetTaskByTool(_tool)
+        local tasks = {}
+        if not _tool then return nil end
+
+        for _, task in ipairs(ToolQueue.Queue) do
+            if task.Tool == _tool then
+                table.insert(tasks, task)
+            end
+        end
+
+        return #tasks > 0 and tasks or nil
+    end
+
+    function m:EquipTool(_tool)
+        -- Validate inputs
+        if not _tool or not _tool:IsA("Tool") then 
+            warn("Player:EquipTool - Invalid tool provided")
+            return false 
+        end
+
+        local humanoid = Core:GetHumanoid()
+        local backpack = Core:GetBackpack()
+
+        if not humanoid then
+            warn("Player:EquipTool - Humanoid not found")
+            return false
+        end
+
+        if not backpack then
+            warn("Player:EquipTool - Backpack not found")
+            return false
+        end
+
+        if _tool.Parent ~= backpack then
+            warn("Player:EquipTool - Tool not in backpack")
+            return false 
+        end
+
+        -- Try to equip with error handling
+        local success, err = pcall(function()
+            humanoid:EquipTool(_tool)
+        end)
+
+        if not success then
+            warn("Player:EquipTool - Failed to equip:", err)
+            return false
+        end
+
+        return true
+    end
+
+    function m:UnequipTool()    
+        local humanoid = Core:GetHumanoid()
+        if not humanoid then
+            warn("Player:UnequipTool - Humanoid not found")
+            return false
+        end
+
+        -- Try to unequip with error handling
+        local success, err = pcall(function()
+            humanoid:UnequipTools()
+        end)
+
+        if not success then
+            warn("Player:UnequipTool - Failed to unequip:", err)
+            return false
+        end
+
+        return true
+    end
+
+    function m:GetEquippedTool()
+        local character = Core:GetCharacter()
+        if not character then 
+            warn("Player:GetEquippedTool - Character not found")
+            return nil 
+        end
+
+        for _, item in ipairs(character:GetChildren()) do
+            if item:IsA("Tool") then
+                return item
+            end
+        end
+
+        return nil
+    end
+
+    function m:MoveToPosition(_position)
+        local humanoid = Core:GetHumanoid()
+        if humanoid then
+            humanoid:MoveTo(_position)
+        else
+            warn("Player:MoveToPosition - Humanoid not found")
+        end
+    end
+
+    function m:TeleportToPosition(_position)
+        local hrp = Core:GetHumanoidRootPart()
+        if hrp then
+            hrp.CFrame = CFrame.new(_position)
+            return true
+        end
+        return false
+    end
+
+    function m:GetPosition()
+        local hrp = Core:GetHumanoidRootPart()
+        return hrp and hrp.Position or Vector3.new(0, 0, 0)
+    end
+
+    function m:GetAllTools()
+        local backpack = Core:GetBackpack()
+        if not backpack then 
+            warn("Player:GetAllTools - Backpack not found")
+            return {} 
+        end
+
+        local tools = {}
+        local success, err = pcall(function()
+            for _, item in ipairs(backpack:GetChildren()) do
+                if item:IsA("Tool") then
+                    table.insert(tools, item)
+                end
+            end
+        end)
+
+        if not success then
+            warn("Player:GetAllTools - Error getting tools:", err)
+            return {}
+        end
+
+        return tools
+    end
+
+    function m:GetTool(_toolName)
+        if not _toolName or type(_toolName) ~= "string" then
+            warn("Player:GetTool - Invalid tool name")
+            return nil
+        end
+
+        local backpack = Core:GetBackpack()
+        if not backpack then
+            warn("Player:GetTool - Backpack not found")
+            return nil 
+        end
+
+        local tool = nil
+        local success, err = pcall(function()
+            tool = backpack:FindFirstChild(_toolName)
+            if tool and not tool:IsA("Tool") then
+                tool = nil
+            end
+        end)
+
+        if not success then
+            warn("Player:GetTool - Error finding tool:", err)
+            return nil
+        end
+
+        if not tool then
+            warn("Player:GetTool - Tool not found:", _toolName)
+        end
+
+        return tool
+    end
+
+    return m
+end
+
+-- Module: ../module/discord.lua
+EmbeddedModules["../module/discord.lua"] = function()
+    local m = {}
+    local HttpService = game:GetService("HttpService")
+
+    function m:SendMessage(webhookUrl, data)
+        -- Mencari fungsi request yang tersedia dari berbagai executor
+        local requestFunction = request or
+                               (syn and syn.request) or
+                               (http and http.request) or
+                               (fluxus and fluxus.request) or
+                               http_request
+
+        -- Jika tidak ada fungsi request yang tersedia, keluar dari fungsi
+        if not requestFunction then
+            return
+        end
+
+        -- Mengubah data menjadi format JSON
+        local jsonData = HttpService:JSONEncode(data)
+
+        -- Menyiapkan headers untuk request
+        local headers = {
+            ['Content-Type'] = "application/json"
+        }
+
+        -- Mengirim POST request ke webhook
+        local success, err = pcall(function()
+            task.spawn(requestFunction, {
+                Url = webhookUrl,
+                Body = jsonData,
+                Method = 'POST',
+                Headers = headers
+            })
+        end)
+
+        if success then
+            print("Discord webhook sent successfully.")
+        else
+            warn("Failed to send Discord webhook:", err)
+        end
+    end
+
+    return m
+
+end
+
+-- Module: farm/plant.lua
+EmbeddedModules["farm/plant.lua"] = function()
+    local m = {}
+    local Window
+    local Core
+    local Player
+    local Garden
+    local PlantsPhysical
+
+    function m:Init(_window, _core, _player, _garden)
+        Window = _window
+        Core = _core
+        Player = _player
+        Garden = _garden
+
+        local myGarden = Garden:GetMyFarm()
+        if not myGarden then
+            warn("Failed to find player's garden")
+            return
+        end
+
+        local important = myGarden:FindFirstChild("Important")
+        PlantsPhysical = important:FindFirstChild("Plants_Physical")  
+
+        _core:MakeLoop(function()
+            return Window:GetConfigValue("AutoPlantSeeds")
+        end, function()
+            self:StartAutoPlanting()
+        end)
+
+        _core:MakeLoop(function()
+            return Window:GetConfigValue("AutoWateringPlants")
+        end, function()
+            self:AutoWateringPlants()
+        end)
+
+        _core:MakeLoop(function()
+            return Window:GetConfigValue("AutoHarvestPlants")
+        end, function()
+            self:StartAutoHarvesting()
+        end)
+    end
+
+    function m:GetPlantRegistry()
+        local success, seedRegistry = pcall(function()
+            return require(Core.ReplicatedStorage.Data.SeedData)
+        end)
+
+        if not success then
+            warn("Failed to get seed registry:", seedRegistry)
+            return {}
+        end
+
+        if not seedRegistry then
+            warn("SeedData is nil or not found")
+            return {}
+        end
+
+       -- Convert SeedData to UI format {text = ..., value = ...}
+        local formattedSeeds = {}
+        for seedName, seedData in pairs(seedRegistry) do
+            table.insert(formattedSeeds, {
+                seed = seedData.SeedName or seedName,
+                plant = seedName,
+                rarity = seedData.SeedRarity or "Unknown",
+            })
+        end
+
+        -- Sort seeds alphabetically (ascending order) - Safe for all executors
+        if #formattedSeeds > 0 then
+            table.sort(formattedSeeds, function(a, b)
+                if not a or not b or not a.plant or not b.plant then
+                    return false
+                end
+                return string.lower(tostring(a.plant)) < string.lower(tostring(b.plant))
+            end)
+        end
+
+        return formattedSeeds
+    end
+
+    function m:PlantSeed(_seedName, _numToPlant, _plantingPosition)
+        if not _seedName or type(_seedName) ~= "string" then
+            warn("FarmUtils:PlantSeed - Invalid seed name")
+            return false
+        end
+
+        if #PlantsPhysical:GetChildren() >= 800 then
+            return false
+        end
+
+        local tool
+        local toolQuantity = 0
+
+        for _, t in next, Player:GetAllTools() do
+            local toolType = t:GetAttribute("b")
+            local toolSeed = t:GetAttribute("Seed")
+            if toolType == "n" and toolSeed == _seedName then
+                tool = t
+                toolQuantity = t:GetAttribute("Quantity") or 0
+                break
+            end
+        end
+
+        if toolQuantity < _numToPlant then
+            _numToPlant = toolQuantity
+        end
+
+        if not tool then
+            print("No seed tool found for seed:", _seedName)
+
+            return false
+        end
+
+        local position = Garden:GetFarmRandomPosition()
+        if _plantingPosition == "Front Right" then
+            position = Garden:GetFarmFrontRightPosition()
+        elseif _plantingPosition == "Front Left" then
+            position = Garden:GetFarmFrontLeftPosition()
+        elseif _plantingPosition == "Back Right" then
+            position = Garden:GetFarmBackRightPosition()
+        elseif _plantingPosition == "Back Left" then
+            position = Garden:GetFarmBackLeftPosition()
+        end
+        if not position then
+            warn("Failed to get farm position for planting")
+            return false
+        end
+
+        local plantTask = function(_numToPlant, _seedName, _position)
+            for i = 1, _numToPlant do
+                if #PlantsPhysical:GetChildren() >= 800 then
+                    break
+                end            
+                Core.GameEvents.Plant_RE:FireServer(_position, _seedName)
+                -- Small delay between planting actions
+                task.wait(0.15)
+            end
+        end
+
+        Player:AddToQueue(
+            tool,       -- tool
+            3,          -- priority (medium)
+            function()
+                plantTask(_numToPlant, _seedName, position)
+            end
+        )
+    end
+
+    function m:FindPlants(plantName)
+        if not plantName or type(plantName) ~= "string" then
+            warn("Invalid plant name")
+            return nil
+        end
+
+        if not PlantsPhysical then
+            warn("PlantsPhysical not found")
+            return nil
+        end
+
+        local foundPlants = {}
+        for _, plant in pairs(PlantsPhysical:GetChildren()) do
+            if plant.Name == plantName then
+                table.insert(foundPlants, plant)
+            end
+        end
+
+        return #foundPlants > 0 and foundPlants or nil
+    end
+
+    function m:StartAutoPlanting()
+        local seedsToPlant = Window:GetConfigValue("SeedsToPlant") or {}
+        local seedToPlantCount = Window:GetConfigValue("SeedsToPlantCount") or 1
+        local plantingPosition = Window:GetConfigValue("PlantingPosition") or "Random"
+
+        -- Cache plant count once at the beginning
+        if #PlantsPhysical:GetChildren() >= 800 then
+            task.wait(30) -- Much longer wait when farm is full
+            return
+        end
+
+        local plantsNeeded = false
+
+        for _, seedName in pairs(seedsToPlant) do
+            if #PlantsPhysical:GetChildren() >= 800 then
+                break
+            end
+            local existingPlants = self:FindPlants(seedName) or {}
+            local numExisting = #existingPlants
+            local numToPlant = math.max(0, seedToPlantCount - numExisting)
+
+            if numToPlant > 0 then
+                self:PlantSeed(seedName, numToPlant, plantingPosition)
+                plantsNeeded = true
+            end
+        end
+
+        if not plantsNeeded then
+            task.wait(60) -- Much longer wait when nothing to do
+        else
+            task.wait(15) -- Moderate wait when work was done
+        end
+    end
+
+    function m:AutoWateringPlants()
+        local wateringCan
+        local wateringDelay = Window:GetConfigValue("WateringDelay") or 2
+        local wateringEach = Window:GetConfigValue("WateringEach") or 5
+        local wateringPosition = Window:GetConfigValue("WateringPosition") or "Front Right"
+        local position = Garden:GetFarmRandomPosition()
+
+        if wateringPosition == "Front Right" then
+            position = Garden:GetFarmFrontRightPosition()
+        elseif wateringPosition == "Front Left" then
+            position = Garden:GetFarmFrontLeftPosition()
+        elseif wateringPosition == "Back Right" then
+            position = Garden:GetFarmBackRightPosition()
+        elseif wateringPosition == "Back Left" then
+            position = Garden:GetFarmBackLeftPosition()
+        end
+
+        for _, Tool in next, Player:GetAllTools() do
+            local toolType = Tool:GetAttribute("b")
+            if toolType == "o" then
+                wateringCan = Tool
+                break
+            end
+        end
+
+        if not wateringCan then
+            warn("No watering can found in inventory")
+            return
+        end
+
+        if #self:GetAllGrowingPlants() < 1 then
+            task.wait(10) -- Wait before checking again
+            return
+        end
+
+        local tasks = Player:GetTaskByTool(wateringCan)
+        if tasks and #tasks > 0 then
+            task.wait(10)
+            return
+        end
+
+
+        local wateringTask = function(position, each)
+            local watered = 0
+
+            for i = 1, each do
+                local success = pcall(function()
+                    Core.GameEvents.Water_RE:FireServer(Vector3.new(position.X, 0, position.Z))
+                end)
+
+                if success then
+                    watered = watered + 1
+                end
+
+                task.wait(1.5) -- Slightly longer delay to reduce server load
+            end
+
+            task.wait(0.5) -- Longer final wait
+        end
+
+
+        Player:AddToQueue(
+            wateringCan,   -- tool
+            99,             -- priority (very low)
+            function()
+                wateringTask(position, wateringEach)
+            end
+        )
+        task.wait(math.max(wateringDelay, 5)) -- Minimum 5 second delay
+    end
+
+    function m:EligibleToHarvest(plant)    
+        local Prompt = plant:FindFirstChild("ProximityPrompt", true)
+        if not Prompt then return false end
+        if not Prompt.Enabled then return false end
+
+        return true
+    end
+
+    function m:GetAllGrowingPlants()
+        if not PlantsPhysical then
+            warn("PlantsPhysical not found")
+            return {}
+        end
+
+        local growingPlants = {}
+        for _, plant in pairs(PlantsPhysical:GetChildren()) do
+            local doneGrowTime = plant:GetAttribute("DoneGrowTime") or 0
+            if doneGrowTime > tick() then
+                table.insert(growingPlants, plant)
+            end
+        end
+
+        return growingPlants
+    end
+
+    function m:IsMaxInventory()
+        local character = Core.LocalPlayer
+        local backpack = Core:GetBackpack()
+        if not character or not backpack then
+            warn("FarmUtils:IsMaxFruitInventory - Character or Backpack not found")
+            return false
+        end
+
+        local bonusBackpack = character:GetAttribute("BonusBackpackSize") or 0
+        local maxCapacity = 200 + bonusBackpack
+        local currentItems = 0
+
+        for _, item in pairs(backpack:GetChildren()) do
+            if item:GetAttribute("b") == "j" then
+                currentItems = currentItems + 1
+            end
+        end
+
+        return currentItems >= maxCapacity
+    end
+
+    function m:GetFruitPlant(plan)
+        local fruits = {}
+
+        for _, child in pairs(plan.Fruits:GetChildren()) do
+            table.insert(fruits, child)
+        end
+
+        return fruits
+    end
+
+    function m:GetPlantDetail(_plant)
+        if not _plant or not _plant:IsA("Model") then
+            warn("Invalid plant")
+            return nil
+        end
+
+        local prompt = _plant:FindFirstChild("ProximityPrompt", true)
+        local parentFruit = prompt and prompt.Parent.Parent.Parent
+        local fruits = {}
+
+        if not prompt or not parentFruit then
+            -- No prompt means not ready to harvest, so no fruits
+            fruits = {}
+        elseif parentFruit and parentFruit.Name == "Fruits" then
+            for _, fruit in pairs(parentFruit:GetChildren()) do
+                table.insert(fruits, fruit)
+            end
+        else
+            fruits = { _plant }
+        end
+
+        local doneGrowTime = _plant:GetAttribute("DoneGrowTime") or math.huge
+
+        local detail = {
+            name = _plant.Name or "Unknown",
+            position = _plant:GetPivot().Position or Vector3.new(0,0,0),
+            isGrowing = doneGrowTime < tick() or false,
+            fruits = {},
+        }
+
+        for _, fruit in pairs(fruits) do
+            local mutations = {}
+
+            for attributeName, attributeValue in pairs(fruit:GetAttributes()) do
+                if attributeValue == true then
+                    table.insert(mutations, attributeName)
+                end
+            end
+
+            table.insert(detail.fruits, {
+                isEligibleToHarvest = self:EligibleToHarvest(fruit),
+                mutations = mutations,
+                model = fruit,
+            })
+        end
+
+        return detail
+    end
+
+    function m:HarvestFruit(_fruit)
+        if not _fruit or not _fruit:IsA("Model") then
+            warn("Invalid plant or fruit")
+            return false
+        end
+
+        if not self:EligibleToHarvest(_fruit) then
+            return false
+        end
+
+        if self:IsMaxInventory() then
+            return false
+        end
+
+        local success, err = pcall(function()
+            Core.GameEvents.Crops.Collect:FireServer({_fruit})
+        end)
+
+        if not success then
+            warn("Failed to harvest item:", _fruit.Name, "Error:", err)
+            return false
+        end
+
+        return true
+    end
+
+    function m:StartAutoHarvesting()
+        if Window:GetConfigValue("AutoHarvestPlants") ~= true then
+            warn("Auto harvesting is disabled in config")
+            return
+        end
+
+        if self:IsMaxInventory() then
+            task.wait(10) -- Wait before checking again
+            return
+        end
+
+        local plantsToHarvest = Window:GetConfigValue("PlantsToHarvest") or {}
+        if #plantsToHarvest == 0 then
+            warn("No plants selected for auto harvesting")
+            task.wait(10) -- Wait before checking again
+            return
+        end
+
+        local harvestedCount = 0
+
+        for _, plantName in pairs(plantsToHarvest) do
+            local plants = self:FindPlants(plantName) or {}
+
+            -- Harvest with limits
+            for _, plant in pairs(plants) do
+                if self:IsMaxInventory() then
+                    break
+                end
+
+                local plantDetail = self:GetPlantDetail(plant)
+                if not plantDetail or not plantDetail.isGrowing then
+                    print("Skipping non-growing plant:", plant.Name)
+                    continue
+                end
+
+                for _, fruitDetail in pairs(plantDetail.fruits) do
+                    if self:IsMaxInventory() then
+                        break
+                    end
+
+                    if not fruitDetail.isEligibleToHarvest then
+                        continue
+                    end
+
+                    local success = self:HarvestFruit(fruitDetail.model)
+                    if success then
+                        harvestedCount = harvestedCount + 1
+                        task.wait(0.15) -- Small delay between harvests
+                    end
+                end
+            end
+
+            if self:IsMaxInventory() then
+                break
+            end
+        end
+
+        if harvestedCount > 0 then
+            task.wait(0.5) -- Moderate wait after work
+        else
+            task.wait(15) -- Longer wait when nothing to do
+        end
+    end
+
+
+    return m
+end
+
+-- Module: event/chubby_chipmunk/quest.lua
+EmbeddedModules["event/chubby_chipmunk/quest.lua"] = function()
+    local m = {}
+
+    local Window
+    local Core
+
+    local BackpackConnection
+    local LastSubmitTime
+
+    function m:Init(_window, _core)
+        Window = _window
+        Core = _core
+
+        Core.GameEvents.SpecialEventStarted.OnClientEvent:Connect(function(weather)
+            self:StopAutoSubmitEventPlants()
+            task.wait(300)
+            self:StartAutoSubmitEventPlants()
+        end)
+
+        task.spawn(function()
+            self:StartAutoSubmitEventPlants()
+        end)
+    end
+
+    function m:StartAutoSubmitEventPlants()
+        if not Window:GetConfigValue("AutoSubmitSeedStagePlants") then
+            return
+        end
+
+        if not BackpackConnection then
+            BackpackConnection = Core:GetBackpack().ChildAdded:Connect(function(child)
+                -- Debounce to prevent multiple submissions in quick succession
+                if tick() - (LastSubmitTime or 0) < 5 then
+                    return
+                end
+
+                if child:GetAttribute("b") ~= "j" then
+                    return
+                end
+
+                Core.GameEvents.SubmitChipmunkFruit:FireServer("All")
+                LastSubmitTime = tick()
+            end)
+        end
+
+        Core.GameEvents.SubmitChipmunkFruit:FireServer("All")
+        LastSubmitTime = tick()
+    end
+
+    function m:StopAutoSubmitEventPlants()
+        if BackpackConnection then
+            BackpackConnection:Disconnect()
+            BackpackConnection = nil
+        end
+    end
+
+    return m
+end
+
+-- Module: shop/egg.lua
+EmbeddedModules["shop/egg.lua"] = function()
+    local m = {}
+
+    local Window
+    local Core
+    local Shop
+
+    local Connections
+    local ShopUI = "PetShop_UI"
+    local ShopItem = "Common Egg"
+
+    function m:Init(_window, _core, _shop)
+        Window = _window
+        Core = _core
+        Shop = _shop
+
+        _core:MakeLoop(function()
+            return Window:GetConfigValue("AutoBuyEggs")
+        end, function()
+            self:BuyAllEggs()
+        end)
+    end
+
+    function m:BuyEgg(eggName)
+        if not eggName or eggName == "" then
+            warn("Invalid egg name")
+            return
+        end
+
+        Core.GameEvents.BuyPetEgg:FireServer(eggName)
+    end
+
+    function m:BuyAllEggs()
+         local items = Shop:GetAvailableItems(ShopUI)
+
+        for eggName, stock in pairs(items) do
+            if stock < 1 then
+                continue
+            end
+
+            for i = 1, stock do
+                self:BuyEgg(eggName)
+                task.wait(0.1) -- Small delay to avoid spamming
+            end
+        end
+    end
+
+    function m:StartEggAutomation()
+        if not Window:GetConfigValue("AutoBuyEggs") then
+            return
+        end
+
+        self:BuyAllEggs()
+
+        if Connections then
+            for _, conn in pairs(Connections) do
+                conn:Disconnect()
+            end
+            Connections = nil
+        end
+
+        Connections = {}
+        for _, item in pairs(Shop:GetListItems(ShopUI)) do
+            local conn = Shop:ConnectToStock(item, function()
+                if not Window:GetConfigValue("AutoBuyEggs") then
+                    return
+                end
+
+                self:BuyAllEggs()
+            end)
+            table.insert(Connections, conn)
+        end
+    end
+
+    function m:StopEggAutomation()
+        if Connections then
+            for _, conn in pairs(Connections) do
+                conn:Disconnect()
+            end
+            Connections = nil
+        end
+    end
+
+    return m
+end
+
+-- Module: notification/ui.lua
+EmbeddedModules["notification/ui.lua"] = function()
+    local m = {}
+
+    local Window
+    local Test
+
+    function m:Init(_window, _test)
+        Window = _window
+        Test = _test
+    end
+
+    function m:CreateNotificationTab()
+        local tab = Window:AddTab({
+            Name = "Notifications",
+            Icon = "🔔",
+        })
+
+        tab:AddLabel("Discord Webhook URL (for notifications)")
+        tab:AddTextBox({
+            Name = "Discord Webhook URL",
+            Default = "",
+            Flag = "DiscordWebhookURL",
+            Placeholder = "https://discord.com/api/webhooks/...",
+            MaxLength = 500,
+        })
+
+        tab:AddLabel("Discord Ping ID (optional)")
+        tab:AddTextBox({
+            Name = "Discord Ping ID",
+            Default = "",
+            Flag = "DiscordPingID",
+            Placeholder = "123456789012345678",
+            MaxLength = 50,
+        })
+
+        tab:AddButton("Test Notification", function()
+            task.spawn(function()
+                Test:HatchEgg("Test Pet", "Test Egg", 10)
+                task.wait(0.15)
+                Test:Statistics("Test Egg", 5)
+            end)
+        end)
+    end
+
+    return m
+end
+
+-- Module: shop/shop.lua
+EmbeddedModules["shop/shop.lua"] = function()
+    local m = {}
+
+    local Core
+
+    function m:Init(_core)
+        Core = _core
+    end
+
+    function m:ConnectToStock(item, buyFunction)
+         task.wait(0.1)
+        local mainFrame = item:FindFirstChild("Main_Frame")
+        if not mainFrame then return end
+
+        local stockText = mainFrame:FindFirstChild("Stock_Text")
+        if not stockText then return end
+
+        print("Connecting to stock changes for", item.Name)
+
+        local connection = stockText:GetPropertyChangedSignal("Text"):Connect(function()
+            print("Stock changed for", item.Name, "New stock:", stockText.Text)
+            local stock = tonumber(stockText.Text:match("%d+"))
+            if stock and stock > 0 then
+                pcall(buyFunction)
+            end
+        end)
+
+        return connection
+    end
+
+    function m:GetListItems(_shopUI)
+        local shopUI = Core:GetPlayerGui():FindFirstChild(_shopUI)
+        if not shopUI then
+            warn("Shop UI not found")
+            return nil
+        end
+
+        local Items = shopUI.Frame.ScrollingFrame:GetChildren()
+        if not Items then
+            warn("Item frame not found in Shop")
+            return nil
+        end
+
+        local listItems = {}
+        for _, item in pairs(Items) do
+            if item:FindFirstChild("Main_Frame") then
+                table.insert(listItems, item)
+            end
+        end
+
+        return listItems
+    end
+
+    function m:GetItemDetail(_item)
+        if not _item then
+            warn("Invalid item")
+            return nil
+        end
+
+        local mainFrame = _item:FindFirstChild("Main_Frame")
+        if not mainFrame then
+            warn("Main frame not found in item")
+            return nil
+        end
+
+        local priceText = mainFrame:FindFirstChild("Price_Text")
+        if not priceText then
+            warn("Price text not found in item")
+            return nil
+        end
+
+        local stockText = mainFrame:FindFirstChild("Stock_Text")
+        if not stockText then
+            warn("Stock text not found in item")
+            return nil
+        end
+
+        local name = _item.Name
+        local price = tonumber(priceText.Text:match("%d+"))
+        local stock = tonumber(stockText.Text:match("%d+"))
+
+        return {
+            Name = name,
+            Price = price,
+            Stock = stock
+        }
+    end
+
+    function m:GetUIItem(_shopUI, _itemName)
+       local shopUI = Core:GetPlayerGui():FindFirstChild(_shopUI)
+        if not shopUI then
+            warn("Shop UI not found")
+            return nil
+        end
+
+        local Item = shopUI:FindFirstChild(_itemName, true)
+        if not Item then
+            warn("Item frame not found in Shop")
+            return nil
+        end
+
+        return Item
+    end
+
+    function m:GetAvailableItems(_shopUI)
+        local availableItems = {}
+        if not _shopUI then
+            warn("Invalid shop UI")
+            return availableItems
+        end
+
+        local shopUI = Core:GetPlayerGui():FindFirstChild(_shopUI)
+        if not shopUI then
+            warn("Shop UI not found")
+            return availableItems
+        end
+
+        local items = shopUI.Frame.ScrollingFrame:GetChildren()
+        if not items then
+            warn("No items found in the shop UI")
+            return availableItems
+        end
+
+        for _, Item in pairs(items) do
+            local MainFrame = Item:FindFirstChild("Main_Frame")
+            if not MainFrame then continue end
+
+            local StockText = MainFrame.Stock_Text.Text
+            local StockCount = tonumber(StockText:match("%d+"))
+
+            availableItems[Item.Name] = StockCount
+        end
+
+        return availableItems
+    end
+
+    return m
+end
+
+-- Module: shop/seed.lua
+EmbeddedModules["shop/seed.lua"] = function()
+    local m = {}
+
+    local Window
+    local Core
+    local Shop
+
+    local Connections
+    local ShopUI = "Seed_Shop"
+    local ShopItem = "Carrot"
+
+    function m:Init(_window, _core, _shop)
+        Window = _window
+        Core = _core
+        Shop = _shop
+
+        _core:MakeLoop(function()
+            return Window:GetConfigValue("AutoBuySeeds")
+        end, function()
+            self:BuyAllSeeds()
+        end)
+    end
+
+    function m:BuySeed(seedName)
+        if not seedName or seedName == "" then
+            warn("Invalid seed name")
+            return
+        end
+
+        Core.GameEvents.BuySeedStock:FireServer("Tier 1", seedName)
+    end
+
+    function m:BuyAllSeeds()
+        local items = Shop:GetAvailableItems(ShopUI)
+
+        for seedName, stock in pairs(items) do
+            if stock and stock < 1 then
+                continue
+            end
+
+            for i = 1, stock do
+                self:BuySeed(seedName)
+                task.wait(0.1)
+            end
+        end
+    end
+
+    function m:StartSeedAutomation()
+        if not Window:GetConfigValue("AutoBuySeeds") then
+            return
+        end
+
+        self:BuyAllSeeds()
+
+        if Connections then
+            for _, conn in pairs(Connections) do
+                conn:Disconnect()
+            end
+            Connections = nil
+        end
+
+        Connections = {}
+        for _, item in pairs(Shop:GetListItems(ShopUI)) do
+            local conn = Shop:ConnectToStock(item, function()
+                if Window:GetConfigValue("AutoBuySeeds") then
+                    return
+                end
+
+                self:BuyAllSeeds()
+            end)
+            table.insert(Connections, conn)
+        end
+    end
+
+    function m:StopSeedAutomation()
+        if Connections then
+            for _, conn in pairs(Connections) do
+                conn:Disconnect()
+            end
+            Connections = nil
+        end
+    end
+
+    return m
+end
+
+-- Module: shop/season_pass.lua
+EmbeddedModules["shop/season_pass.lua"] = function()
+    local m = {}
+
+    local Window
+    local Core
+
+    function m:Init(_window, _core)
+        Window = _window
+        Core = _core
+
+        _core:MakeLoop(function()
+            return Window:GetConfigValue("AutoBuySeasonPasses")
+        end, function()
+            self:BuyAllSeasonPassItems()
+        end)
+    end
+
+    function m:GetAvailableSeasonPassesItems()
+        local availableItems = {}
+
+        local shopUI = Core:GetPlayerGui():FindFirstChild("SeasonPassUI", true)
+        if not shopUI then
+            return availableItems
+        end
+
+        local items = shopUI.SeasonPassFrame.Main.Store.ScrollingFrame.Content:GetChildren()
+        for _, Item in pairs(items) do
+            local MainFrame = Item:FindFirstChild("Main_Frame")
+            if not MainFrame then continue end
+
+            local StockText = MainFrame.Stock_Text.Text
+            local StockCount = tonumber(StockText:match("%d+"))
+
+            availableItems[Item.Name] = StockCount
+        end
+
+        return availableItems
+    end
+
+    function m:BuySeasonPassItem(itemName)
+        if not itemName or itemName == "" then
+            warn("Invalid item name")
+            return
+        end
+
+        Core.GameEvents.SeasonPass.BuySeasonPassStock:FireServer(itemName)
+    end
+
+    function m:BuyAllSeasonPassItems()
+        local items = self:GetAvailableSeasonPassesItems()
+
+        for itemName, stock in pairs(items) do
+            if stock < 1 then
+                continue
+            end
+
+            for i = 1, stock do
+                self:BuySeasonPassItem(itemName)
+                task.wait(0.1) -- Small delay to avoid spamming
+            end
+        end
+    end
+
+    return m
+end
+
+-- Module: shop/ui.lua
+EmbeddedModules["shop/ui.lua"] = function()
+    local m = {}
+
+    local Window
+    local EggShop
+    local SeedShop
+    local GearShop
+    local SeasonPassShop
+    local TravelingShop
+
+    function m:Init(_window, _eggShop, _seedShop, _gearShop, _seasonPassShop, _travelingShop)
+        Window = _window
+        EggShop = _eggShop
+        SeedShop = _seedShop
+        GearShop = _gearShop
+        SeasonPassShop = _seasonPassShop
+        TravelingShop = _travelingShop
+    end
+
+    function m:CreateShopTab()
+        local tab = Window:AddTab({
+            Name = "Shop",
+            Icon = "🛍️",
+        })
+
+        -- Seed Automation
+        tab:AddToggle({
+            Name = "Auto Buy Seeds 🌱",
+            Default = false,
+            Flag = "AutoBuySeeds",
+            Callback = function(Value)
+                if Value then
+                    SeedShop:BuyAllSeeds()
+                end
+            end,
+        })
+
+        -- Gear Automation
+        tab:AddToggle({
+            Name = "Auto Buy Gear 🛠️",
+            Default = false,
+            Flag = "AutoBuyGear",
+            Callback = function(Value)
+                if Value then
+                    GearShop:BuyAllGear()
+                end
+            end,
+        })
+
+        -- Egg Automation
+        tab:AddToggle({
+            Name = "Auto Buy Eggs 🥚",
+            Default = false,
+            Flag = "AutoBuyEggs",
+            Callback = function(Value)
+                if Value then
+                    EggShop:BuyAllEggs()
+                end
+            end,
+        })
+
+        tab:AddToggle({
+            Name = "Auto Buy Traveling Items 🧳",
+            Default = false,
+            Flag = "AutoBuyTravelingMerchant",
+            Callback = function(Value)
+                if Value then
+                    TravelingShop:BuyAllTravelingItems()
+                end
+            end,
+        })
+
+        -- Season Pass Automation
+        tab:AddToggle({
+            Name = "Auto Buy Season Pass Items 🎟️",
+            Default = false,
+            Flag = "AutoBuySeasonPasses",
+            Callback = function(Value)
+                if Value then
+                    SeasonPassShop:BuyAllSeasonPassItems()
+                end
+            end,
+        })
+    end
+
+    return m
+end
+
+-- Module: pet/webhook.lua
+EmbeddedModules["pet/webhook.lua"] = function()
+    local m = {}
+
+    local Window
+    local Core
+    local Discord
+
+    local PlayerName
+    local LastHatchTime = 0
+
+    function m:Init(_window, _core, _discord)
+        Window = _window
+        Core = _core
+        Discord = _discord
+
+        PlayerName = Core.LocalPlayer.Name or "Unknown"
+        LastHatchTime = tick()
+    end
+
+    function m:HatchEgg(_petName, _eggName, _baseWeight)
+        local url = Window:GetConfigValue("DiscordWebhookURL") or ""
+        local pingId = Window:GetConfigValue("DiscordPingID") or ""
+        if url == "" then
+            return
+        end
+
+        local weightStatus = (
+            (_baseWeight >= 9 and "Godly") or
+            (_baseWeight >= 8 and _baseWeight < 9 and "Titanic") or
+            (_baseWeight >= 3 and _baseWeight < 8 and "Huge") or
+            "Small"
+        )
+
+        local message = {
+            content = pingId ~= "" and ("<@"..pingId..">") or nil,
+            embeds = {{
+                title = "**EzGarden**",
+                type = 'rich',
+                color = tonumber("0xfa0c0c"),
+                fields = {{
+                    name = '** -> Profile : ** \n',
+                    value = '> Username : ||'..PlayerName.."||",
+                    inline = false
+                }, {
+                    name = "** -> Hatched : **",
+                    value = "> Pet Name: ``".._petName.."``"..
+                           "\n> Hatched From: ``"..(_eggName or"N/A").."``"..
+                           '\n> Weight: ``'..(tostring(_baseWeight).." KG" or 'N/A')..'``'..
+                           "\n> Weight Status: ``"..weightStatus.."``",
+                    inline = false
+                }}
+            }}
+        }
+
+        Discord:SendMessage(url, message)
+    end
+
+    function m:Statistics(_eggName, _amount)
+        local url = Window:GetConfigValue("DiscordWebhookURL") or ""
+        if url == "" then
+            return
+        end
+
+        local message = {
+            content = "",
+            embeds = {{
+                title = "**EzGarden**",
+                type = 'rich',
+                color = tonumber("0xFFFF00"),
+                fields = {{
+                    name = '** -> Profile : ** \n',
+                    value = '> Username : ||'..PlayerName.."||",
+                    inline = false
+                }, {
+                    name = "** -> Hatch Statistics : **",
+                    value = "> Egg Name: ``"..(_eggName or"N/A").."``"..
+                           '\n> Amount: ``'..(tostring(_amount) or 'N/A')..'``'..
+                           '\n> Duration: ``'..string.format("%d Minutes %d Seconds", math.floor((tick() - LastHatchTime) / 60), math.floor((tick() - LastHatchTime) % 60))..'``',
+                    inline = false
+                }}
+            }}
+        }
+
+        LastHatchTime = tick()
+        Discord:SendMessage(url, message)
+    end
+
+    return m
+end
+
+-- Module: pet/egg.lua
+EmbeddedModules["pet/egg.lua"] = function()
+    local m = {}
+
+    local Core
+    local Player
+    local Window
+    local Garden
+    local Pet
+    local Webhook
+
+    local AutoHatchConnection
+    local IsHatchingInProgress = false
+
+    function m:Init(_core, _player, _window, _garden, _pet, _webhook)
+        Core = _core
+        Player = _player
+        Window = _window
+        Garden = _garden
+        Pet = _pet
+        Webhook = _webhook
+
+        local EggReadyToHatchRemote = Core.GameEvents.EggReadyToHatch_RE
+        AutoHatchConnection = EggReadyToHatchRemote.OnClientEvent:Connect(function()
+            self:StartAutoHatching()
+        end)
+
+        task.spawn(function()
+            self:StartAutoHatching()
+        end)
+    end
+
+    function m:StartAutoHatching()
+        if not Window:GetConfigValue("AutoHatchEggs") then
+            return
+        end
+
+        -- If already processing, don't start another process
+        if IsHatchingInProgress then
+            warn("Hatching already in progress, waiting...")
+            return
+        end
+
+        IsHatchingInProgress = true
+
+        -- Execute hatch
+        self:HatchEgg()
+
+        task.wait(1)
+        IsHatchingInProgress = false
+    end
+
+    function m:StopAutoHatching()
+        if AutoHatchConnection then
+            AutoHatchConnection:Disconnect()
+            AutoHatchConnection = nil
+        end
+    end
+
+    function m:GetEggRegistry()
+        local success, petRegistry = pcall(function()
+            return require(Core.ReplicatedStorage.Data.PetRegistry)
+        end)
+
+        if not success then           
+            warn("Failed to get pet registry:", petRegistry)
+            return {}
+        end
+
+        local eggList = petRegistry.PetEggs
+        if not eggList then
+            warn("PetEggs is nil or not found")
+            return {}
+        end
+
+        -- Return the eggList as-is for PetEggRenderer compatibility
+        return eggList
+    end
+
+    function m:GetAllOwnedEggs()
+        local myEggs = {}
+
+        for _, tool in next, Player:GetAllTools() do
+            local toolType = tool:GetAttribute("b")
+            toolType = toolType and string.lower(toolType) or ""
+
+            if toolType == "c" then
+                table.insert(myEggs, tool)
+            end
+        end
+
+        return myEggs
+    end
+
+    function m:FindEggOwnedEgg(eggName)
+        for _, tool in next, self:GetAllOwnedEggs() do
+            local toolName = tool:GetAttribute("h")
+
+            if toolName == eggName then
+                return tool
+            end
+        end
+        return nil
+    end
+
+    function m:GetAllPlacedEggs()
+        local placedEggs = {}
+        local MyFarm = Garden:GetMyFarm()
+
+        if not MyFarm then
+            warn("My farm not found!")
+            return placedEggs
+        end
+
+        local objectsPhysical = MyFarm.Important.Objects_Physical
+        if not objectsPhysical then
+            warn("Objects_Physical not found!")
+            return placedEggs
+        end
+
+        for _, egg in pairs(objectsPhysical:GetChildren()) do
+            if egg.Name ~= "PetEgg" then
+                continue
+            end
+
+            local owner = egg:GetAttribute("OWNER")
+            if owner == Core.LocalPlayer.Name then
+                table.insert(placedEggs, egg)
+            end
+        end
+
+        return placedEggs
+    end
+
+    function m:GetPlacedEggDetail(_eggID)
+        local success, dataService = pcall(function()
+            return require(Core.ReplicatedStorage.Modules.DataService)
+        end)
+        if not success or not dataService then
+            warn("Failed to get DataService:", dataService)
+            return nil
+        end
+
+        local allData = dataService:GetData()
+        if not allData then
+            warn("No data available from DataService")
+            return nil
+        end
+
+        local saveSlots = allData.SaveSlots
+        if not saveSlots then
+            warn("SaveSlots not found in data")
+            return nil
+        end
+
+        local savedObjects = saveSlots.AllSlots[saveSlots.SelectedSlot].SavedObjects
+
+        if savedObjects and _eggID and savedObjects[_eggID] then
+            return savedObjects[_eggID].Data
+        end
+
+        -- Fallback method
+        warn("Falling back to ReplicationClass method")
+        local replicationClass = Core.ReplicatedStorage.Modules.ReplicationClass
+        local dataStreamReplicator = replicationClass.new("DataStreamReplicator")
+        dataStreamReplicator:YieldUntilData()
+
+        local replicationData = dataStreamReplicator:YieldUntilData().Table
+        local playerData = replicationData[Core.LocalPlayer.Name] or replicationData[tostring(Core.LocalPlayer.UserId)]
+
+        if playerData and playerData[_eggID] then
+            return playerData[_eggID].Data
+        end
+
+        return nil
+    end
+
+    function m:PlacingEgg()
+        local eggName = Window:GetConfigValue("EggPlacing") or ""
+        local maxEggs = Window:GetConfigValue("MaxPlaceEggs") or 0
+        local positionType = Window:GetConfigValue("PositionToPlaceEggs") or "Random"
+        local position = Garden:GetFarmRandomPosition()
+
+        if positionType == "Front Right" then
+            position = Garden:GetFarmFrontRightPosition()
+        elseif positionType == "Front Left" then
+            position = Garden:GetFarmFrontLeftPosition()
+        elseif positionType == "Back Right" then
+            position = Garden:GetFarmBackRightPosition()
+        elseif positionType == "Back Left" then
+            position = Garden:GetFarmBackLeftPosition()
+        end
+
+        if eggName == "" then
+            return
+        end
+
+        if maxEggs < 1 then
+            return
+        end
+
+        local eggOwnedName = self:FindEggOwnedEgg(eggName)
+
+        if not eggOwnedName then
+            return
+        end
+
+        local totalOwnedEggs = eggOwnedName:GetAttribute("e") or 0
+        local maxEggCanPlace = math.min(totalOwnedEggs, maxEggs)
+        print("🥚 Total egg will be placed:", maxEggCanPlace)
+
+        local placeEggTask = function(_maxEggCanPlace, _eggTool, _position, _positionType)
+            print("🥚 Starting egg placement using queue system... already placed:", #self:GetAllPlacedEggs(), "Total to place:", _maxEggCanPlace)
+            print("🔍 Debug - Function parameters:", _maxEggCanPlace, _eggTool and _eggTool.Name or "nil", _position, _positionType)
+
+            local attemptCount = 0
+
+            while #self:GetAllPlacedEggs() < _maxEggCanPlace do
+                print("🔄 While loop iteration:", attemptCount, "Current eggs placed:", #self:GetAllPlacedEggs(), "Target:", _maxEggCanPlace)
+                if Player:GetEquippedTool() ~= _eggTool then
+                    Player:EquipTool(_eggTool)
+                    task.wait(0.5) -- Small delay to ensure tool is equipped
+                end
+
+                local newPosition = Garden:GetFarmRandomPosition()
+
+                local success, err = pcall(function()
+                    if string.find(_positionType, "Front") then
+                        local zPosition = _position.Z - (attemptCount * 5)
+                        if Garden.MailboxPosition.Z > 0 then
+                            zPosition = _position.Z + (attemptCount * 5)
+                        end
+
+                        newPosition = Vector3.new(_position.X, _position.Y, zPosition)
+                    elseif string.find(_positionType, "Back") then
+                        local zPosition = _position.Z + (attemptCount * 5)
+                        if Garden.MailboxPosition.Z < 0 then
+                            zPosition = _position.Z - (attemptCount * 5)
+                        end
+
+                        newPosition = Vector3.new(_position.X, _position.Y, zPosition)
+                    end
+                end)
+
+                print("🔍 Debug - New position calculation:", success, err or "No error", newPosition)
+                print("🥚 Placing egg at:", newPosition)
+                Core.GameEvents.PetEggService:FireServer("CreateEgg", newPosition)
+                task.wait(0.5) -- Small delay to avoid spamming
+
+                attemptCount = attemptCount + 1
+            end
+        end
+
+        -- Add to queue with high priority (1)
+        Player:AddToQueue(
+            eggOwnedName,           -- tool
+            1,                      -- priority (high)
+            function()
+                placeEggTask(maxEggCanPlace, eggOwnedName, position, positionType)
+            end
+        )
+
+        print("🎉 Egg placement completed! Total eggs:", #self:GetAllPlacedEggs())
+    end
+
+    function m:HatchEgg()
+        print("Hatching eggs...")
+        if #self:GetAllPlacedEggs() == 0 then
+            self:PlacingEgg()
+            while #self:GetAllPlacedEggs() < 1 do
+                task.wait(1)
+            end
+        end
+
+        -- Wait for eggs to be ready using while loop
+        print("⏳ Waiting for eggs to be ready to hatch...")
+        while true do
+            local readyCount = 0
+            local maxTimeToHatch = 0
+
+            for _, egg in pairs(self:GetAllPlacedEggs()) do
+                if not egg or not egg.Parent then -- Check if egg still exists
+                    continue
+                end
+
+                local timeToHatch = egg:GetAttribute("TimeToHatch") or 0
+                if timeToHatch > 0 then
+                    maxTimeToHatch = math.max(maxTimeToHatch, timeToHatch)
+                else
+                    readyCount = readyCount + 1
+                end
+            end
+
+            print("🥚 Ready eggs:", readyCount, "/", #self:GetAllPlacedEggs())
+
+            if readyCount == #self:GetAllPlacedEggs() then
+                print("✅ All eggs are ready to hatch!")
+                break
+            end
+
+            task.wait(math.min(maxTimeToHatch, 5)) -- Check every second
+        end
+
+        local hatchPetTeam = Window:GetConfigValue("HatchPetTeam") or nil
+        local specialHatchPetTeam = Window:GetConfigValue("SpecialHatchPetTeam") or nil
+        local specialHatchingPets = Window:GetConfigValue("SpecialHatchingPet") or {}
+        local weightThresholdSpecialHatching = Window:GetConfigValue("WeightThresholdSpecialHatching") or math.huge
+        local boostBeforeHatch = Window:GetConfigValue("AutoBoostBeforeHatch") or false
+        local boostBeforeSpecialHatch = Window:GetConfigValue("AutoBoostBeforeSpecialHatch") or false
+
+        if hatchPetTeam then
+            Pet:ChangeTeamPets(hatchPetTeam)
+            task.wait(2)
+            if boostBeforeHatch then
+                Pet:BoostAllActivePets()
+            end
+        end
+
+        local specialHatchingEgg = {}
+        for _, egg in pairs(self:GetAllPlacedEggs()) do
+            local eggUUID = egg:GetAttribute("OBJECT_UUID")
+            local eggData = self:GetPlacedEggDetail(eggUUID)
+            local baseWeight = eggData and eggData.BaseWeight or 1
+            local petName = eggData and eggData.Type or "Unknown"
+
+            local isSpecialPet = false
+            for _, specialPet in ipairs(specialHatchingPets) do
+                if petName == specialPet then
+                    table.insert(specialHatchingEgg, egg)
+                    isSpecialPet = true
+                    break
+                end
+            end
+
+            if isSpecialPet then
+                continue
+            end
+
+            if baseWeight > weightThresholdSpecialHatching then
+                table.insert(specialHatchingEgg, egg)
+                continue
+            end
+            Core.GameEvents.PetEggService:FireServer("HatchPet", egg)
+        end
+
+        task.wait(1)
+
+        if specialHatchPetTeam and #specialHatchingEgg > 0 then
+            Pet:ChangeTeamPets(specialHatchPetTeam)
+            task.wait(2)
+            if boostBeforeSpecialHatch then
+                Pet:BoostAllActivePets()
+            end
+        end
+
+        for _, egg in pairs(specialHatchingEgg) do
+            local eggUUID = egg:GetAttribute("OBJECT_UUID")
+            local eggData = self:GetPlacedEggDetail(eggUUID)
+            local baseWeight = eggData and eggData.BaseWeight or 1
+            local petName = eggData and eggData.Type or "Unknown"
+            print("Hatching special Pet:", petName, "Weight:", baseWeight)
+            Core.GameEvents.PetEggService:FireServer("HatchPet", egg)
+            task.wait(0.15) -- Small delay to avoid spamming
+
+            task.spawn(function() 
+                Webhook:HatchEgg(petName, egg:GetAttribute("EggName") or "Unknown", baseWeight)
+            end)
+        end
+
+        if #specialHatchingEgg > 0 then
+            task.wait(1)
+        end
+
+
+        local isAutoSellAfterHatch = Window:GetConfigValue("AutoSellPetsAfterHatching") or false
+        local corePetTeam = Window:GetConfigValue("CorePetTeam") or nil
+
+        if isAutoSellAfterHatch then
+            Pet:SellPet()
+        else
+            Pet:ChangeTeamPets(corePetTeam)
+        end
+
+        self:PlacingEgg()
+
+        task.spawn(function()
+            local eggName = Window:GetConfigValue("EggPlacing") or "N/A"
+            local tooolEgg = self:FindEggOwnedEgg(eggName)
+            local totalOwnedEggs = tooolEgg and (tooolEgg:GetAttribute("e") or 0) or 0
+
+            Webhook:Statistics(eggName, totalOwnedEggs)
+        end)
+    end
+
+    return m
+end
+
+-- Module: pet/ui.lua
+EmbeddedModules["pet/ui.lua"] = function()
+    local m = {}
+    local Window
+    local PetTeam
+    local Egg
+    local Pet
+    local Garden
+    local Player
+
+    function m:Init(_window, _petTeam, _egg, _pet, _garden, _player)
+        Window = _window
+        PetTeam = _petTeam
+        Egg = _egg
+        Pet = _pet
+        Garden = _garden
+        Player = _player
+    end
+
+    function m:CreatePetTab()
+        local tab = Window:AddTab({
+            Name = "Pet",
+            Icon = "😺",
+        })
+
+        self:AddPetTeamsSection(tab)
+        self:AddEggsSection(tab)
+        self:AddSellSection(tab)
+    end
+
+    function m:AddPetTeamsSection(tab)
+        local accordion = tab:AddAccordion({
+            Title = "Pet Teams",
+            Icon = "🛠️",
+            Expanded = false,
+        })
+
+        accordion:AddLabel("Create and manage pet teams for different tasks.")
+        local petTeamName = accordion:AddTextBox({
+            Name = "Team Name",
+            Placeholder = "Enter team name example: exp, hatch, sell, etc...",
+            Default = "",
+        })
+
+        accordion:AddButton("Save Team", function()
+            local teamName = petTeamName.GetText()
+            if teamName and teamName ~= "" then
+                print("Please enter a valid team name.")
+            end
+
+            local activePets = Pet:GetAllActivePets()
+            if not activePets then
+                print("No active pets found.")
+                return
+            end
+
+            local listActivePets = {}
+            for petID, petState in pairs(activePets) do
+                table.insert(listActivePets, petID)
+            end
+
+            print("Creating pet team:", teamName)
+            PetTeam:SaveTeamPets(teamName, listActivePets)
+            petTeamName.Clear()
+        end)
+
+        accordion:AddSeparator()
+
+        accordion:AddLabel("Select a pet team to set as core, change, or delete.")
+
+        local selectTeam = accordion:AddSelectBox({
+            Name = "Select Pet Team",
+            Options = PetTeam:GetAllPetTeams(),
+            Placeholder = "Select Pet Team...",
+            MultiSelect = false,
+            OnDropdownOpen = function(currentOptions, updateOptions)
+                local listTeamPet = PetTeam:GetAllPetTeams()
+                local currentOptionsSet = {}
+
+                for _, team in pairs(listTeamPet) do
+                    table.insert(currentOptionsSet, {text = team, value = team})
+                end
+
+                updateOptions(currentOptionsSet)
+            end
+        })
+
+        -- Declare labelCoreTeam variable first (forward declaration)
+        local labelCoreTeam
+
+        accordion:AddButton("Set Core Team", function()
+            local selectedTeam = selectTeam.GetSelected()
+            if selectedTeam and #selectedTeam > 0 then
+                local teamName = selectedTeam[1]
+                Window:SetConfigValue("CorePetTeam", teamName)
+                labelCoreTeam.SetText("Current Core Team: " .. teamName)
+            end    
+        end)
+
+        -- Create the label after the button
+        labelCoreTeam = accordion:AddLabel("Current Core Team: " .. (Window:GetConfigValue("CorePetTeam") or "None"))
+
+        accordion:AddSeparator()
+
+
+        accordion:AddButton("Change Team", function()
+            local selectedTeam = selectTeam.GetSelected()
+            if selectedTeam and #selectedTeam > 0 then
+                local teamName = selectedTeam[1]
+                print("Changing to pet team:", teamName)
+                Pet:ChangeTeamPets(teamName)    
+            end
+        end)
+
+        accordion:AddButton("Delete Selected Team", function()
+            local selectedTeam = selectTeam.GetSelected()
+            if selectedTeam and #selectedTeam > 0 then
+                local teamName = selectedTeam[1]
+                PetTeam:DeleteTeamPets(teamName)
+                selectTeam.Clear()
+            end
+        end)
+    end
+
+    function m:AddEggsSection(tab)
+        local accordion = tab:AddAccordion({
+            Title = "Eggs",
+            Icon = "🥚",
+            Expanded = false,
+        })
+
+        accordion:AddLabel("Select an egg to place in your farm.")
+        accordion:AddSelectBox({
+            Name = "Select Egg",
+            Options = {"Loading..."},
+            Placeholder = "Select Egg...",
+            MultiSelect = false,
+            Flag = "EggPlacing",
+            OnInit = function(currentOptions, updateOptions, selectBoxAPI)
+                local formattedEggs = {}
+
+                local listdEggs = Egg:GetEggRegistry()
+                for egg, _ in pairs(listdEggs) do
+                    table.insert(formattedEggs, {text = egg, value = egg})
+                end
+
+                -- Sort eggs alphabetically (ascending order)
+                if #formattedEggs > 0 then
+                    table.sort(formattedEggs, function(a, b)
+                        if not a or not b or not a.text or not b.text then
+                            return false
+                        end
+                        return string.lower(tostring(a.text)) < string.lower(tostring(b.text))
+                    end)
+                end
+
+                updateOptions(formattedEggs)
+            end
+        })
+
+        accordion:AddLabel("Max Place Eggs")
+        accordion:AddNumberBox({
+            Name = "Max Place Eggs",
+            Placeholder = "Enter max eggs...",
+            Default = 0,
+            Min = 0,
+            Max = 13,
+            Increment = 1,
+            Flag = "MaxPlaceEggs",
+        })
+
+        accordion:AddLabel("Position to Place Eggs")
+        accordion:AddSelectBox({
+            Name = "Position to Place Eggs",
+            Options = {"Random", "Front Right", "Front Left", "Back Right", "Back Left"},
+            Default = "Random",
+            MultiSelect = false,
+            Placeholder = "Select position...",
+            Flag = "PositionToPlaceEggs",
+        })
+
+        accordion:AddButton("Place Selected Egg", function()
+            Egg:PlacingEgg()    
+        end)
+
+        accordion:AddSeparator()
+
+        accordion:AddLabel("Team for Hatching Eggs")
+
+        accordion:AddSelectBox({
+            Name = "Select Pet Team for Hatch",
+            Options = {"Loading..."},
+            Placeholder = "Select Pet Team...",
+            MultiSelect = false,
+            Flag = "HatchPetTeam",
+            OnInit = function(currentOptions, updateOptions)
+                local listTeamPet = PetTeam:GetAllPetTeams()
+                local currentOptionsSet = {}
+
+                for _, team in pairs(listTeamPet) do
+                    table.insert(currentOptionsSet, {text = team, value = team})
+                end
+                updateOptions(currentOptionsSet)
+            end,
+            OnDropdownOpen = function(currentOptions, updateOptions)
+                local listTeamPet = PetTeam:GetAllPetTeams()
+                local currentOptionsSet = {}
+
+                for _, team in pairs(listTeamPet) do
+                    table.insert(currentOptionsSet, {text = team, value = team})
+                end
+
+                updateOptions(currentOptionsSet)
+            end
+        })
+
+        accordion:AddToggle({
+            Name = "Auto Boost Pets Before Hatching",
+            Default = false,
+            Flag = "AutoBoostBeforeHatch",
+        })
+
+        accordion:AddSeparator()
+
+        accordion:AddLabel("Select Hatching Special Pet")
+        accordion:AddSelectBox({
+            Name = "Select Special Pet",
+            Options = {"Loading..."},
+            Placeholder = "Select Special Pet...",
+            MultiSelect = true,
+            Flag = "SpecialHatchingPet",
+            OnInit = function(currentOptions, updateOptions, selectBoxAPI)
+                local specialPets = Pet:GetPetRegistry()
+                updateOptions(specialPets)
+            end
+        })
+
+        accordion:AddLabel("Or If Weight is Higher Than")
+        accordion:AddNumberBox({
+            Name = "Weight Threshold",
+            Placeholder = "Enter weight...",
+            Default = 0.0,
+            Min = 0.0,
+            Max = 20.0,
+            Increment = 1.0,
+            Decimals = 2,
+            Flag = "WeightThresholdSpecialHatching",
+        })
+
+        accordion:AddLabel("Select Team for Special Hatching")
+        accordion:AddSelectBox({
+            Name = "Select Pet Team for Special Hatch",
+            Options = {"Loading..."},
+            Placeholder = "Select Pet Team...",
+            MultiSelect = false,
+            Flag = "SpecialHatchPetTeam",
+            OnInit = function(currentOptions, updateOptions)
+                local listTeamPet = PetTeam:GetAllPetTeams()
+                local currentOptionsSet = {}
+
+                for _, team in pairs(listTeamPet) do
+                    table.insert(currentOptionsSet, {text = team, value = team})
+                end
+                updateOptions(currentOptionsSet)
+            end,
+            OnDropdownOpen = function(currentOptions, updateOptions)
+                local listTeamPet = PetTeam:GetAllPetTeams()
+                local currentOptionsSet = {}
+
+                for _, team in pairs(listTeamPet) do
+                    table.insert(currentOptionsSet, {text = team, value = team})
+                end
+                updateOptions(currentOptionsSet)
+            end
+        })
+
+        accordion:AddToggle({
+            Name = "Auto Boost Pets Before Special Hatching",
+            Default = false,
+            Flag = "AutoBoostBeforeSpecialHatch",
+        })
+
+        accordion:AddSeparator()
+
+        accordion:AddToggle({
+            Name = "Auto Hatch Eggs",
+            Default = false,
+            Flag = "AutoHatchEggs",
+            Callback = function(value)
+                if value then
+                    Egg:StartAutoHatching()
+                end
+            end
+        })
+    end
+
+    function m:AddSellSection(tab)
+        local accordion = tab:AddAccordion({
+            Title = "Sell Pets",
+            Icon = "💰",
+            Expanded = false,
+        })
+
+        accordion:AddLabel("Select a pet to sell.")
+        accordion:AddSelectBox({
+            Name = "Select Pet to Sell",
+            Options = {"Loading..."},
+            Placeholder = "Select Pet...",
+            MultiSelect = true,
+            Flag = "PetToSell",
+            OnInit = function(currentOptions, updateOptions, selectBoxAPI)
+                local specialPets = Pet:GetPetRegistry()
+                updateOptions(specialPets)
+            end,
+        })
+
+        accordion:AddLabel("And If Base Weight Is Less Than Or Equal")
+        accordion:AddNumberBox({
+            Name = "Weight Threshold",
+            Placeholder = "Enter weight...",
+            Default = 1.0,
+            Min = 0.5,
+            Max = 20.0,
+            Increment = 1.0,
+            Decimals = 2,
+            Flag = "WeightThresholdSellPet",
+        })
+
+        accordion:AddLabel("And If Age Is Less Than Or Equal")
+        accordion:AddNumberBox({
+            Name = "Age Threshold (in days)",
+            Placeholder = "Enter age...",
+            Default = 1,
+            Min = 1,
+            Max = 100,
+            Increment = 1,
+            Flag = "AgeThresholdSellPet",
+        })
+
+        accordion:AddLabel("Pet Team to Use for Selling")
+        accordion:AddSelectBox({
+            Name = "Select Pet Team for Sell",
+            Options = {"Loading..."},
+            Placeholder = "Select Pet Team...",
+            MultiSelect = false,
+            Flag = "SellPetTeam",
+            OnInit = function(currentOptions, updateOptions)
+                local listTeamPet = PetTeam:GetAllPetTeams()
+                local currentOptionsSet = {}
+                for _, team in pairs(listTeamPet) do
+                    table.insert(currentOptionsSet, {text = team, value = team})
+                end
+                updateOptions(currentOptionsSet)
+            end,
+            OnDropdownOpen = function(currentOptions, updateOptions)
+                local listTeamPet = PetTeam:GetAllPetTeams()
+                local currentOptionsSet = {}
+
+                for _, team in pairs(listTeamPet) do
+                    table.insert(currentOptionsSet, {text = team, value = team})
+                end
+
+                updateOptions(currentOptionsSet)
+            end
+        })
+        accordion:AddToggle({
+            Name = "Auto Boost Pets Before Selling",
+            Default = false,
+            Flag = "AutoBoostBeforeSelling",
+        })
+
+        accordion:AddToggle({
+            Name = "Auto Sell Pets After Hatching",
+            Default = false,
+            Flag = "AutoSellPetsAfterHatching",
+        })
+
+        accordion:AddButton("Sell Selected Pet", function()
+            Pet:SellPet()
+        end)
+    end
+
+    return m
+end
+
+-- Module: server/ui.lua
+EmbeddedModules["server/ui.lua"] = function()
+    local m = {}
+    local Window
+    local Core
+    local Player
+    local Garden
+
+    function m:Init(_window, _core, _player, _garden)
+        Window = _window
+        Core = _core
+        Player = _player
+        Garden = _garden
+    end
+
+    function m:CreateServerTab()
+        local tab = Window:AddTab({
+            Name = "Server",
+            Icon = "🌐",
+        })
+
+        tab:AddButton("Rejoin Server 🔄", function()
+            Core:Rejoin()
+        end)
+
+        tab:AddButton("Hop Server 🚀", function()
+            Core:HopServer()
+        end)
+
+        tab:AddSeparator()
+
+        tab:AddButton("Debug Status Queue 🔍", function()
+            local queueStatus = Player:GetQueueStatus()
+            warn("Queue size:", queueStatus.queueSize, "Current Task:", queueStatus.currentTask)
+        end)
+
+        tab:AddSeparator()
+
+        tab:AddButton("Front Right", function() 
+            local position = Garden:GetFarmFrontRightPosition()
+
+            if not position then
+                warn("Failed to get Front Right position")
+                return
+            end
+
+            for i = 1, 10 do
+                local z = position.Z - (i * 3)
+
+                -- Safe check for MailboxPosition
+                if Garden.MailboxPosition and Garden.MailboxPosition.Z and Garden.MailboxPosition.Z > 0 then
+                    warn("Revert")
+                    z = position.Z + (i * 3)
+                end
+
+                Player:TeleportToPosition(Vector3.new(position.X, position.Y, z))
+                task.wait(.1)
+            end
+        end)
+
+        tab:AddButton("Back Right", function() 
+            local position = Garden:GetFarmBackRightPosition()
+
+            if not position then
+                warn("Failed to get Back Right position")
+                return
+            end
+
+            for i = 1, 10 do
+                local z = position.Z + (i * 3)
+
+                -- Safe check for MailboxPosition
+                if Garden.MailboxPosition and Garden.MailboxPosition.Z and Garden.MailboxPosition.Z > 0 then
+                    warn("Revert")
+                    z = position.Z - (i * 3)
+                end
+
+                Player:TeleportToPosition(Vector3.new(position.X, position.Y, z))
+                task.wait(.1)
+            end
+        end)
+
+        tab:AddButton("Front Left", function() 
+            local position = Garden:GetFarmFrontLeftPosition()
+
+            if not position then
+                warn("Failed to get Front Left position")
+                return
+            end
+
+            for i = 1, 10 do
+                local z = position.Z - (i * 3)
+
+                -- Safe check for MailboxPosition
+                if Garden.MailboxPosition and Garden.MailboxPosition.Z and Garden.MailboxPosition.Z > 0 then
+                    warn("Revert")
+                    z = position.Z + (i * 3)
+                end
+
+                Player:TeleportToPosition(Vector3.new(position.X, position.Y, z))
+                task.wait(.1)
+            end
+        end)
+
+        tab:AddButton("Back Left", function() 
+            local position = Garden:GetFarmBackLeftPosition()
+
+            if not position then
+                warn("Failed to get Back Left position")
+                return
+            end
+
+            for i = 1, 10 do
+                local z = position.Z + (i * 3)
+
+                -- Safe check for MailboxPosition
+                if Garden.MailboxPosition and Garden.MailboxPosition.Z and Garden.MailboxPosition.Z > 0 then
+                    warn("Revert")
+                    z = position.Z - (i * 3)
+                end
+
+                Player:TeleportToPosition(Vector3.new(position.X, position.Y, z))
+                task.wait(.1)
+            end
+        end)
+    end
+
+    return m
+end
+
+-- Module: farm/garden.lua
+EmbeddedModules["farm/garden.lua"] = function()
+    local m = {}
+    local Window
+    local Core
+    local Player
+    local AutoHarvestThread
+    local AutoHarvesting = false
+    local BackpackConnection
+    local PlantConnection
+    local WateringConnection
+    local PlantsLocation
+    m.MailboxPosition = Vector3.new(0, 0, 0)
+
+    function m:Init(_window, _core, _player)
+        Window = _window
+        Core = _core
+        Player = _player
+
+        local important = self:GetMyFarm():FindFirstChild("Important")
+        PlantsLocation = important:FindFirstChild("Plant_Locations")
+
+        local mailbox = self:GetMyFarm():FindFirstChild("Mailbox")
+        if mailbox then
+            m.MailboxPosition = mailbox:GetPivot().Position
+        end
+
+    end
+
+    function m:GetMyFarm()
+    	local farms = Core.Workspace.Farm:GetChildren()
+
+    	for _, farm in next, farms do
+            local important = farm.Important
+            local data = important.Data
+            local owner = data.Owner
+
+    		if owner.Value == Core.LocalPlayer.Name then
+    			return farm
+    		end
+    	end
+    end
+
+    function m:GetArea(_base)
+        local center = _base:GetPivot()
+    	local size = _base.Size
+
+    	-- Bottom left
+    	local x1 = math.ceil(center.X - (size.X/2))
+    	local z1 = math.ceil(center.Z - (size.Z/2))
+
+    	-- Top right
+    	local x2 = math.floor(center.X + (size.X/2))
+    	local z2 = math.floor(center.Z + (size.Z/2))
+
+    	return x1, z1, x2, z2
+    end
+
+    function m:GetFarmCenterPosition()
+        local farmParts = PlantsLocation:GetChildren()
+        if #farmParts < 1 then
+            return Vector3.new(0, 4, 0)
+        end
+
+        -- Calculate center from all farm parts
+        local totalX, totalZ = 0, 0
+        local totalY = 4 -- Default height for farm
+        local partCount = 0
+
+        for _, part in pairs(farmParts) do
+            if part:IsA("BasePart") then
+                local pos = part.Position
+                totalX = totalX + pos.X
+                totalZ = totalZ + pos.Z
+                totalY = math.max(totalY, pos.Y + part.Size.Y/2) -- Use highest Y position
+                partCount = partCount + 1
+            end
+        end
+
+        if partCount > 0 then
+            local centerX = totalX / partCount
+            local centerZ = totalZ / partCount
+            return Vector3.new(centerX, totalY, centerZ)
+        end
+    end
+
+    function m:GetFarmFrontRightPosition()
+        local farmParts = PlantsLocation:GetChildren()
+
+        if #farmParts < 1 then
+            return Vector3.new(0, 4, 0)
+        end
+
+        local farmLand = farmParts[1]
+        if  m.MailboxPosition.Z > 0 then
+            if farmParts[1]:GetPivot().X > farmParts[2]:GetPivot().X then
+                farmLand = farmParts[2]
+            end
+        else
+            if farmParts[1]:GetPivot().X < farmParts[2]:GetPivot().X then
+                farmLand = farmParts[2]
+            end
+        end
+
+        local x1, z1, x2, z2 = self:GetArea(farmLand)
+
+        local x = math.max(x1, x2)
+        local z = math.max(z1, z2)
+
+        if m.MailboxPosition.Z > 0 then
+            x = math.min(x1, x2)
+            z = math.min(z1, z2)
+        end
+
+        return Vector3.new(x, 4, z)
+    end
+
+    function m:GetFarmFrontLeftPosition()
+        local farmParts = PlantsLocation:GetChildren()
+
+        if #farmParts < 1 then
+            return Vector3.new(0, 4, 0)
+        end
+
+        local farmLand = farmParts[1]
+        if  m.MailboxPosition.Z > 0 then
+            if farmParts[1]:GetPivot().X < farmParts[2]:GetPivot().X then
+                farmLand = farmParts[2]
+            end
+        else
+            if farmParts[1]:GetPivot().X > farmParts[2]:GetPivot().X then
+                farmLand = farmParts[2]
+            end
+        end
+
+        local x1, z1, x2, z2 = self:GetArea(farmLand)
+
+        local x = math.min(x1, x2)
+        local z = math.max(z1, z2)
+
+        if m.MailboxPosition.Z > 0 then
+            x = math.max(x1, x2)
+            z = math.min(z1, z2)
+        end
+
+        return Vector3.new(x, 4, z)
+    end
+
+    function m:GetFarmBackRightPosition()
+        local farmParts = PlantsLocation:GetChildren()
+        if #farmParts < 1 then
+            return Vector3.new(0, 4, 0)
+        end
+
+        local farmLand = farmParts[1]
+        if  m.MailboxPosition.Z > 0 then
+            if farmParts[1]:GetPivot().X > farmParts[2]:GetPivot().X then
+                farmLand = farmParts[2]
+            end
+        else
+            if farmParts[1]:GetPivot().X < farmParts[2]:GetPivot().X then
+                farmLand = farmParts[2]
+            end
+        end
+
+        local x1, z1, x2, z2 = self:GetArea(farmLand)
+
+        local x = math.max(x1, x2)
+        local z = math.min(z1, z2)
+
+        if m.MailboxPosition.Z > 0 then
+            x = math.min(x1, x2)
+            z = math.max(z1, z2)
+        end
+
+        return Vector3.new(x, 4, z)
+    end
+
+    function m:GetFarmBackLeftPosition()
+        local farmParts = PlantsLocation:GetChildren()
+        if #farmParts < 1 then
+            return Vector3.new(0, 4, 0)
+        end
+
+        local farmLand = farmParts[1]
+        if  m.MailboxPosition.Z > 0 then
+            if farmParts[1]:GetPivot().X < farmParts[2]:GetPivot().X then
+                farmLand = farmParts[2]
+            end
+        else
+            if farmParts[1]:GetPivot().X > farmParts[2]:GetPivot().X then
+                farmLand = farmParts[2]
+            end
+        end
+
+        local x1, z1, x2, z2 = self:GetArea(farmLand)
+
+        local x = math.min(x1, x2)
+        local z = math.min(z1, z2)
+
+        if m.MailboxPosition.Z > 0 then
+            x = math.max(x1, x2)
+            z = math.max(z1, z2)
+        end
+
+        return Vector3.new(x, 4, z)
+    end
+
+    function m:GetFarmRandomPosition()
+        local farmParts = PlantsLocation:GetChildren()
+
+        if #farmParts < 1 then
+            return Vector3.new(0, 4, 0)
+        end
+
+        local FarmLand = farmParts[math.random(1, #farmParts)]
+
+        local x1, z1, x2, z2 = self:GetArea(FarmLand)
+        local x = math.random(x1, x2)
+        local z = math.random(z1, z2)
+
+        return Vector3.new(x, 4, z)
+    end
+
+    return m
+end
+
+-- Module: farm/ui.lua
+EmbeddedModules["farm/ui.lua"] = function()
+    local m = {}
+    local Window
+    local Player
+    local Garden
+    local Plant
+
+    function m:init(_window, _player, _garden, _plant)
+        Window = _window
+        Player = _player
+        Garden = _garden
+        Plant = _plant
+    end
+
+    function m:CreateFarmTab()
+        local tab = Window:AddTab({
+            Name = "Farm",
+            Icon = "🌾",
+        })
+
+        self:AddPlantingSection(tab)
+        self:AddWateringSection(tab)
+        self:AddHarvestingSection(tab)
+    end
+
+    function m:AddPlantingSection(tab)
+        local accordion = tab:AddAccordion({
+            Title = "Planting",
+            Icon = "🌱",
+            Expanded = false,
+        })
+
+        accordion:AddLabel("Select seeds to auto plant:")
+        accordion:AddSelectBox({
+            Name = "Seeds to Plant",
+            Options = {"Loading..."},
+            Placeholder = "Select seeds...",
+            MultiSelect = true,
+            Flag = "SeedsToPlant",
+            OnInit = function(currentOptions, updateOptions, selectBoxAPI)
+                local seeds = Plant:GetPlantRegistry()
+                local formattedSeeds = {}
+                for _, seedData in pairs(seeds) do
+                    table.insert(formattedSeeds, {
+                        text = seedData.plant,
+                        value = seedData.plant
+                    })
+                end
+                updateOptions(formattedSeeds)
+            end,
+        })
+
+        accordion:AddLabel("Set the number of seeds to plant:")
+        accordion:AddNumberBox({
+            Name = "Seeds to Plant",
+            Placeholder = "Enter number of seeds...",
+            Flag = "SeedsToPlantCount",
+            Min = 0,
+            Max = 800,
+            Default = 1,
+            Increment = 1,
+        })
+
+        accordion:AddLabel("Position planting seeds:")
+        accordion:AddSelectBox({
+            Name = "Planting Position",
+            Flag = "PlantingPosition",
+            Options = {"Random", "Front Right", "Front Left", "Back Right", "Back Left"},
+            Default = "Random",
+            MultiSelect = false,
+            Placeholder = "Select position...",
+        })
+
+        accordion:AddButton("Save Planting Settings", function()
+            local selectedSeeds = Window:GetConfigValue("SeedsToPlant") or {}
+            local seedsToPlantCount = Window:GetConfigValue("SeedsToPlantCount") or 1
+
+            print("Selected Seeds:", selectedSeeds)
+            print("Number of Seeds to Plant:", seedsToPlantCount)
+
+            Plant:PlantSeed(selectedSeeds[1], seedsToPlantCount)
+        end)
+
+        accordion:AddToggle({
+            Name = "Enable Auto Planting",
+            Flag = "AutoPlantSeeds",
+            Default = false,
+            Callback = function(state)
+               if state then
+                    print("Auto Planting Enabled:", state)
+                    Plant:StartAutoPlanting()
+                else
+                    print("Auto Planting Disabled:", state)
+                end
+            end,
+        })
+    end
+
+    function m:AddWateringSection(tab)
+        local accordion = tab:AddAccordion({
+            Title = "Watering",
+            Icon = "💧",
+            Expanded = false,
+        })
+
+        accordion:AddLabel("Watering Position:")
+        accordion:AddSelectBox({
+            Name = "Watering Position",
+            Flag = "WateringPosition",
+            Options = {"Front Right", "Front Left", "Back Right", "Back Left"},
+            Default = "Front Right",
+            MultiSelect = false,
+            Placeholder = "Select position...",
+        })
+
+        accordion:AddLabel("Set the Each Watering:")
+        accordion:AddNumberBox({
+            Name = "Each Watering",
+            Placeholder = "Enter number of waterings...",
+            Flag = "WateringEach",
+            Min = 1,
+            Max = 100,
+            Default = 1,
+            Increment = 1,
+        })
+
+        accordion:AddLabel("Set the number of waterings delay:")
+        accordion:AddNumberBox({
+            Name = "Watering Delay",
+            Placeholder = "Enter watering delay...",
+            Flag = "WateringDelay",
+            Min = 0,
+            Max = 800,
+            Default = 1,
+            Increment = 1,
+        })
+
+        accordion:AddToggle({
+            Name = "Enable Auto Watering",
+            Flag = "AutoWateringPlants",
+            Default = false,
+            Callback = function(state)
+               if state then
+                    print("Auto Watering Enabled:", state)
+                    Plant:AutoWateringPlants()
+                else
+                    print("Auto Watering Disabled:", state)
+                end
+            end,
+        })
+    end
+
+    function m:AddHarvestingSection(tab)
+        local accordion = tab:AddAccordion({
+            Title = "Harvest",
+            Icon = "🌿",
+            Expanded = false,
+        })
+
+        accordion:AddLabel("Select plants to auto harvest:")
+        accordion:AddSelectBox({
+            Name = "Plants to Harvest",
+            Flag = "PlantsToHarvest",
+            MultiSelect = true,
+            Placeholder = "Select plants...",
+            OnInit = function(currentOptions, updateOptions, selectBoxAPI)
+                local plants = Plant:GetPlantRegistry()
+                local formattedPlants = {}
+                for _, plantData in pairs(plants) do
+                    table.insert(formattedPlants, {
+                        text = plantData.plant,
+                        value = plantData.plant,
+                    })
+                end
+                updateOptions(formattedPlants)
+            end,
+        })
+
+        accordion:AddToggle({
+            Name = "Auto Harvest Plants 🌿",
+            Default = false,
+            Flag = "AutoHarvestPlants",
+            Callback = function(Value)
+                if Value then
+                    Plant:StartAutoHarvesting()
+                end
+            end,
+        })
+    end
+
+    return m
+end
+
+-- Module: shop/gear.lua
+EmbeddedModules["shop/gear.lua"] = function()
+    local m = {}
+
+    local Window
+    local Core
+    local Shop
+
+    local Connections
+    local ShopUI = "Gear_Shop"
+    local ShopItem = "Watering Can"
+
+    function m:Init(_window, _core, _shop)
+        Window = _window
+        Core = _core
+        Shop = _shop
+
+        _core:MakeLoop(function()
+            return Window:GetConfigValue("AutoBuyGear")
+        end, function()
+            self:BuyAllGear()
+        end)
+    end
+
+    function m:BuyGear(gearName)
+        if not gearName or gearName == "" then
+            warn("Invalid gear name")
+            return
+        end
+
+        Core.GameEvents.BuyGearStock:FireServer(gearName)
+    end
+
+    function m:BuyAllGear()
+        local items = Shop:GetAvailableItems(ShopUI)
+
+        for gearName, stock in pairs(items) do
+            if stock < 1 then
+                continue
+            end
+
+            for i = 1, stock do
+                self:BuyGear(gearName)
+                task.wait(0.1)
+            end
+        end
+    end
+
+    function m:StartGearAutomation()
+        if not Window:GetConfigValue("AutoBuyGear") then
+            return
+        end
+
+        self:BuyAllGear()
+
+        if Connections then
+            for _, conn in pairs(Connections) do
+                conn:Disconnect()
+            end
+            Connections = nil
+        end
+
+        Connections = {}
+        for _, item in pairs(Shop:GetListItems(ShopUI)) do
+            local conn = Shop:ConnectToStock(item, function()
+                if not Window:GetConfigValue("AutoBuyGear") then
+                    return
+                end
+
+                self:BuyAllGear()
+            end)
+            table.insert(Connections, conn)
+        end
+    end
+
+    function m:StopGearAutomation()
+        if Connections then
+            for _, conn in pairs(Connections) do
+                conn:Disconnect()
+            end
+            Connections = nil
+        end
+    end
+
+    return m
+end
+
+-- Module: shop/traveling.lua
+EmbeddedModules["shop/traveling.lua"] = function()
+    local m = {}
+
+    local Window
+    local Core
+    local Shop
+
+    local Connections
+    local ShopUI = "TravelingMerchantShop_UI"
+
+    function m:Init(_window, _core, _shop)
+        Window = _window
+        Core = _core
+        Shop = _shop
+
+        _core:MakeLoop(function()
+            return Window:GetConfigValue("AutoBuyTravelingMerchant")
+        end, function()
+            self:BuyAllTravelingItems()
+        end)
+    end
+
+    function m:BuyTravelingItem(itemName)
+        if not itemName or itemName == "" then
+            warn("Invalid traveling item name")
+            return
+        end
+
+        Core.GameEvents.BuyTravelingMerchantShopStock:FireServer(itemName, 5)
+    end
+
+    function m:BuyAllTravelingItems()
+        local items = Shop:GetAvailableItems(ShopUI)
+
+        for itemName, stock in pairs(items) do
+            if stock < 1 then
+                continue
+            end
+
+            for i = 1, stock do
+                self:BuyTravelingItem(itemName)
+                task.wait(0.1) -- Small delay to avoid spamming
+            end
+        end
+    end
+
+
+    return m
+end
+
+-- Module: pet/team.lua
+EmbeddedModules["pet/team.lua"] = function()
+    local m = {}
+
+    local Core
+    local Player
+    local Window
+    local PetConfig
+    local Garden
+
+    function m:Init(_core, _player, _window, _petConfig, _garden)
+        Core = _core
+        Player = _player
+        Window = _window
+        PetConfig = _petConfig
+        Garden = _garden
+    end
+
+    function m:SaveTeamPets(_teamName, _listPets)
+        PetConfig.SetValue(_teamName, _listPets)
+    end
+
+    function m:GetAllPetTeams()
+        return PetConfig.GetAllKeys()
+    end
+
+    function m:FindPetTeam(_teamName)
+        return PetConfig.GetValue(_teamName)
+    end
+
+    function m:DeleteTeamPets(_teamName)
+        PetConfig.DeleteKey(_teamName)
+    end
+
+    return m
+end
+
+-- Module: inventory/ui.lua
+EmbeddedModules["inventory/ui.lua"] = function()
+    local m = {}
+
+    local Window
+    local Inventory
+    local Pet
+
+    function m:Init(_window, _inventory, _pet)
+        Window = _window
+        Inventory = _inventory
+        Pet = _pet
+    end
+
+    function m:CreateTab()
+        local tab = Window:AddTab({
+            Name = "Inventory",
+            Icon = "🎒"
+        })
+
+        self:AddPetSection(tab)
+    end
+
+    function m:AddPetSection(tab)
+        local accordion = tab:AddAccordion({
+            Title = "Pets",
+            Icon = "🐶",
+            Expanded = false,
+        })
+
+        accordion:AddLabel("Select pet name for auto favorite:")
+        accordion:AddSelectBox({
+            Name = "Auto Favorite Pet Name",
+            Options = {"Loading..."},
+            Placeholder = "Select a pet",
+            MultiSelect = true,
+            Flag = "AutoFavoritePetName",
+            OnInit = function(currentOptions, updateOptions, selectBoxAPI)
+                local specialPets = Pet:GetPetRegistry()
+                updateOptions(specialPets)
+            end
+        })
+
+        accordion:AddLabel("Or If Weight Is Higher Than Or Equal To")
+        accordion:AddNumberBox({
+            Name = "Weight Threshold",
+            Placeholder = "Enter weight...",
+            Default = 0.0,
+            Min = 0.0,
+            Max = 20.0,
+            Increment = 1.0,
+            Decimals = 2,
+            Flag = "AutoFavoritePetWeight",
+        })
+
+        accordion:AddLabel("Or If Age Is Higher Than Or Equal To")
+        accordion:AddNumberBox({
+            Name = "Age Threshold",
+            Placeholder = "Enter age...",
+            Default = 0,
+            Min = 0,
+            Max = 100,
+            Increment = 1,
+            Flag = "AutoFavoritePetAge",
+        })
+
+        accordion:AddToggle({
+            Name = "Auto Favorite Pets",
+            Flag = "AutoFavoritePets",
+            Default = false,
+            Callback = function(value)
+                if value then
+                    Inventory:FavoriteAllPets()
+                end
+            end
+        })
+    end
+
+    return m
+end
+
+-- Module: https://raw.githubusercontent.com/alfin-efendy/ez-rbx-ui/refs/heads/main/ui.lua
+EmbeddedModules["https://raw.githubusercontent.com/alfin-efendy/ez-rbx-ui/refs/heads/main/ui.lua"] = function()
+    -- EzUI
+    local EzUI = {}
+
+    -- Configuration System
+    local HttpService = game:GetService("HttpService")
+    local EzUIFolder = "EzUI"
+    local ConfigurationFolder = EzUIFolder .. "/Configurations"
+    local ConfigurationExtension = ".json"
+
+    -- Global flags storage for configuration saving
+    EzUI.Flags = {}
+
+    -- Component registry for flag-based updates
+    EzUI.Components = {}
+
+    -- Global configuration state
+    EzUI.Configuration = {
+    	Enabled = false,
+    	FileName = "DefaultConfig",
+    	FolderName = "EzUI",
+    	AutoSave = true,
+    	AutoLoad = true
+    }
+
+    -- Helper functions for component registry
+    local function registerComponent(flag, componentAPI)
+    	if flag and componentAPI then
+    		if not EzUI.Components[flag] then
+    			EzUI.Components[flag] = {}
+    		end
+    		table.insert(EzUI.Components[flag], componentAPI)
+    	end
+    end
+
+    local function updateComponentsByFlag(flag, value)
+    	if EzUI.Components[flag] then
+    		for _, componentAPI in ipairs(EzUI.Components[flag]) do
+    			if componentAPI.Set then
+    				componentAPI.Set(value)
+    			elseif componentAPI.SetValue then
+    				componentAPI.SetValue(value)
+    			elseif componentAPI.SetText then
+    				componentAPI.SetText(value)
+    			elseif componentAPI.SetSelected then
+    				componentAPI.SetSelected(value)
+    			end
+    		end
+    	end
+    end
+
+    -- Configuration functions
+    local function saveConfiguration(fileName)
+    	if not fileName then return false end
+
+    	-- Create a copy of flags for saving, preserving explicit nil values as empty strings
+    	local flagsToSave = {}
+    	local hasData = false
+
+    	for key, value in pairs(EzUI.Flags) do
+    		flagsToSave[key] = value
+    		hasData = true
+    	end
+
+    	-- Check if we have any flags to save
+    	if not hasData then
+    		print("EzUI: No configuration data to save")
+    		return false
+    	end
+
+    	-- Use dynamic folder name from configuration
+    	local dynamicFolderName = EzUI.Configuration.FolderName or "EzUI"
+    	local dynamicConfigurationFolder = dynamicFolderName .. "/Configurations"
+
+    	-- Save to file if writefile is available
+    	if writefile then
+    		-- Create folder if it doesn't exist
+    		if not isfolder then
+    			warn("EzUI: Configuration saving requires isfolder function")
+    			return false
+    		end
+
+    		if not isfolder(dynamicFolderName) then
+    			makefolder(dynamicFolderName)
+    		end
+
+    		if not isfolder(dynamicConfigurationFolder) then
+    			makefolder(dynamicConfigurationFolder)
+    		end
+
+    		-- Write configuration file
+    		local filePath = dynamicConfigurationFolder .. "/" .. fileName .. ConfigurationExtension
+    		local success, result = pcall(function()
+    			writefile(filePath, HttpService:JSONEncode(flagsToSave))
+    		end)
+
+    		if success then
+    			print("EzUI: Configuration saved to " .. filePath)
+    			return true
+    		else
+    			warn("EzUI: Failed to save configuration: " .. tostring(result))
+    			return false
+    		end
+    	else
+    		warn("EzUI: Configuration saving requires writefile function")
+    		return false
+    	end
+    end
+
+    local function loadConfiguration(fileName)
+    	if not fileName or not readfile or not isfile then 
+    		warn("EzUI: Configuration loading requires readfile and isfile functions")
+    		return false 
+    	end
+
+    	-- Use dynamic folder name from configuration
+    	local dynamicFolderName = EzUI.Configuration.FolderName or "EzUI"
+    	local dynamicConfigurationFolder = dynamicFolderName .. "/Configurations"
+    	local filePath = dynamicConfigurationFolder .. "/" .. fileName .. ConfigurationExtension
+
+    	if not isfile(filePath) then
+    		print("EzUI: No configuration file found at " .. filePath)
+    		return false
+    	end
+
+    	local success, configData = pcall(function()
+    		return HttpService:JSONDecode(readfile(filePath))
+    	end)
+
+    	if not success then
+    		warn("EzUI: Failed to load configuration file: " .. tostring(configData))
+    		return false
+    	end
+
+    	-- Apply loaded configuration to flags and update components
+    	local applied = 0
+    	for flagName, flagValue in pairs(configData) do
+    		EzUI.Flags[flagName] = flagValue
+    		-- Update UI components that use this flag
+    		updateComponentsByFlag(flagName, flagValue)
+    		applied = applied + 1
+    	end
+
+    	print("EzUI: Configuration loaded from " .. filePath .. " (" .. applied .. " settings applied)")
+    	return true
+    end
+
+    -- Custom Configuration System (Independent from Window Configuration)
+    function EzUI.NewConfig(configName)
+    	-- Create a new custom configuration object
+    	-- configName: string - name of the configuration (will be used as filename)
+    	-- Returns: table - custom configuration object with its own methods
+
+    	if not configName or type(configName) ~= "string" then
+    		warn("EzUI.NewConfig: configName must be a string")
+    		return nil
+    	end
+
+    	-- Create independent storage for this custom config
+    	local customFlags = {}
+
+    	-- Save function for this custom config
+    	local function saveCustomConfig()
+    		-- Filter out keys with nil values
+    		local dataToSave = {}
+    		local hasData = false
+
+    		for key, value in pairs(customFlags) do
+    			if value ~= nil then
+    				dataToSave[key] = value
+    				hasData = true
+    			end
+    		end
+
+    		if not hasData then
+    			print("EzUI.CustomConfig: No valid data to save for " .. configName)
+    			return false
+    		end
+
+    		if not writefile or not isfolder or not makefolder then
+    			warn("EzUI.CustomConfig: File operations not available")
+    			return false
+    		end
+
+    		-- Use the main EzUI folder structure
+    		local dynamicFolderName = EzUI.Configuration.FolderName or "EzUI"
+    		local dynamicConfigurationFolder = dynamicFolderName .. "/Configurations"
+
+    		-- Create folders if they don't exist
+    		if not isfolder(dynamicFolderName) then
+    			makefolder(dynamicFolderName)
+    		end
+
+    		if not isfolder(dynamicConfigurationFolder) then
+    			makefolder(dynamicConfigurationFolder)
+    		end
+
+    		-- Save to separate JSON file
+    		local filePath = dynamicConfigurationFolder .. "/" .. configName .. ".json"
+    		local success, result = pcall(function()
+    			writefile(filePath, HttpService:JSONEncode(dataToSave))
+    		end)
+
+    		if success then
+    			local savedCount = 0
+    			for _ in pairs(dataToSave) do
+    				savedCount = savedCount + 1
+    			end
+    			print("EzUI.CustomConfig: " .. configName .. " saved to " .. filePath .. " (" .. savedCount .. " keys)")
+    			return true
+    		else
+    			warn("EzUI.CustomConfig: Failed to save " .. configName .. ": " .. tostring(result))
+    			return false
+    		end
+    	end
+
+    	-- Load function for this custom config
+    	local function loadCustomConfig()
+    		if not readfile or not isfile then
+    			warn("EzUI.CustomConfig: File operations not available")
+    			return false
+    		end
+
+    		local dynamicFolderName = EzUI.Configuration.FolderName or "EzUI"
+    		local dynamicConfigurationFolder = dynamicFolderName .. "/Configurations"
+    		local filePath = dynamicConfigurationFolder .. "/" .. configName .. ".json"
+
+    		if not isfile(filePath) then
+    			print("EzUI.CustomConfig: No file found for " .. configName .. " at " .. filePath)
+    			return false
+    		end
+
+    		local success, configData = pcall(function()
+    			return HttpService:JSONDecode(readfile(filePath))
+    		end)
+
+    		if not success then
+    			warn("EzUI.CustomConfig: Failed to load " .. configName .. ": " .. tostring(configData))
+    			return false
+    		end
+
+    		-- Apply loaded data and update components
+    		local applied = 0
+    		for flagName, flagValue in pairs(configData) do
+    			customFlags[flagName] = flagValue
+    			applied = applied + 1
+    		end
+
+    		print("EzUI.CustomConfig: " .. configName .. " loaded (" .. applied .. " settings applied)")
+    		return true
+    	end
+
+    	-- Auto-load function for custom config
+    	local function autoLoadCustomConfig()
+    		if loadCustomConfig() then
+    			-- Apply loaded values to EzUI.Flags to sync with main configuration system
+    			for flagName, flagValue in pairs(customFlags) do
+    				EzUI.Flags[flagName] = flagValue
+    				-- Update UI components that use this flag
+    				updateComponentsByFlag(flagName, flagValue)
+    			end
+    		end
+    	end
+
+    	-- Auto-load configuration when first declaring custom config
+    	task.defer(function()
+    		autoLoadCustomConfig()
+    	end)
+
+    	-- Return custom configuration object
+    	return {
+    		-- Get value by key
+    		GetValue = function(key)
+    			if not key then
+    				warn("EzUI.CustomConfig.GetValue: key parameter is required")
+    				return nil
+    			end
+    			return customFlags[key]
+    		end,
+
+    		-- Set value by key and update associated components
+    		SetValue = function(key, value)
+    			if not key then
+    				warn("EzUI.CustomConfig.SetValue: key parameter is required")
+    				return false
+    			end
+
+    			customFlags[key] = value
+
+    			saveCustomConfig()
+    			return true
+    		end,
+
+    		-- Get all key-value pairs
+    		GetAll = function()
+    			local result = {}
+    			for key, value in pairs(customFlags) do
+    				if value ~= nil then
+    					result[key] = value
+    				end
+    			end
+    			return result
+    		end,
+
+    		-- Get All Keys
+    		GetAllKeys = function()
+    			local keys = {}
+    			for key, value in pairs(customFlags) do
+    				if value ~= nil then
+    					table.insert(keys, key)
+    				end
+    			end
+    			return keys
+    		end,
+
+    		-- Delete a specific key
+    		DeleteKey = function(key)
+    			if not key then
+    				warn("EzUI.CustomConfig.DeleteKey: key parameter is required")
+    				return false
+    			end
+
+    			if customFlags[key] ~= nil then
+    				customFlags[key] = nil
+
+    				saveCustomConfig()
+    				return true
+    			else
+    				warn("EzUI.CustomConfig.DeleteKey: key '" .. key .. "' not found")
+    				return false
+    			end
+    		end
+    	}
+    end
+
+    function EzUI.CreateWindow(config)
+    	-- Extract opacity parameter (default 1.0 = fully opaque)
+    	local windowOpacity = config.Opacity or 1.0
+    	-- Clamp opacity between 0.1 and 1.0
+    	windowOpacity = math.max(0.1, math.min(1.0, windowOpacity))
+
+    	-- Extract AutoShow parameter (default true = automatically show window)
+    	local autoShow = config.AutoShow
+    	if autoShow == nil then
+    		autoShow = true -- Default to true if not specified
+    	end
+
+    	-- Extract Configuration parameters
+    	local configSaving = config.ConfigurationSaving or {}
+    	local configEnabled = configSaving.Enabled or false
+    	local configFileName = configSaving.FileName or config.Name or "DefaultConfig"
+    	local configFolderName = configSaving.FolderName or "EzUI"
+    	local configAutoSave = configSaving.AutoSave
+    	if configAutoSave == nil then
+    		configAutoSave = true -- Default to true if not specified
+    	end
+    	local configAutoLoad = configSaving.AutoLoad
+    	if configAutoLoad == nil then
+    		configAutoLoad = true -- Default to true if not specified
+    	end
+
+    	-- Set global configuration for components to access
+    	EzUI.Configuration.Enabled = configEnabled
+    	EzUI.Configuration.FileName = configFileName
+    	EzUI.Configuration.FolderName = configFolderName
+    	EzUI.Configuration.AutoSave = configAutoSave
+    	EzUI.Configuration.AutoLoad = configAutoLoad
+
+    	-- Get viewport size for dynamic scaling with proper initialization
+    	local function getViewportSize()
+    		local camera = workspace.CurrentCamera
+    		if not camera then
+    			-- Wait for camera to be available
+    			camera = workspace:WaitForChild("CurrentCamera", 5)
+    		end
+
+    		local viewportSize = camera.ViewportSize
+
+    		-- Check if viewport size is valid (not 1,1)
+    		if viewportSize.X <= 1 or viewportSize.Y <= 1 then
+    			-- Fallback to default resolution if viewport not ready
+    			viewportSize = Vector2.new(1366, 768)
+    			warn("EzUI: Using fallback viewport size:", viewportSize)
+    		end
+
+    		return viewportSize
+    	end
+
+    	-- Calculate dynamic window dimensions based on viewport
+    	local function calculateDynamicSize()
+    		local viewportSize = getViewportSize()
+
+    		local baseWidth = config.Width or (viewportSize.X * 0.7) -- 70% of screen width
+    		local baseHeight = config.Height or (viewportSize.Y * 0.4) -- 40% of screen height
+
+    		-- Apply resolution-based scaling
+    		local scaleMultiplier = 1
+    		if viewportSize.X >= 1920 then -- 1080p+
+    			scaleMultiplier = 1.2
+    		elseif viewportSize.X >= 1366 then -- 720p-1080p
+    			scaleMultiplier = 1.0
+    		elseif viewportSize.X >= 1024 then -- Tablet size
+    			scaleMultiplier = 0.9
+    		else -- Mobile/small screens
+    			scaleMultiplier = 0.8
+    		end
+
+    		-- Apply scaling and enforce minimum/maximum sizes
+    		local finalWidth = math.max(300, math.min(viewportSize.X * 0.8, baseWidth * scaleMultiplier))
+    		local finalHeight = math.max(200, math.min(viewportSize.Y * 0.8, baseHeight * scaleMultiplier))
+
+    		return finalWidth, finalHeight
+    	end
+
+    	local windowWidth, windowHeight = calculateDynamicSize()
+
+    	local screenGui = Instance.new("ScreenGui")
+    	screenGui.Name = config.Name or "MyWindow"
+    	screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+    	-- 🟦 Main window in the center of the screen
+    	local frame = Instance.new("Frame")
+    	frame.Size = UDim2.new(0, windowWidth, 0, windowHeight)
+    	frame.Position = UDim2.new(0.5, -windowWidth / 2, 0.5, -windowHeight / 2)
+    	frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    	frame.BackgroundTransparency = 1 - windowOpacity -- Convert opacity to transparency
+    	frame.BorderSizePixel = 0
+    	frame.Active = true
+    	frame.ClipsDescendants = true -- ensure components do not go outside the window
+    	frame.ZIndex = 1 -- Base Z-index for window
+    	frame.Visible = autoShow -- Set initial visibility based on AutoShow parameter
+    	frame.Parent = screenGui
+
+    	-- ScrollingFrame for window content
+    	local scrollFrame = Instance.new("ScrollingFrame")
+    	scrollFrame.Size = UDim2.new(1, -100, 1, -30) -- already adjusted for tab panel
+    	scrollFrame.Position = UDim2.new(0, 100, 0, 30) -- already adjusted for tab panel
+    	scrollFrame.BackgroundTransparency = 1
+    	scrollFrame.BorderSizePixel = 0
+    	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    	scrollFrame.ScrollBarThickness = 8
+    	scrollFrame.ClipsDescendants = false -- Allow dropdowns to show outside
+    	scrollFrame.ZIndex = 2 -- Above window frame
+    	scrollFrame.Parent = frame
+
+    	-- Vertical Tab Panel
+    	local tabPanel = Instance.new("Frame")
+    	tabPanel.Size = UDim2.new(0, 100, 1, -30)
+    	tabPanel.Position = UDim2.new(0, 0, 0, 30)
+    	tabPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    	tabPanel.BackgroundTransparency = 1 - windowOpacity -- Match window opacity
+    	tabPanel.BorderSizePixel = 0
+    	tabPanel.ClipsDescendants = true
+    	tabPanel.ZIndex = 2 -- Above window frame
+    	tabPanel.Parent = frame
+
+    	-- ScrollingFrame for tab buttons
+    	local tabScrollFrame = Instance.new("ScrollingFrame")
+    	tabScrollFrame.Size = UDim2.new(1, 0, 1, 0)
+    	tabScrollFrame.Position = UDim2.new(0, 0, 0, 0)
+    	tabScrollFrame.BackgroundTransparency = 1
+    	tabScrollFrame.BorderSizePixel = 0
+    	tabScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    	tabScrollFrame.ScrollBarThickness = 6
+    	tabScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
+    	tabScrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+    	tabScrollFrame.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
+    	tabScrollFrame.ZIndex = 3 -- Above tab panel
+    	tabScrollFrame.Parent = tabPanel
+
+    	-- Container for tab buttons
+    	local tabButtonLayout = Instance.new("UIListLayout")
+    	tabButtonLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    	tabButtonLayout.Padding = UDim.new(0, 4)
+    	tabButtonLayout.Parent = tabScrollFrame
+
+    	-- Update canvas size when tab layout changes
+    	tabButtonLayout.Changed:Connect(function(property)
+    		if property == "AbsoluteContentSize" then
+    			tabScrollFrame.CanvasSize = UDim2.new(0, 0, 0, tabButtonLayout.AbsoluteContentSize.Y + 8)
+    		end
+    	end)
+
+    	-- Tab content container (Frame for each tab inside scrollFrame)
+    	local tabContents = {}
+    	local activeTab = nil
+    	local activeTabName = nil
+
+    	-- Resize handle in the bottom right corner
+    	local resizeHandle = Instance.new("ImageButton")
+    	resizeHandle.Size = UDim2.new(0, 16, 0, 16)
+    	resizeHandle.Position = UDim2.new(1, -16, 1, -16)
+    	resizeHandle.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    	resizeHandle.BorderSizePixel = 0
+    	resizeHandle.Image = "rbxassetid://16898613613"
+    	resizeHandle.ImageRectOffset = Vector2.new(820,196)
+    	resizeHandle.ImageRectSize = Vector2.new(48, 48) 
+    	resizeHandle.ZIndex = 27 -- Higher than header
+    	resizeHandle.Parent = frame
+
+    	-- Resize dragging variables
+    	local resizeDragging = false
+    	local resizeStartPos, resizeStartSize, resizeInput
+
+    	local UserInputService = game:GetService("UserInputService")
+
+    	resizeHandle.InputBegan:Connect(function(input)
+    		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+    			resizeDragging = true
+    			resizeStartPos = input.Position
+    			resizeStartSize = frame.Size
+    			resizeInput = input
+    			input.Changed:Connect(function()
+    				if input.UserInputState == Enum.UserInputState.End then
+    					resizeDragging = false
+    				end
+    			end)
+    		end
+    	end)
+
+    	resizeHandle.InputChanged:Connect(function(input)
+    		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+    			resizeInput = input
+    		end
+    	end)
+
+    	UserInputService.InputChanged:Connect(function(input)
+    		if input == resizeInput and resizeDragging then
+    			local delta = input.Position - resizeStartPos
+    			-- Calculate dynamic minimum sizes based on current viewport
+    			local currentViewport = getViewportSize()
+    			local minWidth = math.max(250, currentViewport.X * 0.15) -- Minimum 15% of screen width
+    			local minHeight = math.max(150, currentViewport.Y * 0.2) -- Minimum 20% of screen height
+    			local maxWidth = currentViewport.X * 0.9 -- Maximum 90% of screen width
+    			local maxHeight = currentViewport.Y * 0.9 -- Maximum 90% of screen height
+
+    			local newWidth = math.max(minWidth, math.min(maxWidth, resizeStartSize.X.Offset + delta.X))
+    			local newHeight = math.max(minHeight, math.min(maxHeight, resizeStartSize.Y.Offset + delta.Y))
+    			frame.Size = UDim2.new(0, newWidth, 0, newHeight)
+    			-- Update window position to stay centered
+    			frame.Position = UDim2.new(0.5, -newWidth / 2, 0.5, -newHeight / 2)
+    			-- Update scrollFrame to match
+    			scrollFrame.Size = UDim2.new(1, -100, 1, -30)
+    			-- Update resize handle position
+    			resizeHandle.Position = UDim2.new(1, -16, 1, -16)
+    		end
+    	end)
+
+    	-- Header
+    	local header = Instance.new("Frame")
+    	header.Size = UDim2.new(1, 0, 0, 30)
+    	header.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    	header.BackgroundTransparency = 1 - windowOpacity -- Match window opacity
+    	header.BorderSizePixel = 0
+    	header.ZIndex = 25 -- Higher than SelectBox dropdown
+    	header.Parent = frame
+
+    	local title = Instance.new("TextLabel")
+    	title.Size = UDim2.new(1, -100, 1, 0) -- Make room for resize, minimize and close buttons
+    	title.Position = UDim2.new(0, 10, 0, 0)
+    	title.BackgroundTransparency = 1
+    	title.Text = config.Name or "My Window"
+    	title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    	title.TextXAlignment = Enum.TextXAlignment.Left
+    	title.Font = Enum.Font.SourceSansBold
+    	title.TextSize = 16
+    	title.ZIndex = 26 -- Higher than header
+    	title.Parent = header
+
+    	-- Minimize Button
+    	local minimizeBtn = Instance.new("TextButton")
+    	minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
+    	minimizeBtn.Position = UDim2.new(1, -60, 0, 0) -- Positioned to the left of close button
+    	minimizeBtn.BackgroundColor3 = Color3.fromRGB(200, 170, 0)
+    	minimizeBtn.Text = "-"
+    	minimizeBtn.ZIndex = 26 -- Higher than header
+    	minimizeBtn.Parent = header
+
+    	-- Close Button
+    	local closeBtn = Instance.new("TextButton")
+    	closeBtn.Size = UDim2.new(0, 30, 0, 30)
+    	closeBtn.Position = UDim2.new(1, -30, 0, 0) -- Positioned at the far right
+    	closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    	closeBtn.Text = "X"
+    	closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    	closeBtn.Font = Enum.Font.SourceSansBold
+    	closeBtn.TextSize = 18
+    	closeBtn.ZIndex = 26 -- Higher than header
+    	closeBtn.Parent = header
+
+    	-- Close button hover effects
+    	closeBtn.MouseEnter:Connect(function()
+    		closeBtn.BackgroundColor3 = Color3.fromRGB(255, 70, 70)
+    	end)
+
+    	closeBtn.MouseLeave:Connect(function()
+    		closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    	end)
+
+    	-- 🟩 Floating button at the top left (below the Roblox logo button)
+    	local floatBtn = Instance.new("TextButton")
+    	floatBtn.Size = UDim2.new(0, 120, 0, 35)
+    	floatBtn.Position = UDim2.new(0, 10, 0, 45) -- offset downward to avoid Roblox logo collision
+    	floatBtn.BackgroundColor3 = Color3.fromRGB(100, 150, 250)
+    	floatBtn.Text = "Open "..(config.Name or "UI")
+    	floatBtn.Visible = not autoShow -- Show floating button if window starts hidden
+    	floatBtn.ZIndex = 30 -- Very high Z-index for floating button
+    	floatBtn.Parent = screenGui
+
+    	-- Service & drag variables
+    	local UserInputService = game:GetService("UserInputService")
+    	local dragging, dragInput, dragStart, startPos
+    	local currentTarget
+
+    	local function updateDrag(input)
+    		if currentTarget then
+    			local delta = input.Position - dragStart
+    			currentTarget.Position = UDim2.new(
+    				startPos.X.Scale,
+    				startPos.X.Offset + delta.X,
+    				startPos.Y.Scale,
+    				startPos.Y.Offset + delta.Y
+    			)
+    		end
+    	end
+
+    	-- 🎯 Drag header (move window)
+    	header.InputBegan:Connect(function(input)
+    		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+    			dragging = true
+    			dragStart = input.Position
+    			startPos = frame.Position
+    			currentTarget = frame
+
+    			input.Changed:Connect(function()
+    				if input.UserInputState == Enum.UserInputState.End then
+    					dragging = false
+    					currentTarget = nil
+    				end
+    			end)
+    		end
+    	end)
+
+    	header.InputChanged:Connect(function(input)
+    		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+    			dragInput = input
+    		end
+    	end)
+
+    	-- 🎯 Drag floating button
+    	floatBtn.InputBegan:Connect(function(input)
+    		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+    			dragging = true
+    			dragStart = input.Position
+    			startPos = floatBtn.Position
+    			currentTarget = floatBtn
+
+    			input.Changed:Connect(function()
+    				if input.UserInputState == Enum.UserInputState.End then
+    					dragging = false
+    					currentTarget = nil
+    				end
+    			end)
+    		end
+    	end)
+
+    	floatBtn.InputChanged:Connect(function(input)
+    		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+    			dragInput = input
+    		end
+    	end)
+
+    	-- Global listener
+    	UserInputService.InputChanged:Connect(function(input)
+    		if input == dragInput and dragging then
+    			updateDrag(input)
+    		end
+    	end)
+
+    	-- Minimize Button
+    	minimizeBtn.MouseButton1Click:Connect(function()
+    		frame.Visible = false
+    		floatBtn.Visible = true
+    	end)
+
+    	floatBtn.MouseButton1Click:Connect(function()
+    		frame.Visible = true
+    		floatBtn.Visible = false
+    	end)
+
+    	-- Public API
+    	local api = {}
+    	local currentY = 10 -- Initial Y position inside the active tab content
+    	local currentTabContent = nil
+
+    	-- Fungsi untuk mengupdate ukuran window secara otomatis
+    	function api:UpdateWindowSize()
+    		-- Update CanvasSize dari currentTabContent agar scroll vertical aktif
+    		if currentTabContent then
+    			scrollFrame.CanvasSize = UDim2.new(0, 0, 0, currentY + 10)
+    		end
+    	end
+
+    	-- API untuk tab
+    	function api:AddTab(config)
+    		-- Support both old string parameter and new config parameter for backward compatibility
+    		local tabName, tabIcon, tabVisible, tabCallback
+
+    		if type(config) == "string" then
+    			-- Old format: api:AddTab("Tab Name")
+    			tabName = config
+    			tabIcon = nil
+    			tabVisible = true
+    			tabCallback = nil
+    		else
+    			-- New format: api:AddTab({Name = "Tab Name", Icon = "📁", Visible = true, Callback = function() end})
+    			tabName = config.Name or config.Title or "New Tab"
+    			tabIcon = config.Icon or nil
+    			tabVisible = config.Visible ~= nil and config.Visible or true
+    			tabCallback = config.Callback or nil
+    		end
+
+    		-- Tab button (container)
+    		local tabBtn = Instance.new("TextButton")
+    		tabBtn.Size = UDim2.new(1, -6, 0, 32) -- -6 untuk memberikan ruang scroll bar
+    		tabBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    		tabBtn.Text = "" -- No text, we'll use separate labels
+    		tabBtn.BorderSizePixel = 0
+    		tabBtn.ZIndex = 4 -- Above tab panel
+    		tabBtn.Visible = tabVisible
+    		tabBtn.Parent = tabScrollFrame
+
+    		-- Icon label (left aligned)
+    		local iconLabel = Instance.new("TextLabel")
+    		iconLabel.Size = UDim2.new(0, 30, 1, 0)
+    		iconLabel.Position = UDim2.new(0, 5, 0, 0)
+    		iconLabel.BackgroundTransparency = 1
+    		iconLabel.Text = tabIcon or ""
+    		iconLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    		iconLabel.Font = Enum.Font.SourceSansBold
+    		iconLabel.TextSize = 15
+    		iconLabel.TextXAlignment = Enum.TextXAlignment.Left
+    		iconLabel.ZIndex = 5
+    		iconLabel.Parent = tabBtn
+
+    		-- Title label (alignment depends on icon presence)
+    		local titleLabel = Instance.new("TextLabel")
+    		titleLabel.BackgroundTransparency = 1
+    		titleLabel.Text = tabName
+    		titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    		titleLabel.Font = Enum.Font.SourceSansBold
+    		titleLabel.TextSize = 15
+    		titleLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    		titleLabel.ZIndex = 5
+    		titleLabel.Parent = tabBtn
+
+    		-- Function to update title alignment based on icon presence
+    		local function updateTitleAlignment()
+    			if tabIcon and tabIcon ~= "" then
+    				-- Has icon: title right-aligned, positioned after icon
+    				titleLabel.Size = UDim2.new(1, -40, 1, 0) -- Leave space for icon
+    				titleLabel.Position = UDim2.new(0, 35, 0, 0)
+    				titleLabel.TextXAlignment = Enum.TextXAlignment.Right
+    				iconLabel.Visible = true
+    			else
+    				-- No icon: title left-aligned, full width
+    				titleLabel.Size = UDim2.new(1, -10, 1, 0) -- Full width with padding
+    				titleLabel.Position = UDim2.new(0, 5, 0, 0)
+    				titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    				iconLabel.Visible = false
+    			end
+    		end
+
+    		-- Initial alignment setup
+    		updateTitleAlignment()
+
+    		-- Tab content frame
+    		local tabContent = Instance.new("Frame")
+    		tabContent.Size = UDim2.new(1, 0, 1, 0)
+    		tabContent.Position = UDim2.new(0, 0, 0, 0)
+    		tabContent.BackgroundTransparency = 1
+    		tabContent.Visible = false
+    		tabContent.ClipsDescendants = false -- Allow SelectBox dropdowns to show
+    		tabContent.ZIndex = 2 -- Above scroll frame
+    		tabContent.Parent = scrollFrame
+    		tabContents[tabName] = tabContent
+
+    		-- Tab-specific Y position tracking
+    		local tabCurrentY = 10
+
+    		-- Centralized SelectBox component that can be used by both tab and accordion APIs
+    		local function createSelectBox(config, parentContainer, currentY, updateSizeFunction, animateFunction, isExpanded, isForAccordion)
+    			-- Default config
+    			local rawOptions = config.Options or {"Option 1", "Option 2", "Option 3"}
+    			local placeholder = config.Placeholder or "Select option..."
+    			local multiSelect = config.MultiSelect or false
+    			local callback = config.Callback or function() end
+    			local onDropdownOpen = config.OnDropdownOpen or function() end
+    			local onInit = config.OnInit or function() end
+    			local flag = config.Flag
+
+    			-- Normalize options to object format {text = "", value = ""}
+    			local options = {}
+    			for i, option in ipairs(rawOptions) do
+    				if type(option) == "string" then
+    					-- Convert string to object format
+    					table.insert(options, {text = option, value = option})
+    				elseif type(option) == "table" and option.text and option.value then
+    					-- Already in object format
+    					table.insert(options, {text = option.text, value = option.value})
+    				else
+    					warn("SelectBox: Invalid option format at index " .. i .. ". Expected string or {text, value} object.")
+    				end
+    			end
+
+    			-- Selected values storage (stores actual values, not display text)
+    			local selectedValues = {}
+
+    			-- Helper function to ensure selectedValues is always an array
+    			local function ensureArrayType()
+    				if type(selectedValues) ~= "table" then
+    					selectedValues = selectedValues and {selectedValues} or {}
+    				end
+    			end
+
+    			-- Set initial values from flag if exists
+    			if flag and EzUI.Flags[flag] ~= nil then
+    				local flagValue = EzUI.Flags[flag]
+
+    				if multiSelect then
+    					-- For multiselect, flag should be an array
+    					if type(flagValue) == "table" then
+    						selectedValues = flagValue
+    					else
+    						selectedValues = flagValue ~= "" and {flagValue} or {} -- Convert single value to array, handle empty string
+    					end
+    				else
+    					-- For single select, flag should be a single value
+    					if type(flagValue) == "table" then
+    						selectedValues = {flagValue[1]} -- Take first element if array
+    					else
+    						selectedValues = flagValue ~= "" and {flagValue} or {} -- Wrap single value in array, handle empty string
+    					end
+    				end
+    			else
+    				print("SelectBox Debug - No flag or flag is nil:", flag, EzUI.Flags[flag])
+    			end
+
+    			local isOpen = false
+    			local preventAutoClose = false -- Flag to prevent auto-closing during option clicks
+
+    			-- Main SelectBox container
+    			local selectContainer = Instance.new("Frame")
+    			if isForAccordion then
+    				selectContainer.Size = UDim2.new(1, 0, 0, 25) -- Full width for accordion (padding handles spacing)
+    				selectContainer.Position = UDim2.new(0, 0, 0, currentY)
+    			else
+    				selectContainer.Size = UDim2.new(1, -20, 0, 25) -- Standard size for tab
+    				selectContainer.Position = UDim2.new(0, 10, 0, currentY)
+    				-- Mark this component's start position for accordion tracking
+    				selectContainer:SetAttribute("ComponentStartY", currentY)
+    			end
+    			selectContainer.BackgroundTransparency = 1
+    			selectContainer.ClipsDescendants = false -- Important: allow dropdown to show outside
+    			selectContainer.ZIndex = isForAccordion and 6 or 3 -- Higher Z-index for accordion
+    			selectContainer.Parent = parentContainer
+
+    			-- SelectBox button (main clickable area)
+    			local selectButton = Instance.new("TextButton")
+    			selectButton.Size = UDim2.new(1, -25, 1, 0) -- Leave space for arrow
+    			selectButton.Position = UDim2.new(0, 0, 0, 0)
+    			selectButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    			selectButton.BorderColor3 = Color3.fromRGB(180, 180, 180)
+    			selectButton.BorderSizePixel = 2
+    			selectButton.Text = "  " .. placeholder
+    			selectButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    			selectButton.TextXAlignment = Enum.TextXAlignment.Left
+    			selectButton.Font = Enum.Font.SourceSans
+    			selectButton.TextSize = isForAccordion and 12 or 14
+    			selectButton.ZIndex = isForAccordion and 7 or 4
+    			selectButton.Parent = selectContainer
+
+    			-- Dropdown arrow (clickable)
+    			local arrow = Instance.new("TextButton")
+    			arrow.Size = UDim2.new(0, 25, 1, 0)
+    			arrow.Position = UDim2.new(1, -25, 0, 0)
+    			arrow.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    			arrow.BorderColor3 = Color3.fromRGB(180, 180, 180)
+    			arrow.BorderSizePixel = 2
+    			arrow.Text = "▼"
+    			arrow.TextColor3 = Color3.fromRGB(200, 200, 200)
+    			arrow.TextXAlignment = Enum.TextXAlignment.Center
+    			arrow.Font = Enum.Font.SourceSans
+    			arrow.TextSize = 10
+    			arrow.ZIndex = isForAccordion and 7 or 4
+    			arrow.Parent = selectContainer
+
+    			-- Dropdown list container
+    			local dropdownHeight = isForAccordion and math.min(#options * 25 + 30, 150) or math.min(#options * 30 + 30, 200)
+    			local dropdownFrame = Instance.new("ScrollingFrame")
+    			dropdownFrame.Size = UDim2.new(1, 0, 0, dropdownHeight)
+    			dropdownFrame.Position = UDim2.new(0, 0, 1, 3)
+    			dropdownFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    			dropdownFrame.BorderColor3 = Color3.fromRGB(150, 150, 150)
+    			dropdownFrame.BorderSizePixel = 2
+    			dropdownFrame.Visible = false
+    			dropdownFrame.CanvasSize = UDim2.new(0, 0, 0, isForAccordion and (#options * 25 + 30) or (#options * 30 + 30))
+    			dropdownFrame.ScrollBarThickness = 6
+    			dropdownFrame.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
+    			dropdownFrame.ZIndex = 25 -- Very high Z-index to appear above everything
+    			dropdownFrame.ClipsDescendants = true
+    			dropdownFrame.Active = true
+    			dropdownFrame.Parent = screenGui -- Parent directly to ScreenGui to avoid clipping
+
+    			-- Search box
+    			local searchBox = Instance.new("TextBox")
+    			searchBox.Size = UDim2.new(1, -10, 0, 20)
+    			searchBox.Position = UDim2.new(0, 5, 0, 5)
+    			searchBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    			searchBox.BorderColor3 = Color3.fromRGB(100, 100, 100)
+    			searchBox.BorderSizePixel = 1
+    			searchBox.Text = ""
+    			searchBox.PlaceholderText = "Search options..."
+    			searchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    			searchBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+    			searchBox.Font = Enum.Font.Gotham
+    			searchBox.TextSize = 10
+    			searchBox.ZIndex = 26 -- Higher than dropdown frame
+    			searchBox.ClearTextOnFocus = false
+    			searchBox.Parent = dropdownFrame
+
+    			-- Container for option items (below search box)
+    			local optionsContainer = Instance.new("Frame")
+    			optionsContainer.Size = UDim2.new(1, 0, 1, -30)
+    			optionsContainer.Position = UDim2.new(0, 0, 0, 30)
+    			optionsContainer.BackgroundTransparency = 1
+    			optionsContainer.ZIndex = 26 -- Same as search box
+    			optionsContainer.Parent = dropdownFrame
+
+    			-- List layout for dropdown items
+    			local listLayout = Instance.new("UIListLayout")
+    			listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    			listLayout.Parent = optionsContainer
+
+    			-- Function to update display text
+    			local function updateDisplayText()
+    				-- Ensure selectedValues is always an array
+    				if type(selectedValues) ~= "table" then
+    					selectedValues = {selectedValues}
+    				end
+
+    				if #selectedValues == 0 then
+    					selectButton.Text = "  " .. placeholder
+    					selectButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    				elseif multiSelect then
+    					if #selectedValues == 1 then
+    						-- Find the display text for the selected value
+    						local displayText = selectedValues[1]
+    						for _, option in ipairs(options) do
+    							if option.value == selectedValues[1] then
+    								displayText = option.text
+    								break
+    							end
+    						end
+    						selectButton.Text = "  " .. (displayText or "Unknown")
+    					elseif #selectedValues == 0 then
+    						selectButton.Text = "  None"
+    					else
+    						selectButton.Text = "  " .. #selectedValues .. " items selected"
+    					end
+    					selectButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    				else
+    					-- Single select - find display text for the selected value
+    					local displayText = selectedValues[1]
+    					for _, option in ipairs(options) do
+    						if option.value == selectedValues[1] then
+    							displayText = option.text
+    							break
+    						end
+    					end
+    					selectButton.Text = "  " .. (displayText or "Unknown")
+    					selectButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    				end
+    			end
+
+    			-- Function to calculate dropdown position
+    			local function calculateDropdownPosition()
+    				-- Get absolute position of selectContainer
+    				local absolutePos = selectContainer.AbsolutePosition
+    				local absoluteSize = selectContainer.AbsoluteSize
+    				local viewportSize = getViewportSize()
+
+    				-- Calculate dropdown dimensions
+    				local dropdownHeight = dropdownFrame.Size.Y.Offset
+    				local dropdownWidth = absoluteSize.X
+
+    				-- Check if there's enough space below and above
+    				local spaceBelow = viewportSize.Y - (absolutePos.Y + absoluteSize.Y)
+    				local spaceAbove = absolutePos.Y
+
+    				local finalPosition
+    				local finalX = absolutePos.X
+    				local finalY = absolutePos.Y
+
+    				-- Horizontal positioning - ensure dropdown doesn't go off-screen
+    				if finalX + dropdownWidth > viewportSize.X then
+    					finalX = viewportSize.X - dropdownWidth - 10
+    				end
+    				if finalX < 0 then
+    					finalX = 10
+    				end
+
+    				-- Vertical positioning
+    				if spaceBelow >= dropdownHeight + 10 then
+    					-- Show dropdown below
+    					finalY = absolutePos.Y + absoluteSize.Y + 3
+    				elseif spaceAbove >= dropdownHeight + 10 then
+    					-- Show dropdown above
+    					finalY = absolutePos.Y - dropdownHeight - 3
+    				else
+    					-- Insufficient space on both sides
+    					if spaceBelow > spaceAbove then
+    						-- Show below but adjust height if needed
+    						finalY = absolutePos.Y + absoluteSize.Y + 3
+    						local maxHeight = spaceBelow - 10
+    						if dropdownHeight > maxHeight and maxHeight > 100 then
+    							dropdownHeight = maxHeight
+    							dropdownFrame.Size = UDim2.new(0, dropdownWidth, 0, dropdownHeight)
+    						end
+    					else
+    						-- Show above but adjust height if needed  
+    						local maxHeight = spaceAbove - 10
+    						if dropdownHeight > maxHeight and maxHeight > 100 then
+    							dropdownHeight = maxHeight
+    							dropdownFrame.Size = UDim2.new(0, dropdownWidth, 0, dropdownHeight)
+    						end
+    						finalY = absolutePos.Y - dropdownHeight - 3
+    					end
+    				end
+
+    				-- Ensure dropdown doesn't go below viewport
+    				if finalY + dropdownHeight > viewportSize.Y then
+    					finalY = viewportSize.Y - dropdownHeight - 10
+    				end
+    				if finalY < 0 then
+    					finalY = 10
+    				end
+
+    				finalPosition = UDim2.new(0, finalX, 0, finalY)
+    				dropdownFrame.Position = finalPosition
+    			end
+
+    			-- Function to refresh options display
+    			local function refreshOptionsDisplay()
+    				-- Clear existing options
+    				for _, child in pairs(optionsContainer:GetChildren()) do
+    					if child:IsA("TextButton") then
+    						child:Destroy()
+    					end
+    				end
+
+    				-- Recreate options with new data
+    				for i, option in ipairs(options) do
+    					local optionHeight = isForAccordion and 25 or 30
+    					local optionButton = Instance.new("TextButton")
+    					optionButton.Size = UDim2.new(1, -10, 0, optionHeight)
+    					optionButton.Position = UDim2.new(0, 5, 0, (i-1) * optionHeight)
+    					optionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    					optionButton.BorderSizePixel = 0
+    					optionButton.Text = "  " .. (option.text or "Unknown")
+    					optionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    					optionButton.TextXAlignment = Enum.TextXAlignment.Left
+    					optionButton.Font = Enum.Font.SourceSans
+    					optionButton.TextSize = isForAccordion and 10 or 12
+    					optionButton.ZIndex = 27
+    					optionButton.Parent = optionsContainer
+
+    					-- Store option data reference in the button for filtering
+    					optionButton:SetAttribute("OptionIndex", i)
+    					optionButton:SetAttribute("OptionValue", option.value)
+    					optionButton:SetAttribute("OptionText", option.text)
+
+    					-- Checkmark for multi-select
+    					local checkmark = Instance.new("TextLabel")
+    					checkmark.Size = UDim2.new(0, 20, 1, 0)
+    					checkmark.Position = UDim2.new(1, -20, 0, 0)
+    					checkmark.BackgroundTransparency = 1
+    					checkmark.Text = ""
+    					checkmark.TextColor3 = Color3.fromRGB(100, 255, 100)
+    					checkmark.TextXAlignment = Enum.TextXAlignment.Center
+    					checkmark.Font = Enum.Font.SourceSansBold
+    					checkmark.TextSize = 12
+    					checkmark.ZIndex = 28
+    					checkmark.Parent = optionButton
+    					checkmark.Visible = multiSelect
+
+    					-- Check if this option is already selected
+    					local isSelected = false
+    					-- Ensure selectedValues is always an array
+    					if type(selectedValues) ~= "table" then
+    						selectedValues = {selectedValues}
+    					end
+
+    					-- Use tostring for comparison to handle type differences
+    					local optionValue = tostring(option.value)
+    					for _, value in ipairs(selectedValues) do
+    						if tostring(value) == optionValue then
+    							isSelected = true
+    							break
+    						end
+    					end
+
+    					-- Set initial visual state based on selection
+    					if isSelected then
+    						checkmark.Text = "✓"
+    						optionButton.BackgroundColor3 = Color3.fromRGB(70, 120, 70)
+    					else
+    						checkmark.Text = ""
+    						optionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    					end
+
+    					optionButton.MouseButton1Click:Connect(function()
+    						preventAutoClose = true -- Prevent auto-close during processing
+
+    						if multiSelect then
+    							-- Toggle selection for multi-select
+    							local isCurrentlySelected = false
+    							local indexToRemove = nil
+    							-- Ensure selectedValues is always an array
+    							if type(selectedValues) ~= "table" then
+    								selectedValues = {selectedValues}
+    							end
+    							for j, value in ipairs(selectedValues) do
+    								if value == option.value then
+    									isCurrentlySelected = true
+    									indexToRemove = j
+    									break
+    								end
+    							end
+
+    							if isCurrentlySelected then
+    								table.remove(selectedValues, indexToRemove)
+    								checkmark.Text = ""
+    								optionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    							else
+    								table.insert(selectedValues, option.value)
+    								checkmark.Text = "✓"
+    								optionButton.BackgroundColor3 = Color3.fromRGB(70, 120, 70)
+    							end
+    						else
+    							-- Single select
+    							selectedValues = {option.value}
+    							updateDisplayText()
+    							isOpen = false
+    							dropdownFrame.Visible = false
+    							arrow.Text = "▼"
+    						end
+
+    						updateDisplayText()
+
+    						-- Save to flag if specified
+    						if flag then
+    							if multiSelect then
+    								EzUI.Flags[flag] = selectedValues
+    							else
+    								-- For single select, store the value or empty string (not nil)
+    								EzUI.Flags[flag] = selectedValues[1] or ""
+    							end
+    							if EzUI.Configuration.Enabled and EzUI.Configuration.AutoSave then
+    								saveConfiguration(EzUI.Configuration.FileName)
+    							end
+    						end
+
+    						-- Call callback
+    						if callback then
+    							callback(selectedValues, option.value)
+    						end
+
+    						preventAutoClose = false -- Re-enable auto-close
+    					end)
+
+    					optionButton.MouseEnter:Connect(function()
+    						if optionButton.BackgroundColor3 ~= Color3.fromRGB(70, 120, 70) then
+    							optionButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    						end
+    					end)
+
+    					optionButton.MouseLeave:Connect(function()
+    						local isCurrentlySelected = false
+    						local optionValue = optionButton:GetAttribute("OptionValue")
+    						-- Ensure selectedValues is always an array
+    						if type(selectedValues) ~= "table" then
+    							selectedValues = {selectedValues}
+    						end
+    						for _, val in ipairs(selectedValues) do
+    							if tostring(val) == tostring(optionValue) then
+    								isCurrentlySelected = true
+    								break
+    							end
+    						end
+
+    						if not isCurrentlySelected then
+    							optionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    						end
+    					end)
+    				end
+
+    				-- Update canvas size
+    				local optionHeight = isForAccordion and 25 or 30
+    				dropdownFrame.CanvasSize = UDim2.new(0, 0, 0, #options * optionHeight + 30)
+
+    				-- Force visual state update after all options are created
+    				wait() -- Allow UI to render
+    				for _, child in pairs(optionsContainer:GetChildren()) do
+    					if child:IsA("TextButton") then
+    						local optionValue = child:GetAttribute("OptionValue")
+    						local checkmark = child:FindFirstChild("TextLabel")
+    						local isCurrentlySelected = false
+
+    						-- Ensure selectedValues is always an array
+    						if type(selectedValues) ~= "table" then
+    							selectedValues = {selectedValues}
+    						end
+
+    						-- Check if this option should be selected
+    						for _, value in ipairs(selectedValues) do
+    							if tostring(value) == tostring(optionValue) then
+    								isCurrentlySelected = true
+    								break
+    							end
+    						end
+
+    						-- Apply correct visual state
+    						if isCurrentlySelected then
+    							if checkmark then checkmark.Text = "✓" end
+    							child.BackgroundColor3 = Color3.fromRGB(70, 120, 70)
+    						else
+    							if checkmark then checkmark.Text = "" end
+    							child.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    						end
+    					end
+    				end
+    			end
+
+    			-- Position tracking variables
+    			local positionConnection = nil
+    			local lastKnownPosition = nil
+    			local lastKnownSize = nil
+    			local lastKnownViewportSize = nil
+
+    			-- Function to update dropdown position dynamically
+    			local function updateDropdownPosition()
+    				if isOpen and dropdownFrame.Visible then
+    					calculateDropdownPosition()
+    				end
+    			end
+
+    			-- Function to start position tracking
+    			local function startPositionTracking()
+    				if positionConnection then
+    					positionConnection:Disconnect()
+    				end
+
+    				-- Track position changes using RunService heartbeat
+    				local RunService = game:GetService("RunService")
+    				positionConnection = RunService.Heartbeat:Connect(function()
+    					if isOpen and dropdownFrame.Visible then
+    						local currentPosition = selectContainer.AbsolutePosition
+    						local currentSize = selectContainer.AbsoluteSize
+    						local currentViewportSize = getViewportSize()
+
+    						-- Check if position, size, or viewport has changed
+    						if not lastKnownPosition or 
+    						   currentPosition.X ~= lastKnownPosition.X or 
+    						   currentPosition.Y ~= lastKnownPosition.Y or
+    						   currentSize.X ~= lastKnownSize.X or
+    						   currentSize.Y ~= lastKnownSize.Y or
+    						   (lastKnownViewportSize and (
+    						       currentViewportSize.X ~= lastKnownViewportSize.X or 
+    						       currentViewportSize.Y ~= lastKnownViewportSize.Y
+    						   )) then
+
+    							lastKnownPosition = currentPosition
+    							lastKnownSize = currentSize
+    							lastKnownViewportSize = currentViewportSize
+
+    							-- Update dropdown position and size
+    							local dropdownHeight = isForAccordion and math.min(#options * 25 + 30, 150) or math.min(#options * 30 + 30, 200)
+    							dropdownFrame.Size = UDim2.new(0, currentSize.X, 0, dropdownHeight)
+    							updateDropdownPosition()
+    						end
+    					end
+    				end)
+    			end
+
+    			-- Function to stop position tracking
+    			local function stopPositionTracking()
+    				if positionConnection then
+    					positionConnection:Disconnect()
+    					positionConnection = nil
+    				end
+    				lastKnownPosition = nil
+    				lastKnownSize = nil
+    				lastKnownViewportSize = nil
+    			end
+
+    			local function toggleDropdown()
+    				isOpen = not isOpen
+    				dropdownFrame.Visible = isOpen
+
+    				-- Update arrow direction
+    				arrow.Text = isOpen and "▲" or "▼"
+
+    				-- Start or stop position tracking
+    				if isOpen then
+    					startPositionTracking()
+    				else
+    					stopPositionTracking()
+    				end
+
+    				-- Call OnDropdownOpen callback when dropdown is opened
+    				if isOpen and onDropdownOpen then
+    					onDropdownOpen(options, function(newOptions)
+    						-- Callback function to update options
+    						if newOptions and type(newOptions) == "table" then
+    							-- Update options dengan format baru
+    							rawOptions = newOptions
+    							options = {}
+    							for i, option in ipairs(rawOptions) do
+    								if type(option) == "string" then
+    									table.insert(options, {text = option, value = option})
+    								elseif type(option) == "table" and option.text and option.value then
+    									table.insert(options, {text = option.text, value = option.value})
+    								end
+    							end
+
+    							-- Refresh tampilan options
+    							refreshOptionsDisplay()
+    						end
+    					end)
+    				end
+
+    				-- Only adjust dropdown size, keep container size fixed
+    				if isOpen then
+    					local dropdownHeight = isForAccordion and math.min(#options * 25 + 30, 150) or math.min(#options * 30 + 30, 200)
+    					dropdownFrame.Size = UDim2.new(0, selectContainer.AbsoluteSize.X, 0, dropdownHeight)
+
+    					-- Calculate optimal position
+    					calculateDropdownPosition()
+
+    					-- Store initial position
+    					lastKnownPosition = selectContainer.AbsolutePosition
+    					lastKnownSize = selectContainer.AbsoluteSize
+
+    					-- Bring dropdown to front
+    					dropdownFrame.ZIndex = 25
+    					searchBox.ZIndex = 26
+    					optionsContainer.ZIndex = 26
+    					for _, child in pairs(optionsContainer:GetChildren()) do
+    						if child:IsA("TextButton") then
+    							child.ZIndex = 27
+    							local checkmark = child:FindFirstChild("TextLabel")
+    							if checkmark then
+    								checkmark.ZIndex = 28
+    							end
+    						end
+    					end
+    				end
+    			end
+
+    			-- Create dropdown options
+    			refreshOptionsDisplay()
+
+    			-- Filter options based on search with improved matching
+    			local function filterOptions(searchText)
+    				-- Handle empty or nil search text
+    				searchText = searchText or ""
+    				local originalSearchText = searchText
+    				searchText = string.lower(string.gsub(searchText, "^%s*(.-)%s*$", "%1")) -- Trim whitespace
+
+    				local visibleCount = 0
+    				local optionHeight = isForAccordion and 25 or 30
+    				local allChildren = optionsContainer:GetChildren()
+    				local foundExactMatch = false
+
+    				-- Filter and reposition visible options
+    				for i, child in ipairs(allChildren) do
+    					if child:IsA("TextButton") then
+    						-- Get option data from stored attributes
+    						local optionText = child:GetAttribute("OptionText") or ""
+    						local optionValue = child:GetAttribute("OptionValue") or ""
+    						local shouldShow = false
+    						local isExactMatch = false
+
+    						if optionText ~= "" then
+    							local optionTextLower = string.lower(optionText)
+
+    							if searchText == "" then
+    								-- Show all options when search is empty
+    								shouldShow = true
+    								child.Text = "  " .. optionText -- Reset text without highlighting
+    							else
+    								-- Multiple search strategies
+    								local searchWords = {}
+    								for word in string.gmatch(searchText, "%S+") do
+    									table.insert(searchWords, word)
+    								end
+
+    								-- Check for matches
+    								local hasMatch = false
+    								if #searchWords == 1 then
+    									-- Single word search - check for substring match
+    									hasMatch = string.find(optionTextLower, searchText, 1, true) ~= nil
+    									isExactMatch = optionTextLower == searchText
+    								else
+    									-- Multi-word search - all words must be found
+    									hasMatch = true
+    									for _, word in ipairs(searchWords) do
+    										if not string.find(optionTextLower, word, 1, true) then
+    											hasMatch = false
+    											break
+    										end
+    									end
+    								end
+
+    								shouldShow = hasMatch
+
+    								-- Highlight matching text (simple approach)
+    								if hasMatch and searchText ~= "" then
+    									-- For now, just mark that it's a match
+    									-- More sophisticated highlighting could be added here
+    									if isExactMatch then
+    										foundExactMatch = true
+    									end
+    								end
+    							end
+    						end
+
+    						if shouldShow then
+    							child.Visible = true
+    							child.Position = UDim2.new(0, 5, 0, visibleCount * optionHeight)
+
+    							-- Move exact matches to top
+    							if isExactMatch then
+    								child.Position = UDim2.new(0, 5, 0, 0)
+    							elseif foundExactMatch then
+    								child.Position = UDim2.new(0, 5, 0, (visibleCount + 1) * optionHeight)
+    							end
+
+    							visibleCount = visibleCount + 1
+    						else
+    							child.Visible = false
+    						end
+    					end
+    				end
+
+    				-- Update canvas size based on visible items
+    				local canvasHeight = math.max(visibleCount * optionHeight + 30, 60) -- Minimum height
+    				dropdownFrame.CanvasSize = UDim2.new(0, 0, 0, canvasHeight)
+
+    				-- Reset keyboard navigation index when filtering
+    				selectedIndex = 0
+    			end
+
+    			-- Search functionality with debouncing
+    			local searchDebounceTime = 0.2 -- 200ms debounce
+    			local lastSearchTime = 0
+
+    			searchBox.Changed:Connect(function(property)
+    				if property == "Text" then
+    					local currentTime = tick()
+    					lastSearchTime = currentTime
+
+    					-- Debounce search to avoid excessive filtering
+    					wait(searchDebounceTime)
+    					if lastSearchTime == currentTime then
+    						filterOptions(searchBox.Text)
+    					end
+    				end
+    			end)
+
+    			-- Handle keyboard navigation and immediate search
+    			local UserInputService = game:GetService("UserInputService")
+    			local selectedIndex = 0 -- Track currently highlighted option
+
+    			-- Get visible options for navigation
+    			local function getVisibleOptions()
+    				local visibleOptions = {}
+    				for _, child in ipairs(optionsContainer:GetChildren()) do
+    					if child:IsA("TextButton") and child.Visible then
+    						table.insert(visibleOptions, child)
+    					end
+    				end
+    				return visibleOptions
+    			end
+
+    			-- Update highlight for keyboard navigation
+    			local function updateHighlight()
+    				local visibleOptions = getVisibleOptions()
+    				for i, optionButton in ipairs(visibleOptions) do
+    					if i == selectedIndex then
+    						optionButton.BackgroundColor3 = Color3.fromRGB(70, 120, 200) -- Highlight color
+    					else
+    						-- Reset to normal color or selected color
+    						local isSelected = false
+    						local optionValue = optionButton:GetAttribute("OptionValue")
+    						for _, value in ipairs(selectedValues or {}) do
+    							if tostring(optionValue) == tostring(value) then
+    								isSelected = true
+    								break
+    							end
+    						end
+    						optionButton.BackgroundColor3 = isSelected and Color3.fromRGB(70, 120, 70) or Color3.fromRGB(50, 50, 50)
+    					end
+    				end
+    			end
+
+    			-- Keyboard navigation for search box
+    			searchBox.Focused:Connect(function()
+    				local connection
+    				connection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    					if gameProcessed then return end
+
+    					local visibleOptions = getVisibleOptions()
+    					if #visibleOptions == 0 then return end
+
+    					if input.KeyCode == Enum.KeyCode.Down then
+    						selectedIndex = math.min(selectedIndex + 1, #visibleOptions)
+    						updateHighlight()
+    					elseif input.KeyCode == Enum.KeyCode.Up then
+    						selectedIndex = math.max(selectedIndex - 1, 1)
+    						updateHighlight()
+    					elseif input.KeyCode == Enum.KeyCode.Return then
+    						if selectedIndex > 0 and selectedIndex <= #visibleOptions then
+    							-- Simulate click on the highlighted option by firing the event
+    							local selectedOption = visibleOptions[selectedIndex]
+    							local clickedOptionValue = selectedOption:GetAttribute("OptionValue")
+
+    							-- Simulate the click behavior directly
+    							preventAutoClose = true
+
+    							if multiSelect then
+    								local isSelected = false
+    								local indexToRemove = nil
+    								if type(selectedValues) ~= "table" then
+    									selectedValues = {selectedValues}
+    								end
+    								for j, value in ipairs(selectedValues) do
+    									if value == clickedOptionValue then
+    										isSelected = true
+    										indexToRemove = j
+    										break
+    									end
+    								end
+
+    								if isSelected then
+    									table.remove(selectedValues, indexToRemove)
+    									local checkmark = selectedOption:FindFirstChild("TextLabel")
+    									if checkmark then checkmark.Text = "" end
+    									selectedOption.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    								else
+    									table.insert(selectedValues, clickedOptionValue)
+    									local checkmark = selectedOption:FindFirstChild("TextLabel")
+    									if checkmark then checkmark.Text = "✓" end
+    									selectedOption.BackgroundColor3 = Color3.fromRGB(70, 120, 70)
+    								end
+    							else
+    								selectedValues = {clickedOptionValue}
+    								updateDisplayText()
+    								isOpen = false
+    								dropdownFrame.Visible = false
+    								arrow.Text = "▼"
+    								stopPositionTracking()
+    								searchBox:ReleaseFocus()
+    							end
+
+    							updateDisplayText()
+
+    							if callback then
+    								callback(selectedValues, clickedOptionValue)
+    							end
+
+    							-- Save to flag if specified
+    							if flag then
+    								if multiSelect then
+    									EzUI.Flags[flag] = selectedValues
+    								else
+    									EzUI.Flags[flag] = selectedValues[1] or ""
+    								end
+    								if EzUI.Configuration.Enabled and EzUI.Configuration.AutoSave then
+    									saveConfiguration(EzUI.Configuration.FileName)
+    								end
+    							end
+
+    							preventAutoClose = false
+    						end
+    					elseif input.KeyCode == Enum.KeyCode.Escape then
+    						searchBox:ReleaseFocus()
+    						toggleDropdown()
+    					end
+    				end)
+
+    				-- Clean up connection when focus is lost
+    				searchBox.FocusLost:Connect(function()
+    					if connection then
+    						connection:Disconnect()
+    					end
+    					selectedIndex = 0
+    					updateHighlight()
+    				end)
+    			end)
+
+    			-- Wrapper to reset search when dropdown closes
+    			local originalToggleDropdown = toggleDropdown
+    			toggleDropdown = function()
+    				originalToggleDropdown()
+    				if not isOpen then
+    					searchBox.Text = ""
+    					filterOptions("") -- Show all options when reopening
+    				end
+    			end
+
+    			-- SelectBox button click handler
+    			selectButton.MouseButton1Click:Connect(function()
+    				toggleDropdown()
+    			end)
+
+    			-- Arrow click handler (same functionality as selectButton)
+    			arrow.MouseButton1Click:Connect(function()
+    				toggleDropdown()
+    			end)
+
+    			-- Create SelectBox API
+    			local selectBoxAPI = {
+    				GetSelected = function()
+    					return selectedValues
+    				end,
+    				SetSelected = function(values)
+    					if values == "" then
+    						selectedValues = {} -- Handle empty string as no selection
+    					else
+    						selectedValues = values or {}
+    					end
+    					updateDisplayText()
+
+    					-- Save to flag if specified
+    					if flag then
+    						if multiSelect then
+    							EzUI.Flags[flag] = selectedValues
+    						else
+    							-- For single select, store the value or empty string (not nil)
+    							EzUI.Flags[flag] = selectedValues[1] or ""
+    						end
+    						if EzUI.Configuration.Enabled and EzUI.Configuration.AutoSave then
+    							saveConfiguration(EzUI.Configuration.FileName)
+    						end
+    					end
+
+    					-- Update visual state of options
+    					for _, child in pairs(optionsContainer:GetChildren()) do
+    						if child:IsA("TextButton") then
+    							local childOption = nil
+    							local childIndex = nil
+    							for i, option in ipairs(options) do
+    								local optionChild = optionsContainer:GetChildren()[i]
+    								if optionChild == child then
+    									childOption = option
+    									childIndex = i
+    									break
+    								end
+    							end
+
+    							local childCheckmark = child:FindFirstChild("TextLabel")
+    							if childCheckmark and childOption then
+    								local isSelected = false
+    								-- Ensure selectedValues is always an array
+    								if type(selectedValues) ~= "table" then
+    									selectedValues = {selectedValues}
+    								end
+    								for _, val in ipairs(selectedValues) do
+    									if val == childOption.value then
+    										isSelected = true
+    										break
+    									end
+    								end
+
+    								childCheckmark.Text = isSelected and "✓" or ""
+    								child.BackgroundColor3 = isSelected and Color3.fromRGB(70, 120, 70) or Color3.fromRGB(50, 50, 50)
+    							end
+    						end
+    					end
+    				end,
+    				Clear = function()
+    					selectedValues = {}
+    					updateDisplayText()
+
+    					-- Save to flag if specified
+    					if flag then
+    						if multiSelect then
+    							EzUI.Flags[flag] = {}
+    						else
+    							EzUI.Flags[flag] = ""
+    						end
+    						if EzUI.Configuration.Enabled and EzUI.Configuration.AutoSave then
+    							saveConfiguration(EzUI.Configuration.FileName)
+    						end
+    					end
+
+    					-- Clear visual state
+    					for _, child in pairs(optionsContainer:GetChildren()) do
+    						if child:IsA("TextButton") then
+    							local checkmark = child:FindFirstChild("TextLabel")
+    							if checkmark then
+    								checkmark.Text = ""
+    							end
+    							child.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    						end
+    					end
+    				end,
+    				Refresh = function(newOptions)
+    					-- Clear existing options
+    					for _, child in pairs(optionsContainer:GetChildren()) do
+    						if child:IsA("TextButton") then
+    							child:Destroy()
+    						end
+    					end
+
+    					-- Update options
+    					rawOptions = newOptions
+    					options = {}
+    					for i, option in ipairs(rawOptions) do
+    						if type(option) == "string" then
+    							table.insert(options, {text = option, value = option})
+    						elseif type(option) == "table" and option.text and option.value then
+    							table.insert(options, {text = option.text, value = option.value})
+    						end
+    					end
+
+    					-- Recreate options (similar to above)
+    					for i, option in ipairs(options) do
+    						local optionHeight = isForAccordion and 25 or 30
+    						local optionButton = Instance.new("TextButton")
+    						optionButton.Size = UDim2.new(1, -10, 0, optionHeight)
+    						optionButton.Position = UDim2.new(0, 5, 0, (i-1) * optionHeight)
+    						optionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    						optionButton.BorderSizePixel = 0
+    						optionButton.Text = "  " .. (option.text or "Unknown")
+    						optionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    						optionButton.TextXAlignment = Enum.TextXAlignment.Left
+    						optionButton.Font = Enum.Font.SourceSans
+    						optionButton.TextSize = isForAccordion and 10 or 12
+    						optionButton.ZIndex = 27
+    						optionButton.Parent = optionsContainer
+
+    						local checkmark = Instance.new("TextLabel")
+    						checkmark.Size = UDim2.new(0, 20, 1, 0)
+    						checkmark.Position = UDim2.new(1, -20, 0, 0)
+    						checkmark.BackgroundTransparency = 1
+    						checkmark.Text = ""
+    						checkmark.TextColor3 = Color3.fromRGB(100, 255, 100)
+    						checkmark.TextXAlignment = Enum.TextXAlignment.Center
+    						checkmark.Font = Enum.Font.SourceSansBold
+    						checkmark.TextSize = 12
+    						checkmark.ZIndex = 28
+    						checkmark.Parent = optionButton
+    						checkmark.Visible = multiSelect
+
+    						optionButton.MouseButton1Click:Connect(function()
+    							preventAutoClose = true
+
+    							-- Get option data from stored attributes
+    							local clickedOptionValue = optionButton:GetAttribute("OptionValue")
+    							local clickedOptionText = optionButton:GetAttribute("OptionText")
+
+    							if multiSelect then
+    								local isSelected = false
+    								local indexToRemove = nil
+    								-- Ensure selectedValues is always an array
+    								if type(selectedValues) ~= "table" then
+    									selectedValues = {selectedValues}
+    								end
+    								for j, value in ipairs(selectedValues) do
+    									if value == clickedOptionValue then
+    										isSelected = true
+    										indexToRemove = j
+    										break
+    									end
+    								end
+
+    								if isSelected then
+    									table.remove(selectedValues, indexToRemove)
+    									checkmark.Text = ""
+    									optionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    								else
+    									table.insert(selectedValues, clickedOptionValue)
+    									checkmark.Text = "✓"
+    									optionButton.BackgroundColor3 = Color3.fromRGB(70, 120, 70)
+    								end
+    							else
+    								selectedValues = {clickedOptionValue}
+    								updateDisplayText()
+    								isOpen = false
+    								dropdownFrame.Visible = false
+    								arrow.Text = "▼"
+    								stopPositionTracking()
+    							end
+
+    							updateDisplayText()
+
+    							if callback then
+    								callback(selectedValues, clickedOptionValue)
+    							end
+
+    								-- Save to flag if specified
+    								if flag then
+    									if multiSelect then
+    										EzUI.Flags[flag] = selectedValues
+    									else
+    										-- For single select, store the value or empty string (not nil)
+    										EzUI.Flags[flag] = selectedValues[1] or ""
+    									end
+    									if EzUI.Configuration.Enabled and EzUI.Configuration.AutoSave then
+    										saveConfiguration(EzUI.Configuration.FileName)
+    									end
+    								end							if not multiSelect and not preventAutoClose then
+    								spawn(function()
+    									wait(0.1)
+    									isOpen = false
+    									dropdownFrame.Visible = false
+    									arrow.Text = "▼"
+    									stopPositionTracking()
+    								end)
+    							end
+
+    							preventAutoClose = false
+    						end)
+
+    						optionButton.MouseEnter:Connect(function()
+    							if optionButton.BackgroundColor3 ~= Color3.fromRGB(70, 120, 70) then
+    								optionButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    							end
+    						end)
+
+    						optionButton.MouseLeave:Connect(function()
+    							local isSelected = false
+    							local optionValue = optionButton:GetAttribute("OptionValue")
+    							-- Ensure selectedValues is always an array
+    							if type(selectedValues) ~= "table" then
+    								selectedValues = {selectedValues}
+    							end
+    							for _, val in ipairs(selectedValues) do
+    								if val == optionValue then
+    									isSelected = true
+    									break
+    								end
+    							end
+
+    							if not isSelected then
+    								optionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    							end
+    						end)
+    					end
+
+    					-- Update canvas size
+    					local optionHeight = isForAccordion and 25 or 30
+    					dropdownFrame.CanvasSize = UDim2.new(0, 0, 0, #options * optionHeight + 30)
+
+    					-- Clear selected values
+    					selectedValues = {}
+    					updateDisplayText()
+    				end,
+    				-- Set function for configuration loading
+    				Set = function(values)
+    					if values == "" then
+    						selectedValues = {} -- Handle empty string as no selection
+    					else
+    						selectedValues = values or {}
+    					end
+    					updateDisplayText()
+    				end
+    			}
+
+    			-- Add cleanup function to API
+    			selectBoxAPI.Cleanup = function()
+    				-- Stop position tracking
+    				stopPositionTracking()
+
+    				-- Close dropdown if open
+    				if isOpen then
+    					isOpen = false
+    					dropdownFrame.Visible = false
+    					arrow.Text = "▼"
+    				end
+
+    				-- Cleanup UI elements
+    				if selectContainer and selectContainer.Parent then
+    					selectContainer:Destroy()
+    				end
+    			end
+
+    			-- Also add cleanup when container is destroyed
+    			selectContainer.AncestryChanged:Connect(function()
+    				if not selectContainer.Parent then
+    					stopPositionTracking()
+    				end
+    			end)
+
+    			-- Register component for flag-based updates
+    			registerComponent(flag, selectBoxAPI)
+
+    			-- Call onInit callback after component creation to allow initial options update
+    			if onInit then
+    				-- Preserve selected values before calling onInit
+    				local preservedSelectedValues = selectedValues
+
+    				onInit(options, function(newOptions)
+    					-- Callback function to update options on initialization
+    					if newOptions and type(newOptions) == "table" then
+    						-- Update options dengan format baru
+    						rawOptions = newOptions
+    						options = {}
+    						for i, option in ipairs(rawOptions) do
+    							if type(option) == "string" then
+    								table.insert(options, {text = option, value = option})
+    							elseif type(option) == "table" and option.text and option.value then
+    								table.insert(options, {text = option.text, value = option.value})
+    							end
+    						end
+
+    						-- Restore selected values after options update
+    						selectedValues = preservedSelectedValues
+
+    						-- Refresh tampilan options
+    						refreshOptionsDisplay()
+    						-- Update display text after refreshing options
+    						updateDisplayText()
+    					end
+    				end, selectBoxAPI)
+    			end
+
+    			-- Initial display update after component creation and flag loading
+    			updateDisplayText()
+
+    			-- Return SelectBox API
+    			return selectBoxAPI
+    		end
+
+    		-- Centralized Label component that can be used by both tab and accordion APIs
+    		local function createLabel(text, parentContainer, currentY, updateSizeFunction, animateFunction, isExpanded, isForAccordion)
+    			local label = Instance.new("TextLabel")
+    			if isForAccordion then
+    				label.Size = UDim2.new(1, 0, 0, 25) -- Full width for accordion (padding handles spacing)
+    				label.Position = UDim2.new(0, 0, 0, currentY)
+    				label.TextSize = 14
+    				label.ZIndex = 5
+    			else
+    				label.Size = UDim2.new(1, -20, 0, 30) -- Standard size for tab
+    				label.Position = UDim2.new(0, 10, 0, currentY)
+    				label.TextSize = 16
+    				label.ZIndex = 3
+    				-- Mark this component's start position for accordion tracking
+    				label:SetAttribute("ComponentStartY", currentY)
+    			end
+    			label.BackgroundTransparency = 1
+    			label.Text = text
+    			label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    			label.TextXAlignment = Enum.TextXAlignment.Left
+    			label.Font = Enum.Font.SourceSans
+    			label.Parent = parentContainer
+
+    			return label
+    		end
+
+    		-- Centralized Button component that can be used by both tab and accordion APIs
+    		local function createButton(text, callback, parentContainer, currentY, updateSizeFunction, animateFunction, isExpanded, isForAccordion)
+    			local button = Instance.new("TextButton")
+    			if isForAccordion then
+    				button.Size = UDim2.new(0, 100, 0, 25)
+    				button.Position = UDim2.new(0, 0, 0, currentY)
+    				button.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    				button.BorderSizePixel = 2
+    				button.TextSize = 12
+    				button.ZIndex = 5
+
+    				-- Round corners for accordion button
+    				local buttonCorner = Instance.new("UICorner")
+    				buttonCorner.CornerRadius = UDim.new(0, 4)
+    				buttonCorner.Parent = button
+
+    				-- Button hover effects for accordion
+    				button.MouseEnter:Connect(function()
+    					button.BackgroundColor3 = Color3.fromRGB(120, 170, 255)
+    				end)
+
+    				button.MouseLeave:Connect(function()
+    					button.BackgroundColor3 = Color3.fromRGB(100, 150, 250)
+    				end)
+    			else
+    				button.Size = UDim2.new(0, 120, 0, 30)
+    				button.Position = UDim2.new(0, 10, 0, currentY)
+    				button.BorderSizePixel = 0
+    				button.TextSize = 14
+    				button.ZIndex = 3
+    				-- Mark this component's start position for accordion tracking
+    				button:SetAttribute("ComponentStartY", currentY)
+    			end
+    			button.BackgroundColor3 = Color3.fromRGB(100, 150, 250)
+    			button.Text = text
+    			button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    			button.Font = Enum.Font.SourceSans
+    			button.Parent = parentContainer
+
+    			if callback then
+    				button.MouseButton1Click:Connect(callback)
+    			end
+
+    			return button
+    		end
+
+    		-- Centralized Separator component that can be used by both tab and accordion APIs
+    		local function createSeparator(parentContainer, currentY, updateSizeFunction, animateFunction, isExpanded, isForAccordion)
+    			local separator = Instance.new("Frame")
+    			if isForAccordion then
+    				separator.Size = UDim2.new(1, 0, 0, 1) -- Full width for accordion (padding handles spacing)
+    				separator.Position = UDim2.new(0, 0, 0, currentY + 5)
+    				separator.ZIndex = 5
+    			else
+    				separator.Size = UDim2.new(1, -20, 0, 1) -- Standard size for tab
+    				separator.Position = UDim2.new(0, 10, 0, currentY + 5)
+    				separator.ZIndex = 3
+    				-- Mark this component's start position for accordion tracking
+    				separator:SetAttribute("ComponentStartY", currentY)
+    			end
+    			separator.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    			separator.BorderSizePixel = 0
+    			separator.Parent = parentContainer
+
+    			return separator
+    		end
+
+    		-- Centralized Toggle component that can be used by both tab and accordion APIs
+    		local function createToggle(config, parentContainer, currentY, updateSizeFunction, animateFunction, isExpanded, isForAccordion)
+    			-- Default config
+    			local text = config.Name or config.Text or "Toggle"
+    			local defaultValue = config.Default or false
+    			local callback = config.Callback or function() end
+    			local flag = config.Flag -- Optional flag for configuration saving
+
+    			-- Toggle state
+    			local isToggled = defaultValue
+
+    			-- Set initial value from flag if exists
+    			if flag and EzUI.Flags[flag] ~= nil then
+    				isToggled = EzUI.Flags[flag]
+    			end
+
+    			-- Main toggle container
+    			local toggleContainer = Instance.new("Frame")
+    			if isForAccordion then
+    				toggleContainer.Size = UDim2.new(1, -10, 0, 25) -- Compact size for accordion
+    				toggleContainer.Position = UDim2.new(0, 5, 0, currentY)
+    				toggleContainer.ZIndex = 6
+    			else
+    				toggleContainer.Size = UDim2.new(1, -20, 0, 30) -- Standard size for tab
+    				toggleContainer.Position = UDim2.new(0, 10, 0, currentY)
+    				toggleContainer.ZIndex = 3
+    				-- Mark this component's start position for accordion tracking
+    				toggleContainer:SetAttribute("ComponentStartY", currentY)
+    			end
+    			toggleContainer.BackgroundTransparency = 1
+    			toggleContainer.Parent = parentContainer
+
+    			-- Toggle label
+    			local toggleLabel = Instance.new("TextLabel")
+    			if isForAccordion then
+    				toggleLabel.Size = UDim2.new(1, -45, 1, 0)
+    				toggleLabel.TextSize = 12 -- Smaller text for accordion
+    				toggleLabel.ZIndex = 7
+    			else
+    				toggleLabel.Size = UDim2.new(1, -60, 1, 0)
+    				toggleLabel.TextSize = 16 -- Normal text for tab
+    				toggleLabel.ZIndex = 4
+    			end
+    			toggleLabel.Position = UDim2.new(0, 0, 0, 0)
+    			toggleLabel.BackgroundTransparency = 1
+    			toggleLabel.Text = text
+    			toggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    			toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    			toggleLabel.Font = Enum.Font.SourceSans
+    			toggleLabel.Parent = toggleContainer
+
+    			-- Toggle switch background
+    			local toggleBg = Instance.new("Frame")
+    			if isForAccordion then
+    				toggleBg.Size = UDim2.new(0, 40, 0, 20) -- Smaller for accordion
+    				toggleBg.Position = UDim2.new(1, -40, 0.5, -10)
+    				toggleBg.ZIndex = 7
+    			else
+    				toggleBg.Size = UDim2.new(0, 50, 0, 24) -- Standard for tab
+    				toggleBg.Position = UDim2.new(1, -50, 0.5, -12)
+    				toggleBg.ZIndex = 4
+    			end
+    			toggleBg.BackgroundColor3 = isToggled and Color3.fromRGB(76, 175, 80) or Color3.fromRGB(100, 100, 100)
+    			toggleBg.BorderSizePixel = 0
+    			toggleBg.Parent = toggleContainer
+
+    			-- Round corners for toggle background
+    			local toggleBgCorner = Instance.new("UICorner")
+    			toggleBgCorner.CornerRadius = UDim.new(0, isForAccordion and 10 or 12)
+    			toggleBgCorner.Parent = toggleBg
+
+    			-- Toggle switch button (circle)
+    			local toggleButton = Instance.new("TextButton")
+    			if isForAccordion then
+    				toggleButton.Size = UDim2.new(0, 16, 0, 16) -- Smaller for accordion
+    				toggleButton.Position = isToggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+    				toggleButton.ZIndex = 8
+    			else
+    				toggleButton.Size = UDim2.new(0, 20, 0, 20) -- Standard for tab
+    				toggleButton.Position = isToggled and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
+    				toggleButton.ZIndex = 5
+    			end
+    			toggleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    			toggleButton.BorderSizePixel = 0
+    			toggleButton.Text = ""
+    			toggleButton.Parent = toggleBg
+
+    			-- Round corners for toggle button
+    			local toggleButtonCorner = Instance.new("UICorner")
+    			toggleButtonCorner.CornerRadius = UDim.new(0, isForAccordion and 8 or 10)
+    			toggleButtonCorner.Parent = toggleButton
+
+    			-- Function to update toggle appearance
+    			local function updateToggleAppearance()
+    				local targetBgColor = isToggled and Color3.fromRGB(76, 175, 80) or Color3.fromRGB(100, 100, 100)
+    				local targetPosition
+
+    				if isForAccordion then
+    					targetPosition = isToggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+    				else
+    					targetPosition = isToggled and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
+    				end
+
+    				-- Animate background color
+    				local bgTween = game:GetService("TweenService"):Create(
+    					toggleBg,
+    					TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+    					{BackgroundColor3 = targetBgColor}
+    				)
+    				bgTween:Play()
+
+    				-- Animate button position
+    				local buttonTween = game:GetService("TweenService"):Create(
+    					toggleButton,
+    					TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+    					{Position = targetPosition}
+    				)
+    				buttonTween:Play()
+    			end
+
+    			-- Toggle click handler
+    			toggleButton.MouseButton1Click:Connect(function()
+    				isToggled = not isToggled
+    				updateToggleAppearance()
+
+    				-- Save to flag if specified
+    				if flag then
+    					EzUI.Flags[flag] = isToggled
+    					if EzUI.Configuration.Enabled and EzUI.Configuration.AutoSave then
+    						saveConfiguration(EzUI.Configuration.FileName)
+    					end
+    				end
+
+    				-- Call user callback
+    				local success, errorMsg = pcall(function()
+    					callback(isToggled)
+    				end)
+
+    				if not success then
+    					warn("Toggle callback error:", errorMsg)
+    				end
+    			end)
+
+    			-- Also allow clicking the background to toggle
+    			toggleBg.InputBegan:Connect(function(input)
+    				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    					isToggled = not isToggled
+    					updateToggleAppearance()
+
+    					-- Save to flag if specified
+    					if flag then
+    						EzUI.Flags[flag] = isToggled
+    						if EzUI.Configuration.Enabled and EzUI.Configuration.AutoSave then
+    							saveConfiguration(EzUI.Configuration.FileName)
+    						end
+    					end
+
+    					-- Call user callback
+    					local success, errorMsg = pcall(function()
+    						callback(isToggled)
+    					end)
+
+    					if not success then
+    						warn("Toggle callback error:", errorMsg)
+    					end
+    				end
+    			end)
+
+    			-- Hover effects
+    			toggleButton.MouseEnter:Connect(function()
+    				toggleButton.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
+    			end)
+
+    			toggleButton.MouseLeave:Connect(function()
+    				toggleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    			end)
+
+    			-- Return Toggle API
+    			local toggleAPI = {}
+    			toggleAPI.SetValue = function(newValue)
+    				if type(newValue) == "boolean" and newValue ~= isToggled then
+    					isToggled = newValue
+    					updateToggleAppearance()
+
+    					-- Save to flag if specified
+    					if flag then
+    						EzUI.Flags[flag] = isToggled
+    						if EzUI.Configuration.Enabled and EzUI.Configuration.AutoSave then
+    							saveConfiguration(EzUI.Configuration.FileName)
+    						end
+    					end
+    				end
+    			end
+
+    			toggleAPI.GetValue = function()
+    				return isToggled
+    			end
+
+    			toggleAPI.SetText = function(newText)
+    				text = newText
+    				toggleLabel.Text = newText
+    			end
+
+    			toggleAPI.SetCallback = function(newCallback)
+    				callback = newCallback or function() end
+    			end
+
+    			-- Set function for configuration loading
+    			toggleAPI.Set = toggleAPI.SetValue
+
+    			-- Register component for flag-based updates
+    			registerComponent(flag, toggleAPI)
+
+    			return toggleAPI
+    		end
+
+    		-- Centralized TextBox component that can be used by both tab and accordion APIs
+    		local function createTextBox(config, parentContainer, currentY, updateSizeFunction, animateFunction, isExpanded, isForAccordion)
+    			-- Default config
+    			local placeholder = config.Placeholder or "Enter text..."
+    			local defaultText = config.Default or ""
+    			local callback = config.Callback or function() end
+    			local maxLength = config.MaxLength or 100
+    			local multiline = config.Multiline or false
+    			local flag = config.Flag
+
+    			-- TextBox state
+    			local currentText = defaultText
+
+    			-- Set initial value from flag if exists
+    			if flag and EzUI.Flags[flag] ~= nil then
+    				currentText = EzUI.Flags[flag]
+    				defaultText = currentText
+    			end
+
+    			-- Main textbox container
+    			local textBoxContainer = Instance.new("Frame")
+    			if isForAccordion then
+    				textBoxContainer.Size = UDim2.new(1, -10, 0, multiline and 60 or 25) -- Compact for accordion
+    				textBoxContainer.Position = UDim2.new(0, 5, 0, currentY)
+    				textBoxContainer.ZIndex = 6
+    			else
+    				textBoxContainer.Size = UDim2.new(1, -20, 0, multiline and 80 or 30) -- Standard for tab
+    				textBoxContainer.Position = UDim2.new(0, 10, 0, currentY)
+    				textBoxContainer.ZIndex = 3
+    				-- Mark this component's start position for accordion tracking
+    				textBoxContainer:SetAttribute("ComponentStartY", currentY)
+    			end
+    			textBoxContainer.BackgroundTransparency = 1
+    			textBoxContainer.Parent = parentContainer
+
+    			-- TextBox input
+    			local textBox = Instance.new("TextBox")
+    			textBox.Size = UDim2.new(1, 0, 1, 0)
+    			textBox.Position = UDim2.new(0, 0, 0, 0)
+    			textBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    			textBox.BorderColor3 = Color3.fromRGB(100, 100, 100)
+    			textBox.BorderSizePixel = 1
+    			textBox.Text = defaultText
+    			textBox.PlaceholderText = placeholder
+    			textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    			textBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+    			textBox.Font = Enum.Font.SourceSans
+    			textBox.TextSize = isForAccordion and 12 or 14 -- Smaller text for accordion
+    			textBox.TextXAlignment = Enum.TextXAlignment.Left
+    			textBox.TextYAlignment = multiline and Enum.TextYAlignment.Top or Enum.TextYAlignment.Center
+    			textBox.MultiLine = multiline
+    			textBox.TextWrapped = multiline
+    			textBox.ClearTextOnFocus = false
+    			textBox.ZIndex = isForAccordion and 7 or 4
+    			textBox.Parent = textBoxContainer
+
+    			-- Round corners
+    			local corner = Instance.new("UICorner")
+    			corner.CornerRadius = UDim.new(0, 4)
+    			corner.Parent = textBox
+
+    			-- Character counter (if maxLength is set)
+    			local charCounter = nil
+    			if maxLength and maxLength > 0 then
+    				charCounter = Instance.new("TextLabel")
+    				charCounter.Size = UDim2.new(0, 50, 0, 15)
+    				charCounter.Position = UDim2.new(1, -55, 1, -18)
+    				charCounter.BackgroundTransparency = 1
+    				charCounter.Text = string.len(currentText) .. "/" .. maxLength
+    				charCounter.TextColor3 = Color3.fromRGB(150, 150, 150)
+    				charCounter.Font = Enum.Font.SourceSans
+    				charCounter.TextSize = isForAccordion and 10 or 12 -- Smaller for accordion
+    				charCounter.TextXAlignment = Enum.TextXAlignment.Right
+    				charCounter.ZIndex = isForAccordion and 8 or 5
+    				charCounter.Parent = textBoxContainer
+    			end
+
+    			-- Function to update character counter
+    			local function updateCharCounter()
+    				if charCounter then
+    					local textLength = string.len(textBox.Text)
+    					charCounter.Text = textLength .. "/" .. maxLength
+
+    					-- Change color based on limit
+    					if textLength >= maxLength then
+    						charCounter.TextColor3 = Color3.fromRGB(255, 100, 100) -- Red when at limit
+    					elseif textLength >= maxLength * 0.8 then
+    						charCounter.TextColor3 = Color3.fromRGB(255, 200, 100) -- Orange when close to limit
+    					else
+    						charCounter.TextColor3 = Color3.fromRGB(150, 150, 150) -- Gray when safe
+    					end
+    				end
+    			end
+
+    			-- Text change handler
+    			textBox.Changed:Connect(function(property)
+    				if property == "Text" then
+    					-- Enforce max length
+    					if maxLength and maxLength > 0 and string.len(textBox.Text) > maxLength then
+    						textBox.Text = string.sub(textBox.Text, 1, maxLength)
+    					end
+
+    					currentText = textBox.Text
+    					updateCharCounter()
+
+    					-- Save to flag if specified
+    					if flag then
+    						EzUI.Flags[flag] = currentText
+    						if EzUI.Configuration.Enabled and EzUI.Configuration.AutoSave then
+    							saveConfiguration(EzUI.Configuration.FileName)
+    						end
+    					end
+
+    					-- Call user callback
+    					local success, errorMsg = pcall(function()
+    						callback(currentText)
+    					end)
+
+    					if not success then
+    						warn("TextBox callback error:", errorMsg)
+    					end
+    				end
+    			end)
+
+    			-- Focus effects
+    			textBox.Focused:Connect(function()
+    				textBox.BorderColor3 = Color3.fromRGB(100, 150, 250)
+    			end)
+
+    			textBox.FocusLost:Connect(function()
+    				textBox.BorderColor3 = Color3.fromRGB(100, 100, 100)
+    			end)
+
+    			-- Return TextBox API
+    			local textBoxAPI = {
+    				GetText = function()
+    					return currentText
+    				end,
+    				SetText = function(newText)
+    					textBox.Text = tostring(newText or "")
+    					currentText = textBox.Text
+    					updateCharCounter()
+    					-- Save to flag if specified
+    					if flag then
+    						EzUI.Flags[flag] = currentText
+    						if EzUI.Configuration.Enabled and EzUI.Configuration.AutoSave then
+    							saveConfiguration(EzUI.Configuration.FileName)
+    						end
+    					end
+    				end,
+    				Clear = function()
+    					textBox.Text = ""
+    					currentText = ""
+    					updateCharCounter()
+    					-- Save to flag if specified
+    					if flag then
+    						EzUI.Flags[flag] = currentText
+    						if EzUI.Configuration.Enabled and EzUI.Configuration.AutoSave then
+    							saveConfiguration(EzUI.Configuration.FileName)
+    						end
+    					end
+    				end,
+    				SetPlaceholder = function(newPlaceholder)
+    					textBox.PlaceholderText = tostring(newPlaceholder or "")
+    				end,
+    				Focus = function()
+    					textBox:CaptureFocus()
+    				end,
+    				Blur = function()
+    					textBox:ReleaseFocus()
+    				end,
+    				SetCallback = function(newCallback)
+    					callback = newCallback or function() end
+    				end,
+    				-- Set function for configuration loading
+    				Set = function(newText)
+    					textBox.Text = tostring(newText or "")
+    					currentText = textBox.Text
+    					updateCharCounter()
+    				end
+    			}
+
+    			-- Register component for flag-based updates
+    			registerComponent(flag, textBoxAPI)
+
+    			return textBoxAPI
+    		end
+
+    		-- Centralized NumberBox component that can be used by both tab and accordion APIs
+    		local function createNumberBox(config, parentContainer, currentY, updateSizeFunction, animateFunction, isExpanded, isForAccordion)
+    			-- Default config
+    			local placeholder = config.Placeholder or "Enter number..."
+    			local defaultValue = config.Default or 0
+    			local callback = config.Callback or function() end
+    			local minValue = config.Min or -math.huge
+    			local maxValue = config.Max or math.huge
+    			local increment = config.Increment or 1
+    			local decimals = config.Decimals or 0
+    			local flag = config.Flag
+
+    			-- NumberBox state
+    			local currentValue = defaultValue
+
+    			-- Set initial value from flag if exists
+    			if flag and EzUI.Flags[flag] ~= nil then
+    				currentValue = EzUI.Flags[flag]
+    				defaultValue = currentValue
+    			end
+
+    			-- Main numberbox container
+    			local numberBoxContainer = Instance.new("Frame")
+    			if isForAccordion then
+    				numberBoxContainer.Size = UDim2.new(1, -10, 0, 25) -- Compact for accordion
+    				numberBoxContainer.Position = UDim2.new(0, 5, 0, currentY)
+    				numberBoxContainer.ZIndex = 6
+    			else
+    				numberBoxContainer.Size = UDim2.new(1, -20, 0, 30) -- Standard for tab
+    				numberBoxContainer.Position = UDim2.new(0, 10, 0, currentY)
+    				numberBoxContainer.ZIndex = 3
+    				-- Mark this component's start position for accordion tracking
+    				numberBoxContainer:SetAttribute("ComponentStartY", currentY)
+    			end
+    			numberBoxContainer.BackgroundTransparency = 1
+    			numberBoxContainer.Parent = parentContainer
+
+    			-- Number input box
+    			local numberBox = Instance.new("TextBox")
+    			if isForAccordion then
+    				numberBox.Size = UDim2.new(1, -45, 1, 0) -- Smaller for accordion
+    				numberBox.TextSize = 12 -- Smaller text for accordion
+    				numberBox.ZIndex = 7
+    			else
+    				numberBox.Size = UDim2.new(1, -60, 1, 0) -- Standard for tab
+    				numberBox.TextSize = 14 -- Normal text for tab
+    				numberBox.ZIndex = 4
+    			end
+    			numberBox.Position = UDim2.new(0, 0, 0, 0)
+    			numberBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    			numberBox.BorderColor3 = Color3.fromRGB(100, 100, 100)
+    			numberBox.BorderSizePixel = 1
+    			numberBox.Text = decimals > 0 and string.format("%." .. decimals .. "f", defaultValue) or tostring(defaultValue)
+    			numberBox.PlaceholderText = placeholder
+    			numberBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    			numberBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+    			numberBox.Font = Enum.Font.SourceSans
+    			numberBox.TextXAlignment = Enum.TextXAlignment.Center
+    			numberBox.TextYAlignment = Enum.TextYAlignment.Center
+    			numberBox.ClearTextOnFocus = false
+    			numberBox.Parent = numberBoxContainer
+
+    			-- Round corners for number box
+    			local numberCorner = Instance.new("UICorner")
+    			numberCorner.CornerRadius = UDim.new(0, 4)
+    			numberCorner.Parent = numberBox
+
+    			-- Increment button (up arrow)
+    			local incrementBtn = Instance.new("TextButton")
+    			if isForAccordion then
+    				incrementBtn.Size = UDim2.new(0, 20, 0, 12) -- Smaller for accordion
+    				incrementBtn.Position = UDim2.new(1, -22, 0, 1)
+    				incrementBtn.TextSize = 8
+    				incrementBtn.ZIndex = 7
+    			else
+    				incrementBtn.Size = UDim2.new(0, 25, 0, 14) -- Standard for tab
+    				incrementBtn.Position = UDim2.new(1, -30, 0, 1)
+    				incrementBtn.TextSize = 10
+    				incrementBtn.ZIndex = 4
+    			end
+    			incrementBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    			incrementBtn.BorderColor3 = Color3.fromRGB(100, 100, 100)
+    			incrementBtn.BorderSizePixel = 1
+    			incrementBtn.Text = "▲"
+    			incrementBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    			incrementBtn.Font = Enum.Font.SourceSans
+    			incrementBtn.Parent = numberBoxContainer
+
+    			-- Decrement button (down arrow)
+    			local decrementBtn = Instance.new("TextButton")
+    			if isForAccordion then
+    				decrementBtn.Size = UDim2.new(0, 20, 0, 12) -- Smaller for accordion
+    				decrementBtn.Position = UDim2.new(1, -22, 0, 13)
+    				decrementBtn.TextSize = 8
+    				decrementBtn.ZIndex = 7
+    			else
+    				decrementBtn.Size = UDim2.new(0, 25, 0, 14) -- Standard for tab
+    				decrementBtn.Position = UDim2.new(1, -30, 0, 15)
+    				decrementBtn.TextSize = 10
+    				decrementBtn.ZIndex = 4
+    			end
+    			decrementBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    			decrementBtn.BorderColor3 = Color3.fromRGB(100, 100, 100)
+    			decrementBtn.BorderSizePixel = 1
+    			decrementBtn.Text = "▼"
+    			decrementBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    			decrementBtn.Font = Enum.Font.SourceSans
+    			decrementBtn.Parent = numberBoxContainer
+
+    			-- Function to validate and update value
+    			local function updateValue(newValue)
+    				-- Clamp to min/max
+    				newValue = math.max(minValue, math.min(maxValue, newValue))
+
+    				-- Round to decimal places
+    				if decimals > 0 then
+    					local multiplier = 10 ^ decimals
+    					newValue = math.floor(newValue * multiplier + 0.5) / multiplier
+    				else
+    					newValue = math.floor(newValue + 0.5)
+    				end
+
+    				currentValue = newValue
+
+    				-- Update text box display
+    				if decimals > 0 then
+    					numberBox.Text = string.format("%." .. decimals .. "f", newValue)
+    				else
+    					numberBox.Text = tostring(newValue)
+    				end
+
+    				-- Save to flag if specified
+    				if flag then
+    					EzUI.Flags[flag] = currentValue
+    					if EzUI.Configuration.Enabled and EzUI.Configuration.AutoSave then
+    						saveConfiguration(EzUI.Configuration.FileName)
+    					end
+    				end
+
+    				-- Call user callback
+    				local success, errorMsg = pcall(function()
+    					callback(currentValue)
+    				end)
+
+    				if not success then
+    					warn("NumberBox callback error:", errorMsg)
+    				end
+
+    				return newValue
+    			end
+
+    			-- Text change handler with validation
+    			numberBox.FocusLost:Connect(function()
+    				local inputText = numberBox.Text
+    				local numValue = tonumber(inputText)
+
+    				if numValue then
+    					updateValue(numValue)
+    				else
+    					-- Invalid input, revert to current value
+    					if decimals > 0 then
+    						numberBox.Text = string.format("%." .. decimals .. "f", currentValue)
+    					else
+    						numberBox.Text = tostring(currentValue)
+    					end
+    				end
+    			end)
+
+    			-- Increment button handler
+    			incrementBtn.MouseButton1Click:Connect(function()
+    				updateValue(currentValue + increment)
+    			end)
+
+    			-- Decrement button handler
+    			decrementBtn.MouseButton1Click:Connect(function()
+    				updateValue(currentValue - increment)
+    			end)
+
+    			-- Button hover effects
+    			incrementBtn.MouseEnter:Connect(function()
+    				incrementBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    			end)
+
+    			incrementBtn.MouseLeave:Connect(function()
+    				incrementBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    			end)
+
+    			decrementBtn.MouseEnter:Connect(function()
+    				decrementBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    			end)
+
+    			decrementBtn.MouseLeave:Connect(function()
+    				decrementBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    			end)
+
+    			-- Focus effects
+    			numberBox.Focused:Connect(function()
+    				numberBox.BorderColor3 = Color3.fromRGB(100, 150, 250)
+    			end)
+
+    			numberBox.FocusLost:Connect(function()
+    				numberBox.BorderColor3 = Color3.fromRGB(100, 100, 100)
+    			end)
+
+    			-- Return NumberBox API
+    			local numberBoxAPI = {
+    				GetValue = function()
+    					return currentValue
+    				end,
+    				SetValue = function(newValue)
+    					local numValue = tonumber(newValue)
+    					if numValue then
+    						updateValue(numValue)
+    					else
+    						warn("NumberBox SetValue: Expected number, got " .. type(newValue))
+    					end
+    				end,
+    				SetMin = function(newMin)
+    					minValue = tonumber(newMin) or -math.huge
+    					updateValue(currentValue) -- Re-validate current value
+    				end,
+    				SetMax = function(newMax)
+    					maxValue = tonumber(newMax) or math.huge
+    					updateValue(currentValue) -- Re-validate current value
+    				end,
+    				SetIncrement = function(newIncrement)
+    					increment = tonumber(newIncrement) or 1
+    				end,
+    				Clear = function()
+    					updateValue(0)
+    				end,
+    				Focus = function()
+    					numberBox:CaptureFocus()
+    				end,
+    				Blur = function()
+    					numberBox:ReleaseFocus()
+    				end,
+    				SetCallback = function(newCallback)
+    					callback = newCallback or function() end
+    				end,
+    				-- Set function for configuration loading
+    				Set = function(newValue)
+    					local numValue = tonumber(newValue)
+    					if numValue then
+    						updateValue(numValue)
+    					end
+    				end
+    			}
+
+    			-- Register component for flag-based updates
+    			registerComponent(flag, numberBoxAPI)
+
+    			return numberBoxAPI
+    		end
+
+    		-- Create tab API object
+    		local tabAPI = {}
+
+    		function tabAPI:AddLabel(text)
+    			-- Use centralized Label function for tab
+    			local label = createLabel(text, tabContent, tabCurrentY, nil, nil, nil, false)
+
+    			-- Update posisi Y untuk elemen berikutnya
+    			tabCurrentY = tabCurrentY + 35
+
+    			-- Update canvas size jika tab ini sedang aktif
+    			if tabContent == activeTab then
+    				currentY = tabCurrentY
+    				api:UpdateWindowSize()
+    			end
+
+    			-- Return label API with SetText function
+    			return {
+    				SetText = function(newText)
+    					label.Text = newText
+    				end,
+    				SetColor = function(color)
+    					label.TextColor3 = color
+    				end,
+    				GetText = function()
+    					return label.Text
+    				end
+    			}
+    		end
+
+    		function tabAPI:AddButton(text, callback)
+    			-- Use centralized Button function for tab
+    			local button = createButton(text, callback, tabContent, tabCurrentY, nil, nil, nil, false)
+
+    			-- Update posisi Y untuk elemen berikutnya
+    			tabCurrentY = tabCurrentY + 35
+
+    			-- Update canvas size jika tab ini sedang aktif
+    			if tabContent == activeTab then
+    				currentY = tabCurrentY
+    				api:UpdateWindowSize()
+    			end
+    		end
+
+    		function tabAPI:AddSelectBox(config)
+    			-- Use centralized SelectBox function for tab
+    			local selectBoxAPI = createSelectBox(
+    				config, 
+    				tabContent, 
+    				tabCurrentY, 
+    				function() -- updateSizeFunction
+    					if tabContent == activeTab then
+    						currentY = tabCurrentY
+    						api:UpdateWindowSize()
+    					end
+    				end, 
+    				nil, -- animateFunction (not needed for tabs)
+    				true, -- isExpanded (always true for tabs)
+    				false -- isForAccordion = false
+    			)
+
+    			-- Update posisi Y untuk elemen berikutnya
+    			tabCurrentY = tabCurrentY + 40
+
+    			-- Update canvas size jika tab ini sedang aktif
+    			if tabContent == activeTab then
+    				currentY = tabCurrentY
+    				api:UpdateWindowSize()
+    			end
+
+    			-- Return SelectBox API
+    			return selectBoxAPI
+    		end
+
+    		function tabAPI:AddToggle(config)
+    			-- Use centralized Toggle function for tab
+    			local toggleAPI = createToggle(config, tabContent, tabCurrentY, nil, nil, nil, false)
+
+    			-- Update posisi Y untuk elemen berikutnya
+    			tabCurrentY = tabCurrentY + 35
+
+    			-- Update canvas size jika tab ini sedang aktif
+    			if tabContent == activeTab then
+    				currentY = tabCurrentY
+    				api:UpdateWindowSize()
+    			end
+
+    			-- Return Toggle API
+    			return toggleAPI
+    		end
+
+    		function tabAPI:AddTextBox(config)
+    			-- Use centralized TextBox function for tab
+    			local textBoxAPI = createTextBox(config, tabContent, tabCurrentY, nil, nil, nil, false)
+
+    			-- Update posisi Y untuk elemen berikutnya
+    			local multiline = config.Multiline or false
+    			tabCurrentY = tabCurrentY + (multiline and 90 or 40)
+
+    			-- Update canvas size jika tab ini sedang aktif
+    			if tabContent == activeTab then
+    				currentY = tabCurrentY
+    				api:UpdateWindowSize()
+    			end
+
+    			-- Return TextBox API
+    			return textBoxAPI
+    		end
+
+    		function tabAPI:AddNumberBox(config)
+    			-- Use centralized NumberBox function for tab
+    			local numberBoxAPI = createNumberBox(config, tabContent, tabCurrentY, nil, nil, nil, false)
+
+    			-- Update position Y for next element
+    			tabCurrentY = tabCurrentY + 40
+
+    			-- Update canvas size for active tab
+    			if tabContent == activeTab then
+    				currentY = tabCurrentY
+    				api:UpdateWindowSize()
+    			end
+
+    			-- Return NumberBox API
+    			return numberBoxAPI
+    		end
+
+    		function tabAPI:AddSeparator()
+    			-- Use centralized Separator function for tab
+    			local separator = createSeparator(tabContent, tabCurrentY, nil, nil, nil, false)
+
+    			-- Update posisi Y untuk elemen berikutnya (separator uses +15 spacing like accordion)
+    			tabCurrentY = tabCurrentY + 15
+
+    			-- Update canvas size jika tab ini sedang aktif
+    			if tabContent == activeTab then
+    				currentY = tabCurrentY
+    				api:UpdateWindowSize()
+    			end
+    		end
+
+    		function tabAPI:AddAccordion(config)
+    			-- Default config
+    			local title = config.Title or config.Name or "Accordion"
+    			local expanded = config.Expanded ~= nil and config.Expanded or false
+    			local callback = config.Callback or function() end
+    			local icon = config.Icon or "📁" -- Optional icon for the accordion
+
+    			-- Accordion state
+    			local isExpanded = expanded
+    			local accordionContentHeight = 0
+    			local accordionStartY = tabCurrentY -- Store initial Y position
+
+    			-- Main accordion container
+    			local accordionContainer = Instance.new("Frame")
+    			accordionContainer.Size = UDim2.new(1, -20, 0, 30) -- Initial height just for header
+    			accordionContainer.Position = UDim2.new(0, 10, 0, tabCurrentY)
+    			accordionContainer.BackgroundTransparency = 1
+    			accordionContainer.ClipsDescendants = false -- Allow content to show
+    			accordionContainer.ZIndex = 3
+    			accordionContainer.Parent = tabContent
+
+    			-- Store reference to this accordion in tab content for position tracking
+    			accordionContainer:SetAttribute("AccordionStartY", tabCurrentY)
+    			accordionContainer:SetAttribute("IsAccordion", true)
+
+    			-- Accordion header (clickable)
+    			local accordionHeader = Instance.new("TextButton")
+    			accordionHeader.Size = UDim2.new(1, 0, 0, 30)
+    			accordionHeader.Position = UDim2.new(0, 0, 0, 0)
+    			accordionHeader.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    			accordionHeader.BorderColor3 = Color3.fromRGB(100, 100, 100)
+    			accordionHeader.BorderSizePixel = 1
+    			accordionHeader.Text = "" -- We'll use custom labels
+    			accordionHeader.ZIndex = 4
+    			accordionHeader.Parent = accordionContainer
+
+    			-- Expand/Collapse arrow
+    			local accordionArrow = Instance.new("TextLabel")
+    			accordionArrow.Size = UDim2.new(0, 30, 1, 0)
+    			accordionArrow.Position = UDim2.new(0, 5, 0, 0)
+    			accordionArrow.BackgroundTransparency = 1
+    			accordionArrow.Text = isExpanded and "▼" or "▶"
+    			accordionArrow.TextColor3 = Color3.fromRGB(200, 200, 200)
+    			accordionArrow.TextXAlignment = Enum.TextXAlignment.Center
+    			accordionArrow.Font = Enum.Font.SourceSans
+    			accordionArrow.TextSize = 14
+    			accordionArrow.ZIndex = 5
+    			accordionArrow.Parent = accordionHeader
+
+    			-- Icon (optional)
+    			local accordionIcon = Instance.new("TextLabel")
+    			accordionIcon.Size = UDim2.new(0, 25, 1, 0)
+    			accordionIcon.Position = UDim2.new(0, 35, 0, 0)
+    			accordionIcon.BackgroundTransparency = 1
+    			accordionIcon.Text = icon
+    			accordionIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
+    			accordionIcon.TextXAlignment = Enum.TextXAlignment.Center
+    			accordionIcon.Font = Enum.Font.SourceSans
+    			accordionIcon.TextSize = 16
+    			accordionIcon.ZIndex = 5
+    			accordionIcon.Parent = accordionHeader
+
+    			-- Accordion title
+    			local accordionTitle = Instance.new("TextLabel")
+    			accordionTitle.Size = UDim2.new(1, -70, 1, 0)
+    			accordionTitle.Position = UDim2.new(0, 65, 0, 0)
+    			accordionTitle.BackgroundTransparency = 1
+    			accordionTitle.Text = title
+    			accordionTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    			accordionTitle.TextXAlignment = Enum.TextXAlignment.Left
+    			accordionTitle.Font = Enum.Font.SourceSansBold
+    			accordionTitle.TextSize = 16
+    			accordionTitle.ZIndex = 5
+    			accordionTitle.Parent = accordionHeader
+
+    			-- Accordion content container (scrollable)
+    			local accordionContent = Instance.new("ScrollingFrame")
+    			accordionContent.Size = UDim2.new(1, 0, 0, 0) -- Start with 0 height
+    			accordionContent.Position = UDim2.new(0, 0, 0, 35) -- Below header with small gap
+    			accordionContent.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    			accordionContent.BorderColor3 = Color3.fromRGB(80, 80, 80)
+    			accordionContent.BorderSizePixel = 1
+    			accordionContent.Visible = isExpanded
+    			accordionContent.CanvasSize = UDim2.new(0, 0, 0, 0)
+    			accordionContent.ScrollBarThickness = 6
+    			accordionContent.ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120)
+    			accordionContent.ScrollingDirection = Enum.ScrollingDirection.Y
+    			accordionContent.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
+    			accordionContent.ZIndex = 4
+    			accordionContent.Parent = accordionContainer
+
+    			-- Round corners for content (bottom only)
+    			local contentCorner = Instance.new("UICorner")
+    			contentCorner.CornerRadius = UDim.new(0, 4)
+    			contentCorner.Parent = accordionContent
+
+    			-- Add padding to accordion content
+    			local contentPadding = Instance.new("UIPadding")
+    			contentPadding.PaddingTop = UDim.new(0, 8)
+    			contentPadding.PaddingBottom = UDim.new(0, 8)
+    			contentPadding.PaddingLeft = UDim.new(0, 8)
+    			contentPadding.PaddingRight = UDim.new(0, 8)
+    			contentPadding.Parent = accordionContent
+
+    			-- Content layout
+    			local contentLayout = Instance.new("UIListLayout")
+    			contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    			contentLayout.Padding = UDim.new(0, 5)
+    			contentLayout.Parent = accordionContent
+
+    			-- Track content Y position within accordion
+    			local accordionCurrentY = 10
+
+    			-- Function to update positions of all components below this accordion
+    			local function updateComponentsBelow()
+    				local currentAccordionBottom = accordionContainer.Position.Y.Offset + accordionContainer.Size.Y.Offset
+    				local accordionHeightChange = accordionContainer.Size.Y.Offset - 35 -- 35 is header height
+
+    				-- Find all components that come after this accordion and update their positions
+    				for _, child in pairs(tabContent:GetChildren()) do
+    					if child:IsA("GuiObject") and child ~= accordionContainer then
+    						-- Check if this component is positioned after the accordion
+    						local childCurrentY = child.Position.Y.Offset
+    						local accordionHeaderBottom = accordionStartY + 35 -- Just the header
+
+    						if childCurrentY > accordionHeaderBottom then
+    							-- This component comes after the accordion, adjust its position
+    							local newY = accordionStartY + accordionContainer.Size.Y.Offset + 5 + (childCurrentY - accordionHeaderBottom - 5)
+    							child.Position = UDim2.new(child.Position.X.Scale, child.Position.X.Offset, 0, newY)
+    						end
+    					end
+    				end
+    			end
+
+    			-- Function to recalculate total tab height including all accordions
+    			local function recalculateTabHeight()
+    				local maxY = 10
+
+    				for _, child in pairs(tabContent:GetChildren()) do
+    					if child:IsA("GuiObject") then
+    						local childBottom = child.Position.Y.Offset + child.Size.Y.Offset
+    						maxY = math.max(maxY, childBottom)
+    					end
+    				end
+
+    				-- Update the global tab current Y to reflect new total height
+    				tabCurrentY = maxY + 10
+
+    				-- Update canvas size if this tab is active
+    				if tabContent == activeTab then
+    					currentY = tabCurrentY
+    					api:UpdateWindowSize()
+    				end
+    			end
+
+    			-- Function to update accordion container size and canvas
+    			local function updateAccordionSize()
+    				-- Update canvas size for content
+    				accordionContent.CanvasSize = UDim2.new(0, 0, 0, accordionCurrentY + 10)
+
+    				-- Calculate accordion content height (max 150px, scrollable if needed)
+    				accordionContentHeight = math.min(accordionCurrentY + 20, 150)
+
+    				-- Update accordion container size
+    				local totalHeight = 35 + (isExpanded and accordionContentHeight or 0) -- Header + content
+    				accordionContainer.Size = UDim2.new(1, -20, 0, totalHeight)
+
+    				-- Update accordion content frame size
+    				if isExpanded then
+    					accordionContent.Size = UDim2.new(1, 0, 0, accordionContentHeight)
+    				end
+
+    				-- Update positions of components below this accordion
+    				updateComponentsBelow()
+
+    				-- Recalculate total tab height
+    				recalculateTabHeight()
+    			end
+
+    			-- Animation function for smooth expand/collapse
+    			local function animateAccordion()
+    				local TweenService = game:GetService("TweenService")
+
+    				-- Calculate sizes BEFORE any changes
+    				local oldContainerHeight = accordionContainer.Size.Y.Offset
+    				local targetContentHeight = isExpanded and accordionContentHeight or 0
+    				local targetContainerHeight = 35 + targetContentHeight
+    				local heightDifference = targetContainerHeight - oldContainerHeight
+
+    				-- Store components that come after this accordion BEFORE size changes
+    				local componentsBelow = {}
+    				local accordionBottom = accordionContainer.Position.Y.Offset + oldContainerHeight
+
+    				for _, child in pairs(tabContent:GetChildren()) do
+    					if child:IsA("GuiObject") and child ~= accordionContainer then
+    						local childY = child.Position.Y.Offset
+    						if childY > accordionBottom then
+    							table.insert(componentsBelow, {
+    								component = child,
+    								currentY = childY,
+    								targetY = childY + heightDifference
+    							})
+    						end
+    					end
+    				end
+
+    				-- Update arrow direction
+    				accordionArrow.Text = isExpanded and "▼" or "▶"
+
+    				-- Show content immediately if expanding, hide after animation if collapsing
+    				if isExpanded then
+    					accordionContent.Visible = true
+    				end
+
+    				-- Animate container size
+    				local containerTween = TweenService:Create(
+    					accordionContainer,
+    					TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+    					{Size = UDim2.new(1, -20, 0, targetContainerHeight)}
+    				)
+
+    				-- Animate content size
+    				local contentTween = TweenService:Create(
+    					accordionContent,
+    					TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+    					{Size = UDim2.new(1, 0, 0, targetContentHeight)}
+    				)
+
+    				-- Animate components below
+    				for _, componentData in ipairs(componentsBelow) do
+    					local componentTween = TweenService:Create(
+    						componentData.component,
+    						TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+    						{Position = UDim2.new(componentData.component.Position.X.Scale, componentData.component.Position.X.Offset, 0, componentData.targetY)}
+    					)
+    					componentTween:Play()
+    				end
+
+    				containerTween:Play()
+    				contentTween:Play()
+
+    				-- Hide content after collapse animation
+    				if not isExpanded then
+    					containerTween.Completed:Connect(function()
+    						accordionContent.Visible = false
+    					end)
+    				end
+
+    				-- Update tab canvas after animation completes
+    				containerTween.Completed:Connect(function()
+    					recalculateTabHeight()
+    				end)
+    			end
+
+    			-- Header click handler
+    			accordionHeader.MouseButton1Click:Connect(function()
+    				isExpanded = not isExpanded
+
+    				-- Call user callback
+    				local success, errorMsg = pcall(function()
+    					callback(isExpanded)
+    				end)
+
+    				if not success then
+    					warn("Accordion callback error:", errorMsg)
+    				end
+
+    				animateAccordion()
+    			end)
+
+    			-- Header hover effects
+    			accordionHeader.MouseEnter:Connect(function()
+    				accordionHeader.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    			end)
+
+    			accordionHeader.MouseLeave:Connect(function()
+    				accordionHeader.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+    			end)
+
+    			-- Update position Y for next element and mark it
+    			tabCurrentY = tabCurrentY + 40 -- Initial spacing for header
+
+    			-- Create accordion content API
+    			local accordionAPI = {}
+
+    			function accordionAPI:AddLabel(text)
+    				-- Use centralized Label function for accordion
+    				local label = createLabel(text, accordionContent, accordionCurrentY, updateAccordionSize, animateAccordion, isExpanded, true)
+
+    				accordionCurrentY = accordionCurrentY + 30
+    				updateAccordionSize()
+
+    				if isExpanded then
+    					animateAccordion()
+    				end
+
+    				-- Return label API with SetText function
+    				return {
+    					SetText = function(newText)
+    						label.Text = newText
+    					end,
+    					SetColor = function(color)
+    						label.TextColor3 = color
+    					end,
+    					GetText = function()
+    						return label.Text
+    					end
+    				}
+    			end
+
+    			function accordionAPI:AddButton(text, buttonCallback)
+    				-- Use centralized Button function for accordion
+    				local button = createButton(text, buttonCallback, accordionContent, accordionCurrentY, updateAccordionSize, animateAccordion, isExpanded, true)
+
+    				accordionCurrentY = accordionCurrentY + 30
+    				updateAccordionSize()
+
+    				if isExpanded then
+    					animateAccordion()
+    				end
+    			end
+
+    			function accordionAPI:AddSelectBox(config)
+    				-- Use centralized SelectBox function for accordion
+    				local selectBoxAPI = createSelectBox(
+    					config, 
+    					accordionContent, 
+    					accordionCurrentY, 
+    					updateAccordionSize, 
+    					animateAccordion, 
+    					isExpanded, 
+    					true -- isForAccordion = true
+    				)
+
+    				-- Update accordion position
+    				accordionCurrentY = accordionCurrentY + 35 -- Height + spacing
+    				updateAccordionSize()
+
+    				if isExpanded then
+    					animateAccordion()
+    				end
+
+    				-- Return SelectBox API
+    				return selectBoxAPI
+    			end
+
+    			function accordionAPI:AddSeparator()
+    				-- Use centralized Separator function for accordion
+    				local separator = createSeparator(accordionContent, accordionCurrentY, updateAccordionSize, animateAccordion, isExpanded, true)
+
+    				accordionCurrentY = accordionCurrentY + 15
+    				updateAccordionSize()
+
+    				if isExpanded then
+    					animateAccordion()
+    				end
+    			end
+
+    			function accordionAPI:AddToggle(config)
+    				-- Use centralized Toggle function for accordion
+    				local toggleAPI = createToggle(config, accordionContent, accordionCurrentY, updateAccordionSize, animateAccordion, isExpanded, true)
+
+    				-- Update accordion position
+    				accordionCurrentY = accordionCurrentY + 30
+    				updateAccordionSize()
+
+    				if isExpanded then
+    					animateAccordion()
+    				end
+
+    				-- Return Toggle API
+    				return toggleAPI
+    			end
+
+    			function accordionAPI:AddTextBox(config)
+    				-- Use centralized TextBox function for accordion
+    				local textBoxAPI = createTextBox(config, accordionContent, accordionCurrentY, updateAccordionSize, animateAccordion, isExpanded, true)
+
+    				-- Update accordion position
+    				local multiline = config.Multiline or false
+    				accordionCurrentY = accordionCurrentY + (multiline and 70 or 35) -- Compact spacing for accordion
+    				updateAccordionSize()
+
+    				if isExpanded then
+    					animateAccordion()
+    				end
+
+    				-- Return TextBox API
+    				return textBoxAPI
+    			end
+
+    			function accordionAPI:AddNumberBox(config)
+    				-- Use centralized NumberBox function for accordion
+    				local numberBoxAPI = createNumberBox(config, accordionContent, accordionCurrentY, updateAccordionSize, animateAccordion, isExpanded, true)
+
+    				-- Update accordion position
+    				accordionCurrentY = accordionCurrentY + 35 -- Compact spacing for accordion
+    				updateAccordionSize()
+
+    				if isExpanded then
+    					animateAccordion()
+    				end
+
+    				-- Return NumberBox API
+    				return numberBoxAPI
+    			end
+
+    			-- Initialize with expanded state
+    			if isExpanded then
+    				updateAccordionSize()
+    				animateAccordion()
+    			end
+
+    			-- Return accordion API
+    			return {
+    				Expand = function()
+    					if not isExpanded then
+    						isExpanded = true
+    						animateAccordion()
+
+    						-- Call user callback
+    						local success, errorMsg = pcall(function()
+    							callback(isExpanded)
+    						end)
+
+    						if not success then
+    							warn("Accordion callback error:", errorMsg)
+    						end
+    					end
+    				end,
+    				Collapse = function()
+    					if isExpanded then
+    						isExpanded = false
+    						animateAccordion()
+
+    						-- Call user callback
+    						local success, errorMsg = pcall(function()
+    							callback(isExpanded)
+    						end)
+
+    						if not success then
+    							warn("Accordion callback error:", errorMsg)
+    						end
+    					end
+    				end,
+    				Toggle = function()
+    					isExpanded = not isExpanded
+    					animateAccordion()
+
+    					-- Call user callback
+    					local success, errorMsg = pcall(function()
+    						callback(isExpanded)
+    					end)
+
+    					if not success then
+    						warn("Accordion callback error:", errorMsg)
+    					end
+
+    					return isExpanded
+    				end,
+    				IsExpanded = function()
+    					return isExpanded
+    				end,
+    				SetTitle = function(newTitle)
+    					title = newTitle
+    					accordionTitle.Text = newTitle
+    				end,
+    				SetIcon = function(newIcon)
+    					icon = newIcon
+    					accordionIcon.Text = newIcon
+    				end,
+    				AddLabel = accordionAPI.AddLabel,
+    				AddButton = accordionAPI.AddButton,
+    				AddSelectBox = accordionAPI.AddSelectBox,
+    				AddSeparator = accordionAPI.AddSeparator,
+    				AddToggle = accordionAPI.AddToggle,
+    				AddTextBox = accordionAPI.AddTextBox,
+    				AddNumberBox = accordionAPI.AddNumberBox
+    			}
+    		end
+
+    		-- Tab button click
+    		tabBtn.MouseButton1Click:Connect(function()
+    			-- Reset all tab buttons to normal color and hide contents
+    			for _, content in pairs(tabContents) do
+    				content.Visible = false
+    			end
+    			for _, btn in pairs(tabScrollFrame:GetChildren()) do
+    				if btn:IsA("TextButton") then
+    					btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    				end
+    			end
+
+    			-- Activate the clicked tab
+    			tabContent.Visible = true
+    			tabBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    			activeTab = tabContent
+    			activeTabName = tabName
+    			currentTabContent = tabContent
+    			currentY = tabCurrentY
+    			api:UpdateWindowSize()
+
+    			-- Call user callback if provided
+    			if tabCallback then
+    				local success, errorMsg = pcall(function()
+    					tabCallback(tabName, true) -- tab name and activated state
+    				end)
+
+    				if not success then
+    					warn("Tab callback error:", errorMsg)
+    				end
+    			end
+    		end)
+
+    		-- Auto-activate first tab
+    		if not activeTab then
+    			tabContent.Visible = true
+    			activeTab = tabContent
+    			activeTabName = tabName
+    			currentTabContent = tabContent
+    			currentY = tabCurrentY
+    			tabBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    			api:UpdateWindowSize()
+    		end
+
+    		-- Return tab API object with enhanced methods
+    		local enhancedTabAPI = {}
+
+    		-- Copy all existing tabAPI methods
+    		for key, value in pairs(tabAPI) do
+    			enhancedTabAPI[key] = value
+    		end
+
+    		-- Add new tab control methods
+    		function enhancedTabAPI:SetVisible(visible)
+    			tabBtn.Visible = visible
+    			tabVisible = visible
+    		end
+
+    		function enhancedTabAPI:GetVisible()
+    			return tabVisible
+    		end
+
+    		function enhancedTabAPI:SetTitle(newTitle)
+    			tabName = newTitle
+    			titleLabel.Text = newTitle
+    		end
+
+    		function enhancedTabAPI:GetTitle()
+    			return tabName
+    		end
+
+    		function enhancedTabAPI:SetIcon(newIcon)
+    			tabIcon = newIcon
+    			iconLabel.Text = newIcon or ""
+    			updateTitleAlignment()
+    		end
+
+    		function enhancedTabAPI:GetIcon()
+    			return tabIcon
+    		end
+
+    		function enhancedTabAPI:Activate()
+    			-- Programmatically activate this tab
+    			-- Reset all tab buttons to normal color and hide contents
+    			for _, content in pairs(tabContents) do
+    				content.Visible = false
+    			end
+    			for _, btn in pairs(tabScrollFrame:GetChildren()) do
+    				if btn:IsA("TextButton") then
+    					btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    				end
+    			end
+
+    			-- Activate this tab
+    			tabContent.Visible = true
+    			tabBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    			activeTab = tabContent
+    			activeTabName = tabName
+    			currentTabContent = tabContent
+    			currentY = tabCurrentY
+    			api:UpdateWindowSize()
+
+    			-- Call user callback if provided
+    			if tabCallback then
+    				local success, errorMsg = pcall(function()
+    					tabCallback(tabName, true)
+    				end)
+
+    				if not success then
+    					warn("Tab callback error:", errorMsg)
+    				end
+    			end
+    		end
+
+    		function enhancedTabAPI:IsActive()
+    			return activeTab == tabContent
+    		end
+
+    		function enhancedTabAPI:SetCallback(newCallback)
+    			tabCallback = newCallback
+    		end
+
+    		return enhancedTabAPI
+    	end
+
+    	-- Window opacity control methods
+    	function api:SetOpacity(opacity)
+    		-- Clamp opacity between 0.1 and 1.0
+    		windowOpacity = math.max(0.1, math.min(1.0, opacity))
+    		local transparency = 1 - windowOpacity
+
+    		-- Update main window components
+    		frame.BackgroundTransparency = transparency
+    		tabPanel.BackgroundTransparency = transparency
+    		header.BackgroundTransparency = transparency
+    	end
+
+    	function api:GetOpacity()
+    		return windowOpacity
+    	end
+
+    	function api:FadeIn(duration)
+    		duration = duration or 0.3
+    		local TweenService = game:GetService("TweenService")
+    		local targetTransparency = 1 - windowOpacity
+
+    		-- Start from fully transparent
+    		frame.BackgroundTransparency = 1
+    		tabPanel.BackgroundTransparency = 1
+    		header.BackgroundTransparency = 1
+
+    		-- Tween to target opacity
+    		local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+
+    		local frameTween = TweenService:Create(frame, tweenInfo, {BackgroundTransparency = targetTransparency})
+    		local tabPanelTween = TweenService:Create(tabPanel, tweenInfo, {BackgroundTransparency = targetTransparency})
+    		local headerTween = TweenService:Create(header, tweenInfo, {BackgroundTransparency = targetTransparency})
+
+    		frameTween:Play()
+    		tabPanelTween:Play()
+    		headerTween:Play()
+    	end
+
+    	function api:FadeOut(duration)
+    		duration = duration or 0.3
+    		local TweenService = game:GetService("TweenService")
+
+    		-- Tween to fully transparent
+    		local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+
+    		local frameTween = TweenService:Create(frame, tweenInfo, {BackgroundTransparency = 1})
+    		local tabPanelTween = TweenService:Create(tabPanel, tweenInfo, {BackgroundTransparency = 1})
+    		local headerTween = TweenService:Create(header, tweenInfo, {BackgroundTransparency = 1})
+
+    		frameTween:Play()
+    		tabPanelTween:Play()
+    		headerTween:Play()
+    	end
+
+    	function api:Show()
+    		-- Show the window by enabling the ScreenGui
+    		screenGui.Enabled = true
+    		-- Hide the floating button when window is shown
+    		floatBtn.Visible = false
+    	end
+
+    	function api:Hide()
+    		-- Hide the window by disabling the ScreenGui
+    		screenGui.Enabled = false
+    		-- Show the floating button when window is hidden
+    		floatBtn.Visible = true
+    	end
+
+    	function api:IsVisible()
+    		-- Check if the window is currently visible
+    		return screenGui.Enabled
+    	end
+
+    	function api:ToggleVisibility()
+    		-- Toggle window visibility
+    		screenGui.Enabled = not screenGui.Enabled
+    		-- Toggle floating button visibility (opposite of window)
+    		floatBtn.Visible = not screenGui.Enabled
+    		return screenGui.Enabled
+    	end
+
+    	function api:AdaptToViewport()
+    		-- Recalculate window size based on current viewport
+    		local currentViewport = getViewportSize()
+    		local baseWidth = config.Width or (currentViewport.X * 0.3)
+    		local baseHeight = config.Height or (currentViewport.Y * 0.4)
+
+    		-- Apply resolution-based scaling
+    		local scaleMultiplier = 1
+    		if currentViewport.X >= 1920 then -- 1080p+
+    			scaleMultiplier = 1.2
+    		elseif currentViewport.X >= 1366 then -- 720p-1080p
+    			scaleMultiplier = 1.0
+    		elseif currentViewport.X >= 1024 then -- Tablet size
+    			scaleMultiplier = 0.9
+    		else -- Mobile/small screens
+    			scaleMultiplier = 0.8
+    		end
+
+    		-- Calculate new size with limits
+    		local newWidth = math.max(250, math.min(currentViewport.X * 0.8, baseWidth * scaleMultiplier))
+    		local newHeight = math.max(150, math.min(currentViewport.Y * 0.8, baseHeight * scaleMultiplier))
+
+    		-- Apply new size and center the window
+    		frame.Size = UDim2.new(0, newWidth, 0, newHeight)
+    		frame.Position = UDim2.new(0.5, -newWidth / 2, 0.5, -newHeight / 2)
+    	end
+
+    	function api:GetDynamicSize()
+    		local currentViewport = getViewportSize()
+    		return {
+    			Width = frame.Size.X.Offset,
+    			Height = frame.Size.Y.Offset,
+    			ViewportWidth = currentViewport.X,
+    			ViewportHeight = currentViewport.Y
+    		}
+    	end
+
+    	-- Set window size programmatically
+    	function api:SetSize(width, height)
+    		local viewportSize = getViewportSize()
+
+    		-- Apply constraints
+    		width = math.max(300, math.min(width, viewportSize.X * 0.9))
+    		height = math.max(200, math.min(height, viewportSize.Y * 0.9))
+
+    		frame.Size = UDim2.new(0, width, 0, height)
+
+    		-- Update canvas size for scrolling
+    		if currentTabContent then
+    			scrollFrame.CanvasSize = UDim2.new(0, 0, 0, currentY + 10)
+    		end
+
+    		return {Width = width, Height = height}
+    	end
+
+    	-- Auto-adapt to viewport changes (optional)
+    	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+    		if config.AutoAdapt ~= false then -- Default true, can be disabled
+    			wait(0.1) -- Small delay to ensure viewport is stable
+    			api:AdaptToViewport()
+    		end
+    	end)
+
+    	-- Close window functionality
+    	local onCloseCallback = nil
+
+    	function api:SetCloseCallback(callback)
+    		onCloseCallback = callback
+    	end
+
+    	function api:Close()
+    		-- Call user callback before destroying
+    		if onCloseCallback then
+    			local success, errorMsg = pcall(function()
+    				onCloseCallback()
+    			end)
+
+    			if not success then
+    				warn("Close callback error:", errorMsg)
+    			end
+    		end
+
+    		-- Destroy the UI
+    		if screenGui then
+    			screenGui:Destroy()
+    		end
+    	end
+
+    	-- Configuration Management API
+    	function api:SaveConfiguration()
+    		if configEnabled then
+    			saveConfiguration(configFileName)
+    		else
+    			warn("EzUI: Configuration saving is not enabled for this window")
+    		end
+    	end
+
+    	function api:LoadConfiguration()
+    		if configEnabled then
+    			return loadConfiguration(configFileName)
+    		else
+    			warn("EzUI: Configuration saving is not enabled for this window")
+    			return false
+    		end
+    	end
+
+    	function api:GetConfigurationStatus()
+    		return {
+    			Enabled = configEnabled,
+    			FileName = configFileName,
+    			FolderName = configFolderName,
+    			AutoSave = configAutoSave,
+    			AutoLoad = configAutoLoad,
+    			FlagsCount = #EzUI.Flags
+    		}
+    	end
+
+    	-- Custom Configuration Key Management
+    	function api:SetConfigValue(key, value)
+    		if not key then
+    			warn("EzUI: SetConfigValue requires a key parameter")
+    			return false
+    		end
+
+    		-- Set the value in global flags
+    		EzUI.Flags[key] = value
+
+    		-- Auto-save if enabled
+    		if configEnabled and configAutoSave then
+    			saveConfiguration(configFileName)
+    		end
+
+    		-- Update components with this flag
+    		updateComponentsByFlag(key, value)
+
+    		return true
+    	end
+
+    	function api:GetConfigValue(key, defaultValue)
+    		if not key then
+    			warn("EzUI: GetConfigValue requires a key parameter")
+    			return defaultValue
+    		end
+
+    		local value = EzUI.Flags[key]
+    		return value ~= nil and value or defaultValue
+    	end
+
+    	function api:DeleteConfigValue(key)
+    		if not key then
+    			warn("EzUI: DeleteConfigValue requires a key parameter")
+    			return false
+    		end
+
+    		if EzUI.Flags[key] ~= nil then
+    			EzUI.Flags[key] = nil
+
+    			-- Auto-save if enabled
+    			if configEnabled and configAutoSave then
+    				saveConfiguration(configFileName)
+    			end
+
+    			return true
+    		end
+
+    		return false
+    	end
+
+    	function api:HasConfigValue(key)
+    		if not key then
+    			warn("EzUI: HasConfigValue requires a key parameter")
+    			return false
+    		end
+
+    		return EzUI.Flags[key] ~= nil
+    	end
+
+    	function api:GetAllConfigValues()
+    		local configCopy = {}
+    		for key, value in pairs(EzUI.Flags) do
+    			configCopy[key] = value
+    		end
+    		return configCopy
+    	end
+
+    	function api:ClearAllConfigValues()
+    		-- Clear all flags
+    		for key in pairs(EzUI.Flags) do
+    			EzUI.Flags[key] = nil
+    		end
+
+    		-- Auto-save if enabled
+    		if configEnabled and configAutoSave then
+    			saveConfiguration(configFileName)
+    		end
+
+    		return true
+    	end
+
+    	function api:SetMultipleConfigValues(keyValuePairs)
+    		if type(keyValuePairs) ~= "table" then
+    			warn("EzUI: SetMultipleConfigValues requires a table parameter")
+    			return false
+    		end
+
+    		local updatedKeys = {}
+    		for key, value in pairs(keyValuePairs) do
+    			if type(key) == "string" then
+    				EzUI.Flags[key] = value
+    				table.insert(updatedKeys, key)
+    				-- Update components with this flag
+    				updateComponentsByFlag(key, value)
+    			end
+    		end
+
+    		-- Auto-save if enabled
+    		if configEnabled and configAutoSave then
+    			saveConfiguration(configFileName)
+    		end
+
+    		return updatedKeys
+    	end
+
+    	-- Connect close button functionality
+    	closeBtn.MouseButton1Click:Connect(function()
+    		api:Close()
+    	end)
+
+    	-- Add ESC key support for closing window
+    	local closeConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    		if not gameProcessed and input.KeyCode == Enum.KeyCode.Escape then
+    			api:Close()
+    		end
+    	end)
+
+    	-- Store connection to disconnect it when window is destroyed
+    	local function disconnectCloseConnection()
+    		if closeConnection then
+    			closeConnection:Disconnect()
+    			closeConnection = nil
+    		end
+    	end
+
+    	-- Override Close function to also disconnect the connection
+    	local originalClose = api.Close
+    	api.Close = function(self)
+    		disconnectCloseConnection()
+    		originalClose(self)
+    	end
+
+    	-- Auto-load configuration if enabled
+    	if configEnabled and configAutoLoad then
+    		task.defer(function()
+    			local loaded = loadConfiguration(configFileName)
+    			if loaded then
+    				print("EzUI: Auto-loaded configuration for " .. configFileName)
+    			end
+    		end)
+    	end
+
+    	return api
+    end
+
+    return EzUI
+
+end
+
+-- Module: ../module/core.lua
+EmbeddedModules["../module/core.lua"] = function()
+    local m = {}
+
+    -- Services
+    m.Players = game:GetService("Players")
+    m.ReplicatedStorage = game:GetService("ReplicatedStorage")
+    m.TeleportService = game:GetService("TeleportService")
+    m.UserInputService = game:GetService("UserInputService")
+    m.GuiService = game:GetService("GuiService")
+    m.Workspace = game:GetService("Workspace")
+    m.VirtualUser = game:GetService("VirtualUser")
+    m.PlaceId = game.PlaceId
+    m.JobId = game.JobId
+
+    -- Player reference
+    m.LocalPlayer = m.Players.LocalPlayer
+
+    -- References
+    m.GameEvents = m.ReplicatedStorage.GameEvents
+
+    -- Dynamic getters
+    function m:GetCharacter()
+        return self.LocalPlayer.Character
+    end
+
+    function m:GetHumanoid()
+        local char = self:GetCharacter()
+        return char and char:FindFirstChildOfClass("Humanoid") or nil
+    end
+
+    function m:GetHumanoidRootPart()
+        local char = self:GetCharacter()
+        return char and char:FindFirstChild("HumanoidRootPart") or nil
+    end
+
+    function m:GetBackpack()
+        return self.LocalPlayer:FindFirstChild("Backpack")
+    end
+
+    function m:GetPlayerGui()
+        return self.LocalPlayer:FindFirstChild("PlayerGui")
+    end
+
+    function m:Rejoin()
+        if self.PlaceId and self.JobId then
+            self.TeleportService:TeleportToPlaceInstance(self.PlaceId, self.JobId, self.LocalPlayer)
+        else
+            warn("Core:Rejoin - PlaceId or JobId is nil, cannot rejoin.")
+        end
+    end
+
+    function m:HopServer()
+        if self.PlaceId then
+            self.TeleportService:Teleport(self.PlaceId, self.LocalPlayer)
+        else
+            warn("Core:HopServer - PlaceId is nil, cannot hop server.")
+        end
+    end
+
+    function m:MakeLoop(_isEnableFunc, _func)
+        coroutine.wrap(function()
+            local lastCheck = 0
+            local checkInterval = 5 -- Check config every 5 seconds instead of every 0.1 seconds
+
+    		while true do
+                local currentTime = tick()
+                local isEnabled = false
+
+                -- Only check config periodically to reduce overhead
+                if currentTime - lastCheck >= checkInterval then
+                    -- Handle both function and direct value
+                    if type(_isEnableFunc) == "function" then
+                        isEnabled = _isEnableFunc()
+                    else
+                        isEnabled = _isEnableFunc
+                    end
+                    lastCheck = currentTime
+                else
+                    -- Use cached value between checks
+                    if type(_isEnableFunc) == "function" then
+                        isEnabled = _isEnableFunc()
+                    else
+                        isEnabled = _isEnableFunc
+                    end
+                end
+
+    			if not isEnabled then
+                    task.wait(5) -- Longer wait when disabled
+                    continue 
+                end
+
+    			_func()
+                task.wait(3) -- Longer wait between executions (was 0.1, now 3 seconds)
+    		end
+    	end)()
+    end
+    return m
+end
+
+-- Module: quest/ascension.lua
+EmbeddedModules["quest/ascension.lua"] = function()
+    local m = {}
+
+    local Window
+    local Core
+    local Plant
+    local Player
+
+    m.AscensionItem = {
+        Name = "N/A",
+        Amount = 0,
+        Mutations = "N/A"
+    }
+
+    function m:Init(_window, _core, _plant, _player)
+        Window = _window
+        Core = _core
+        Plant = _plant
+        Player = _player
+
+        task.spawn(function()
+            m.AscensionItem = self:GetQuestDetail()
+        end)
+
+        Core:MakeLoop(function()
+            return Window:GetConfigValue("AutoAscend")
+        end, function()
+            self:AutoSubmitQuest()
+        end)
+    end
+
+    function m:GetQuestDetail()
+        local UI = Core:GetPlayerGui():FindFirstChild("RebirthConfirmation")
+        if not UI then
+            warn("RebirthConfirmation UI not found")
+            return nil
+        end
+
+        local questDetail = UI.Frame.Display.RebirthDetails:FindFirstChild("RequiredItemTemplate")
+        if not questDetail then
+            warn("RequiredItemTemplate not found")
+            return nil
+        end
+
+        local itemName = questDetail:FindFirstChild("ItemName")
+        if not itemName then
+            warn("ItemName not found")
+            return nil
+        end
+
+        local itemAmount = questDetail:FindFirstChild("ItemAmount")
+        if not itemAmount then
+            warn("ItemAmount not found")
+            return nil
+        end
+
+        local itemMutations = questDetail:FindFirstChild("ItemMutations")
+        if not itemMutations then
+            warn("ItemMutations not found")
+            return nil
+        end
+
+        -- Parse text with color tags
+        local function parseText(text)
+            if not text then return "" end
+            -- Remove color tags like <font color="#6cb8ff">Frozen</font>
+            return text:gsub('<font[^>]*>', ''):gsub('</font>', '')
+        end
+
+        local parsedName = itemName.Text
+        local parsedAmount = tonumber(itemAmount.Text:match("%d+"))
+        local parsedMutations = parseText(itemMutations.Text)
+
+        m.AscensionItem = {
+            Name = parsedName,
+            Amount = parsedAmount,
+            Mutations = parsedMutations
+        }
+
+        return {
+            Name = parsedName,
+            Amount = parsedAmount,
+            Mutations = parsedMutations
+        }
+    end
+
+    function m:IsQuestFruit(_fruit)
+        local isEligible = false
+
+        if not _fruit:IsA("Tool") then
+            return isEligible
+        end
+
+        if _fruit:GetAttribute("b") ~= "j" then
+            return isEligible
+        end
+
+        if _fruit:FindFirstChild("f") ~= self.AscensionItem.Name then
+            return isEligible
+        end
+
+        if not self.AscensionItem.Mutations or self.AscensionItem.Mutations == "" or self.AscensionItem.Mutations == "N/A" then
+            return true
+        end
+
+        for attributeName, attributeValue in pairs(_fruit:GetAttributes()) do
+            print("Fruit Attribute:", attributeName, attributeValue)
+            if attributeValue == true and attributeName == self.AscensionItem.Mutations then
+                isEligible = true
+                break
+            end
+        end
+
+        return isEligible
+    end
+
+    function m:GetAllOwnedFruitsQuest()
+        local myFruits = {}
+
+        for _, fruit in pairs(Core:GetBackpack():GetChildren()) do
+            if self:IsQuestFruit(fruit) then
+                table.insert(myFruits, fruit)
+            end
+        end
+
+        return myFruits
+    end
+
+    function m:SubmitRebirth(fruit)
+        local rebirthTask = function()
+            Core.GameEvents.BuyRebirth:FireServer()
+
+            wait(1)
+
+            self.AscensionItem = self:GetQuestDetail()
+        end
+
+        Player:AddToQueue(fruit, 10, function()
+            rebirthTask()
+        end)
+    end
+
+    function m:AutoSubmitQuest()
+        local quest = self:GetQuestDetail()
+        if not quest then
+            return
+        end
+
+        local ownedFruits = self:GetAllOwnedFruitsQuest()
+        if ownedFruits and #ownedFruits >= quest.Amount then
+            self:SubmitRebirth(ownedFruits[1])
+        end
+
+        local plants = Plant:FindPlants(quest.Name) or {}
+        if not plants or #plants < quest.Amount then
+            warn("Not enough plants found for quest:", quest.Name)
+
+            local plantingPosition = Window:GetConfigValue("PlantingAscensionPosition") or "Random"
+
+            print("Planting more seeds:", quest.Name, "to reach", quest.Amount, "positions:", plantingPosition)
+            Plant:PlantSeed(quest.Name, quest.Amount - #plants, plantingPosition)
+            return
+        end
+
+        local plantToHarvest = {}
+        for _, plant in pairs(plants) do
+            if #plantToHarvest >= quest.Amount then
+                print("Collected enough plants to harvest for the quest.")
+                break
+            end
+            if plant.name ~= quest.Name then
+                print("Skipping plant due to name mismatch:", plant.name, "vs", quest.Name)
+                continue
+            end
+
+            -- Get mutation name from attributes (key with value = true)
+            local plantDetail = Plant:GetPlantDetail(plant)
+            print("Checking plant:", plant.name)
+            if not plantDetail or #plantDetail.fruits == 0 then
+                continue
+            end
+            for _, fruit in pairs(plantDetail.fruits) do
+                if not fruit.isEligibleToHarvest then
+                    continue
+                end
+
+
+                print("Found matching fruit:", fruit.name)
+                print("Required mutation:", quest.Mutations)
+                print("Fruit mutations:", table.concat(fruit.mutations, ", "))
+                if not quest.Mutations or quest.Mutations == "" or quest.Mutations == "N/A" then
+                    table.insert(plantToHarvest, fruit.model)
+                    break
+                end
+
+                for _, mutation in pairs(fruit.mutations) do
+                    if mutation == quest.Mutations then
+                        table.insert(plantToHarvest, fruit.model)
+                        break
+                    end
+                end
+            end
+        end
+
+        if not plantToHarvest or #plantToHarvest == 0 then
+            warn("No suitable plants found to submit for the quest.")
+            return
+        end
+
+        -- Harvesting fruits
+        local harvestedCount = 0
+        for _, fruit in pairs(plantToHarvest) do
+            if harvestedCount >= quest.Amount then
+                break
+            end
+
+            print("Harvesting fruit:", fruit.Name)
+            local success = Plant:HarvestFruit(fruit)
+            if success then
+                harvestedCount = harvestedCount + 1
+                task.wait(0.15) -- Small delay between harvests
+            end
+        end
+    end
+
+    return m
+end
+
+-- Module: quest/ui.lua
+EmbeddedModules["quest/ui.lua"] = function()
+    local m = {}
+    local Window
+    local Core
+    local Ascension
+    local ChubbyChipmunkUI
+
+    function m:Init(_window, _core, _ascension, _chubbyChipmunkUI)
+        Window = _window
+        Core = _core
+        Ascension = _ascension
+        ChubbyChipmunkUI = _chubbyChipmunkUI
+    end
+
+    function m:CreateQuestTab()
+        local tab = Window:AddTab({
+            Name = "Quests",
+            Icon = "📜",
+        })
+
+        -- Chubby Chipmunk Event
+        ChubbyChipmunkUI:AddQuestSection(tab)
+
+        -- Ascension
+        self:AscensionSection(tab)
+    end
+
+    function m:AscensionSection(tab)
+        local accordion = tab:AddAccordion({
+            Name = "Ascension",
+            Icon = "🪙",
+            Expanded = false,
+        })
+
+        accordion:AddLabel("Current Ascension Quest:")
+        accordion:AddLabel(" - Item: " .. (Ascension.AscensionItem.Name or "N/A"))
+        accordion:AddLabel(" - Amount: " .. (Ascension.AscensionItem.Amount or "N/A"))
+        accordion:AddLabel(" - Mutations: " .. (Ascension.AscensionItem.Mutations or "N/A"))
+
+        accordion:AddLabel("Position planting seeds:")
+        accordion:AddSelectBox({
+            Name = "Planting Position",
+            Flag = "PlantingAscensionPosition",
+            Options = {"Random", "Front Right", "Front Left", "Back Right", "Back Left"},
+            Default = "Random",
+            MultiSelect = false,
+            Placeholder = "Select position...",
+        })
+
+        accordion:AddToggle({
+            Name = "Auto Ascend",
+            Default = false,
+            Flag = "AutoAscend",
+            Tooltip = "Automatically ascend when the option is available.",
+        })
+    end
+
+    return m
+end
+
+-- Module: event/chubby_chipmunk/ui.lua
+EmbeddedModules["event/chubby_chipmunk/ui.lua"] = function()
+    local m = {}
+
+    local Window
+    local Quest
+
+    function m:Init(_window, _quest)
+        Window = _window
+        Quest = _quest
+    end
+
+    function m:AddQuestSection(tab)
+        local eventAccordion = tab:AddAccordion({
+            Title = "Chubby Chipmunk Event",
+            Icon = "🐿️",
+            Default = false,
+        })
+
+        eventAccordion:AddToggle({
+            Name = "Auto Submit Chipmunk Fruit 🥜",
+            Default = false,
+            Flag = "AutoSubmitSeedStagePlants",
+            Callback = function(Value)
+                if Value then
+                    Quest:StartAutoSubmitEventPlants()
+                else
+                    Quest:StopAutoSubmitEventPlants()
+                end
+            end,
+        })
+    end
+
+    return m
+end
+
+-- Module: pet/pet.lua
+EmbeddedModules["pet/pet.lua"] = function()
+    local m = {}
+
+    local Core
+    local Player
+    local Window
+    local Garden
+    local PetTeam
+
+    function m:Init(_core, _player, _window, _garden, _petTeam)
+        Core = _core
+        Player = _player
+        Window = _window
+        Garden = _garden
+        PetTeam = _petTeam
+    end
+
+    function m:GetPetReplicationData()
+        local replicationClass = require(Core.ReplicatedStorage.Modules.ReplicationClass)
+        local activePetsReplicator = replicationClass.new("ActivePetsService_Replicator")
+        return activePetsReplicator:YieldUntilData().Table
+    end
+
+    function m:GetAllActivePets()
+        local success, replicationData = pcall(function()
+            return self:GetPetReplicationData()
+        end)
+
+        if not success then
+            warn("🐾 [GET ACTIVE] Failed to get replication data:", replicationData)
+            return nil
+        end
+
+        if not replicationData or not replicationData.ActivePetStates then
+            warn("🐾 [GET ACTIVE] Invalid replication data structure")
+            return nil
+        end
+
+        local activePetStates = replicationData.ActivePetStates
+        local playerName = Core.LocalPlayer.Name
+        local playerId = tostring(Core.LocalPlayer.UserId)
+
+        -- Try multiple ways to find player's pets
+        local playerPets = activePetStates[playerName] 
+                        or activePetStates[playerId]
+                        or activePetStates[tonumber(playerId)]
+
+        if not playerPets then
+            print("🐾 [GET ACTIVE] No active pets found for player:", playerName)
+            -- Debug: Show available keys
+            print("🐾 [GET ACTIVE] Available keys in ActivePetStates:")
+            for key, _ in pairs(activePetStates) do
+                print("  - Key:", key, "Type:", type(key))
+            end
+        end
+
+        return playerPets
+    end
+
+    function m:GetPlayerPetData()
+        local success, replicationData = pcall(self.GetPetReplicationData, self)
+        if not success then
+            warn("🐾 [GET DATA] Failed to get replication data:", replicationData)
+            return nil
+        end
+
+        if not replicationData or not replicationData.PlayerPetData then
+            warn("🐾 [GET DATA] Invalid PlayerPetData structure")
+            return nil
+        end
+
+        local playerPetData = replicationData.PlayerPetData
+        local playerName = Core.LocalPlayer.Name
+        local playerId = tostring(Core.LocalPlayer.UserId)
+
+        -- Try multiple ways to find player's data
+        local playerData = playerPetData[playerName] 
+                        or playerPetData[playerId]
+                        or playerPetData[tonumber(playerId)]
+
+        if not playerData then
+            print("🐾 [GET DATA] No pet data found for player:", playerName)
+            -- Debug: Show available keys
+            print("🐾 [GET DATA] Available keys in PlayerPetData:")
+            for key, _ in pairs(playerPetData) do
+                print("  - Key:", key, "Type:", type(key))
+            end
+        end
+
+        return playerData
+    end
+
+    function m:GetPetData(_petID)
+        local playerData = self:GetPlayerPetData()
+        if playerData and playerData.PetInventory then
+            return playerData.PetInventory.Data[_petID]
+        end
+        return nil
+    end
+
+    function m:EquipPet(_petID)
+        if not _petID then
+            warn("🐾 [EQUIP] Invalid pet ID provided")
+            return false
+        end
+
+        local success = pcall(function()
+            local position = CFrame.new(Garden:GetFarmCenterPosition())
+            if not position then
+                error("Failed to get farm center position")
+            end
+
+            Core.GameEvents.PetsService:FireServer(
+                "EquipPet",
+                _petID,
+                position
+            )
+        end)
+
+        if not success then
+            warn("🐾 [EQUIP] Failed to equip pet:", _petID)
+            return false
+        end
+
+        return true
+    end
+
+    function m:UnequipPet(_petID)
+        if not _petID then
+            warn("🐾 [UNEQUIP] Invalid pet ID provided")
+            return false
+        end
+
+        local success = pcall(function()
+            Core.GameEvents.PetsService:FireServer(
+                "UnequipPet",
+                _petID
+            )
+        end)
+
+        if not success then
+            warn("🐾 [UNEQUIP] Failed to unequip pet:", _petID)
+            return false
+        end
+
+        return true
+    end
+
+
+    function m:ChangeTeamPets(_teamName)
+        if not _teamName or _teamName == "" then
+            return false
+        end
+
+        local pets = PetTeam:FindPetTeam(_teamName)
+
+        if not pets or #pets == 0 then
+            warn("🐾 [CHANGE TEAM] No pets found in the team:", _teamName)
+            return false
+        end
+
+        -- Deactivate all current active pets
+        local activePets = self:GetAllActivePets() or {}
+
+        if not activePets then
+            print("🐾 [CHANGE TEAM] No active pets to unequip")
+        end
+
+        for petID, _ in pairs(activePets) do
+            local success = pcall(function()
+                self:UnequipPet(petID)
+            end)
+
+            if not success then
+                warn("🐾 [CHANGE TEAM] Failed to unequip pet:", petID)
+            end
+
+            task.wait(0.25) -- Longer delay to ensure server processes
+        end
+
+        -- Wait for unequip to complete
+        task.wait(1)
+
+        -- Activate pets in the selected team
+        for _, petID in pairs(pets) do
+            local success = pcall(function()
+                self:EquipPet(petID)
+            end)
+
+            if not success then
+                warn("🐾 [CHANGE TEAM] Failed to equip pet:", petID)
+            end
+
+            task.wait(0.25) -- Longer delay between equips
+        end
+
+        return true
+    end
+
+    function m:BoostPet(_petID)
+        Core.GameEvents.PetBoostService:FireServer(
+            "ApplyBoost",
+            _petID
+        )
+    end
+
+    function m:EligiblePetUseBoost(_petID, _boostType, _boostAmount)
+        local petData = self:GetPetData(_petID)
+        local isEligible = true
+
+        if not petData or not petData.PetData then
+            return false
+        end
+
+        for key, value in pairs(petData.PetData) do
+            if type(value) ~= "table" then
+                continue
+            end
+            if key ~= "Boosts" and #value < 1 then
+                continue
+            end
+
+            for i, boostInfo in ipairs(value) do
+                local currentBoostType = boostInfo.BoostType
+                local currentBoostAmount = boostInfo.BoostAmount
+
+                if currentBoostType == _boostType and currentBoostAmount == _boostAmount then
+                    isEligible = false
+                end
+            end
+        end
+        return isEligible
+    end
+
+    function m:BoostAllActivePets()
+        local boostTool = {}
+
+        for _, tool in next, Player:GetAllTools() do
+            local toolType = tool:GetAttribute("q")
+
+            if toolType == "PASSIVE_BOOST" then
+                table.insert(boostTool, tool)
+            end
+        end
+
+        if #boostTool == 0 then
+            print("No boost tool found in inventory.")
+            return
+        end
+
+        for _, tool in next, boostTool do
+            local boostType = tool:GetAttribute("q")
+            local boostAmount = tool:GetAttribute("o")
+            local isTaskCompleted = false
+
+            local boostingPetTask = function(_boostType, _boostAmount)
+                print("🚀 Starting boost task for tool:", tool.Name)
+                for petID, _ in pairs(self:GetAllActivePets()) do
+                    local isEligible = self:EligiblePetUseBoost(petID, _boostType, _boostAmount)
+
+                    if not isEligible then
+                        continue
+                    end
+
+                    print("🐾 Boosting pet:", petID, "with", _boostType, "amount:", _boostAmount)
+                    self:BoostPet(petID)
+                    task.wait(0.15)
+                end
+            end
+
+            local boostingPetCallback = function()
+                print("🚀 Boost task completed for tool:", tool.Name)
+                isTaskCompleted = true
+            end
+
+            Player:AddToQueue(
+                tool,               -- tool
+                1,                  -- priority (high)
+                function()
+                    boostingPetTask(boostType, boostAmount)
+                end,    -- task function
+                function()
+                    boostingPetCallback()
+                end     -- callback function
+            )
+
+            -- Wait until task is completed
+            while isTaskCompleted == false do
+                print("⏳ Waiting for boost task to complete...")
+                task.wait(2)
+            end
+            print("✅ Boost task finished, moving to next tool")
+        end
+    end
+
+    function m:GetAllOwnedPets()
+        local myPets = {}
+
+        for _, tool in next, Player:GetAllTools() do
+            local toolType = tool:GetAttribute("b")
+            toolType = toolType and string.lower(toolType) or ""
+            if toolType == "l" then
+                table.insert(myPets, tool)
+            end
+        end
+
+        return myPets
+    end
+
+
+    function m:GetPetRegistry()
+        local success, petRegistry = pcall(function()
+            return require(Core.ReplicatedStorage.Data.PetRegistry)
+        end)
+
+        if not success then           
+            warn("Failed to get pet registry:", petRegistry)
+            return {}
+        end
+
+        local petList = petRegistry.PetList
+        if not petList then
+            warn("PetList is nil or not found")
+            return {}
+        end
+
+        -- Convert PetList to UI format {text = ..., value = ...}
+        local formattedPets = {}
+        for petName, petData in pairs(petList) do
+            table.insert(formattedPets, {
+                text = petName,
+                value = petName
+            })
+        end
+
+        if #formattedPets < 1 then
+            return {}
+        end
+
+        -- Sort pets alphabetically (ascending order)
+        table.sort(formattedPets, function(a, b)
+            if not a or not b or not a.text or not b.text then
+                return false
+            end
+            return string.lower(tostring(a.text)) < string.lower(tostring(b.text))
+        end)
+
+        return formattedPets
+    end
+
+    function m:SellPet()
+        local petNames = Window:GetConfigValue("PetToSell") or {}
+        local weighLessThan = Window:GetConfigValue("WeightThresholdSellPet") or 1
+        local ageLessThan = Window:GetConfigValue("AgeThresholdSellPet") or 1
+        local sellPetTeam = Window:GetConfigValue("SellPetTeam") or nil
+        local boostBeforeSelling = Window:GetConfigValue("AutoBoostBeforeSelling") or false
+        local corePetTeam = Window:GetConfigValue("CorePetTeam") or nil
+
+        if #petNames == 0 then
+            print("No pet selected for selling.")
+            if corePetTeam then
+                print("Reverting to Core Pet Team:", corePetTeam)
+                self:ChangeTeamPets(corePetTeam)
+            end
+            return
+        end
+
+        -- Favorite pets should not be sold
+        for _, tool in pairs(self:GetAllOwnedPets()) do
+            local isFavorited = tool:GetAttribute("d") or false
+            if isFavorited then
+                continue
+            end
+
+            local petID = tool:GetAttribute("PET_UUID")
+            local petData = self:GetPetData(petID)
+            if not petData then
+                warn("Pet data not found for UUID:", petID)
+                continue
+            end
+
+            local petName = petData.PetType or "Unknown"
+            local petDetail = petData.PetData
+            local petWeight = petDetail.BaseWeight or 20
+            local petAge = petDetail.Level or math.huge
+
+            local isPetNameMatched = false
+            for _, selectedPet in ipairs(petNames) do
+                if petName == selectedPet then
+                    isPetNameMatched = true
+                    break
+                end
+            end
+
+            if petWeight >= weighLessThan or petAge >= ageLessThan or not isPetNameMatched then
+                print("Skipping pet (does not meet sell criteria):", petName, "| Weight:", petWeight, "| Age:", petAge, "| Is Name Matched:", tostring(isPetNameMatched))
+
+                Core.GameEvents.Favorite_Item:FireServer(tool)
+                task.wait(0.15)
+            end
+        end
+
+        task.wait(0.5) -- Wait for favorites to process
+
+        if sellPetTeam then
+            self:ChangeTeamPets(sellPetTeam)
+            task.wait(2)
+            if boostBeforeSelling then
+                self:BoostAllActivePets()
+            end
+        end
+
+        task.wait(1) -- Wait before selling
+
+        Core.GameEvents.SellAllPets_RE:FireServer()
+        task.wait(1) -- Wait for selling to process
+
+        if corePetTeam then
+            self:ChangeTeamPets(corePetTeam)
+        end
+    end
+
+    return m
+end
+
+-- Load module helper function
+local function loadModule(url)
+    -- Try embedded module first
+    if EmbeddedModules[url] then
+        return EmbeddedModules[url]()
+    end
+    
+    -- Fallback to original require
+    return require(url)
+end
+
+-- Main Script
+-- Main entry point
+local EzUI = loadModule("https://raw.githubusercontent.com/alfin-efendy/ez-rbx-ui/refs/heads/main/ui.lua")
+-- Import local modules
+local CoreModule = loadModule("../module/core.lua")
+local PlayerModule = loadModule("../module/player.lua")
+local Discord = loadModule("../module/discord.lua")
+local ServerUI = loadModule("server/ui.lua")
+
+-- Farm modules
+local GardenModule = loadModule("farm/garden.lua")
+local PlantModule = loadModule("farm/plant.lua")
+local FarmUI = loadModule("farm/ui.lua")
+
+-- Quest module
+local AscensionModule = loadModule("quest/ascension.lua")
+local QuestUI = loadModule("quest/ui.lua")
+
+-- Event modules
+local ChubbyChipmunkQuest = loadModule("event/chubby_chipmunk/quest.lua")
+local ChubbyChipmunkUI = loadModule("event/chubby_chipmunk/ui.lua")
+
+-- Shop modules
+local ShopModule = loadModule("shop/shop.lua")
+local ShopSeedModule = loadModule("shop/seed.lua")
+local ShopGearModule = loadModule("shop/gear.lua")
+local ShopEggModule = loadModule("shop/egg.lua")
+local ShopSeasonPassModule = loadModule("shop/season_pass.lua")
+local TravelingShop = loadModule("shop/traveling.lua")
+local ShopUI = loadModule("shop/ui.lua")
+
+-- -- Pet modules
+local PetTeamModule = loadModule("pet/team.lua")
+local PetWebhook = loadModule("pet/webhook.lua")
+local EggModule = loadModule("pet/egg.lua")
+local PetModule = loadModule("pet/pet.lua")
+local PetUI = loadModule("pet/ui.lua")
+
+-- Inventory modules
+local InventoryModule = loadModule("inventory/inventory.lua")
+local InventoryUI = loadModule("inventory/ui.lua")
+
+-- Notification module
+local NotificationUI = loadModule("notification/ui.lua")
+
+-- Initialize window
+local window = EzUI.CreateWindow({
+    Name = "EzGarden",
+    Width = 700,
+    Height = 400,
+    Opacity = 0.9,
+    AutoAdapt = true,
+    AutoShow = false,
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "EzGarden",
+        FileName = "settings",
+        AutoLoad = true,
+        AutoSave = true,
+    },
+})
+
+window:SetCloseCallback(function()
+	print("window is closing! Performing cleanup...")
+	
+    -- Remove Anti-AFK connections
+    PlayerModule:RemoveAntiAFK()
+    
+    -- Stop all queued tasks
+    PlayerModule:ClearQueue()
+
+	print("Cleanup completed!")
+end)
+
+-- Wait load config
+task.wait(1) -- Ensure config is loaded
+
+-- Player
+PlayerModule:Init(CoreModule)
+
+-- Farm
+GardenModule:Init(window, CoreModule, PlayerModule)
+PlantModule:Init(window, CoreModule, PlayerModule, GardenModule)
+FarmUI:init(window, PlayerModule, GardenModule, PlantModule)
+FarmUI:CreateFarmTab()
+print("Farm initialized")
+
+-- -- Pet
+PetTeamModule:Init(CoreModule, PlayerModule, window, EzUI.NewConfig("PetTeamConfig"), GardenModule)
+PetWebhook:Init(window, CoreModule, Discord)
+PetModule:Init(CoreModule, PlayerModule, window, GardenModule, PetTeamModule)
+EggModule:Init(CoreModule, PlayerModule, window, GardenModule, PetModule, PetWebhook)
+PetUI:Init(window, PetTeamModule, EggModule, PetModule, GardenModule, PlayerModule)
+PetUI:CreatePetTab()
+print("Pet initialized")
+
+-- Shop
+ShopModule:Init(CoreModule)
+ShopSeedModule:Init(window, CoreModule, ShopModule)
+ShopGearModule:Init(window, CoreModule, ShopModule)
+ShopEggModule:Init(window, CoreModule, ShopModule)
+TravelingShop:Init(window, CoreModule, ShopModule)
+ShopSeasonPassModule:Init(window, CoreModule, ShopModule)
+ShopUI:Init(window, ShopEggModule, ShopSeedModule, ShopGearModule, ShopSeasonPassModule, TravelingShop)
+ShopUI:CreateShopTab()
+print("Shop initialized")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+
+-- Event
+ChubbyChipmunkQuest:Init(window, CoreModule)
+ChubbyChipmunkUI:Init(window, ChubbyChipmunkQuest)
+
+-- Quest
+AscensionModule:Init(window, CoreModule, PlantModule, PlayerModule)
+QuestUI:Init(window, CoreModule, AscensionModule, ChubbyChipmunkUI)
+QuestUI:CreateQuestTab()
+print("Quest initialized")
+
+-- Inventory
+InventoryModule:Init(CoreModule, PlayerModule, window)
+InventoryUI:Init(window, InventoryModule, PetModule)
+InventoryUI:CreateTab()
+print("Inventory initialized")
+
+-- Server
+ServerUI:Init(window, CoreModule, PlayerModule, GardenModule)
+ServerUI:CreateServerTab()
+print("Server initialized")
+
+-- -- Notification
+NotificationUI:Init(window, PetWebhook)
+NotificationUI:CreateNotificationTab()
