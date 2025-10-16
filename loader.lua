@@ -97,7 +97,7 @@ for _, asset in ipairs(release.assets) do
     
     if code then
         print("Running script from release:", release.tag_name)
-        loadstring(code)()
+        (load or loadstring)(code)()
     else
         warn("Failed to load asset " .. fileName)
     end
