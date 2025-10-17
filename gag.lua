@@ -4,6 +4,1296 @@
 
 local EmbeddedModules = {}
 
+-- Module: event/ghoul/ui.lua
+EmbeddedModules["event/ghoul/ui.lua"] = function()
+    local m = {}
+
+    local Window
+    local Quest
+    local Shop
+
+    function m:Init(_window, _quest, _shop)
+        Window = _window
+        Quest = _quest
+        Shop = _shop
+
+
+        local tab = Window:AddTab({
+            Name = "Ghoul Event",
+            Icon = "👻",
+        })
+        self:GhoulSection(tab)
+        self:SeedShopSection(tab)
+        self:CreepyCrittersSection(tab)
+        self:DevilishDecorSection(tab)
+    end
+
+    function m:GhoulSection(tab)
+        local eventAccordion = tab:AddAccordion({
+            Title = "Ghoul Event",
+            Icon = "👻",
+            Default = false,
+        })
+
+        eventAccordion:AddToggle({
+            Name = "Auto Submit Ghoul Quest Items 👻",
+            Default = false,
+            Flag = "AutoSubmitGhoulQuest",
+            Callback = function(Value)
+                if Value then
+                    Quest:StartAutoSubmitEventPlants()
+                end
+            end,
+        })
+    end
+
+    function m:SeedShopSection(tab)
+        local merchant = "Spooky Seeds"
+        local accordion = tab:AddAccordion({
+            Title = "Spooky Seeds Shop",
+            Icon = "🎃",
+            Default = false,
+        })
+
+        accordion:AddSelectBox({
+            Name = "Select Item to Buy 🛒",
+            Options = {"loading ..."},
+            Placeholder = "Select Item",
+            MultiSelect = true,
+            Flag = "SpookyShopItem",
+            OnInit =  function(api, optionsData)
+                local items = Shop:GetItemRepository(merchant)
+
+                local itemNames = {}
+                for itemName, _ in pairs(items) do
+                    table.insert(itemNames, itemName)
+                end
+
+                optionsData.updateOptions(itemNames)
+            end
+        })
+
+        accordion:AddToggle({
+            Name = "Auto Buy Spooky Shop Items 🛒",
+            Default = false,
+            Flag = "AutoBuySpookyShop",
+            Callback = function(Value)
+                if Value then
+                    Quest:StartAutoBuyEventItems()
+                end
+            end,
+        })
+    end
+
+    function m:CreepyCrittersSection(tab)
+        local merchant = "Creepy Critters"
+        local accordion = tab:AddAccordion({
+            Title = "Creepy Critters Shop",
+            Icon = "🦇",
+            Default = false,
+        })
+
+        accordion:AddSelectBox({
+            Name = "Select Item to Buy 🛒",
+            Options = {"loading ..."},
+            Placeholder = "Select Item",
+            MultiSelect = true,
+            Flag = "CreepyShopItem",
+            OnInit =  function(api, optionsData)
+                local items = Shop:GetItemRepository(merchant)
+
+                local itemNames = {}
+                for itemName, _ in pairs(items) do
+                    table.insert(itemNames, itemName)
+                end
+
+                optionsData.updateOptions(itemNames)
+            end
+        })
+
+        accordion:AddToggle({
+            Name = "Auto Buy Creepy Shop Items 🛒",
+            Default = false,
+            Flag = "AutoBuyCreepyShop",
+            Callback = function(Value)
+                if Value then
+                    Quest:StartAutoBuyEventItems()
+                end
+            end,
+        })
+    end
+
+    function m:DevilishDecorSection(tab)
+        local merchant = "Devilish Decor"
+        local accordion = tab:AddAccordion({
+            Title = "Devilish Decor Shop",
+            Icon = "🕸️",
+            Default = false,
+        })
+
+        accordion:AddSelectBox({
+            Name = "Select Item to Buy 🛒",
+            Options = {"loading ..."},
+            Placeholder = "Select Item",
+            MultiSelect = true,
+            Flag = "DevilishShopItem",
+            OnInit =  function(api, optionsData)
+                local items = Shop:GetItemRepository(merchant)
+
+                local itemNames = {}
+                for itemName, _ in pairs(items) do
+                    table.insert(itemNames, itemName)
+                end
+
+                optionsData.updateOptions(itemNames)
+            end
+        })
+
+        accordion:AddToggle({
+            Name = "Auto Buy Devilish Shop Items 🛒",
+            Default = false,
+            Flag = "AutoBuyDevilishShop",
+            Callback = function(Value)
+                if Value then
+                    Quest:StartAutoBuyEventItems()
+                end
+            end,
+        })
+    end
+
+    return m
+end
+
+-- Module: ../module/player.lua
+EmbeddedModules["../module/player.lua"] = function()
+    local m = {}
+
+    -- Load Core module with error handling
+    local Core
+    local AntiAFKConnection -- Store the connection reference
+    local ReconnectConnection
+
+    -- Queue system for tool equipping
+    local ToolQueue = {
+        Queue = {},
+        IsProcessing = false,
+        CurrentTask = nil
+    }
+
+    function m:Init(_core)
+        if not _core then
+            error("Player:Init - Core module is required")
+        end
+        Core = _core
+
+        -- Store the connection so we can disconnect it later
+        AntiAFKConnection = Core.LocalPlayer.Idled:Connect(function()
+            Core.VirtualUser:CaptureController()
+            Core.VirtualUser:ClickButton2(Vector2.new())
+            print("Anti-AFK: Clicked to prevent idle kick")
+        end)
+
+        ReconnectConnection = Core.GuiService.ErrorMessageChanged:Connect(function()
+            local IsSingle = #Core.Players:GetPlayers() <= 1
+
+            --// Join a different server if the player is solo
+            if IsSingle then
+                Core:HopServer()
+                return
+            end
+
+            Core:Rejoin()
+        end)
+
+        -- Initialize queue system
+        ToolQueue.Queue = {}
+        ToolQueue.IsProcessing = false
+        ToolQueue.CurrentTask = nil
+    end
+
+    function m:RemoveAntiAFK()
+        -- Disconnect the stored connection
+        if AntiAFKConnection then
+            AntiAFKConnection:Disconnect()
+            AntiAFKConnection = nil
+            print("Anti-AFK: Disconnected idle connection")
+        else
+            print("Anti-AFK: No connection to disconnect")
+        end
+    end
+
+    function m:RemoveReconnect()
+        if ReconnectConnection then
+            ReconnectConnection:Disconnect()
+            ReconnectConnection = nil
+            print("Reconnect: Disconnected error message connection")
+        else
+            print("Reconnect: No connection to disconnect")
+        end
+    end
+
+    -- ===== QUEUE SYSTEM =====
+
+    -- Add task to queue
+    -- tool: Tool object to equip
+    -- priority: Number (lower = higher priority, default = 5)
+    -- taskFunction: Function to execute after tool is equipped (optional)
+    -- callback: Function to call when task is complete (optional)
+    function m:AddToQueue(_tool, _priority, _taskFunction, _callback)
+        _priority = _priority or 5
+
+        if not _tool or not _tool:IsA("Tool") then
+            warn("Player:AddToQueue - Invalid tool provided")
+            if _callback then _callback(false, "Invalid tool") end
+            return false
+        end
+
+        local task = {
+            Id = tick(), -- Unique identifier
+            Tool = _tool,
+            Priority = _priority,
+            TaskFunction = _taskFunction,
+            Callback = _callback,
+            Timestamp = tick()
+        }
+
+        -- Insert task into queue
+        table.insert(ToolQueue.Queue, task)
+
+        print("🔧 Added tool to queue:", _tool.Name, "Priority:", _priority, "Queue size:", #ToolQueue.Queue)
+
+        -- Start processing if not already processing
+        if not ToolQueue.IsProcessing then
+            print("🔧 Queue is already processing or empty, skipping...", self:GetQueueStatus())
+
+            self:ProcessQueue()
+        end
+
+        return true
+    end
+
+    -- Process the queue
+    function m:ProcessQueue()
+        if ToolQueue.IsProcessing or #ToolQueue.Queue == 0 then
+            print("🔧 Queue is already processing or empty, skipping...", self:GetQueueStatus())
+            return -- Already processing or queue is empty
+        end
+
+        ToolQueue.IsProcessing = true
+
+        while #ToolQueue.Queue > 0 do
+            -- Sort queue by priority and timestamp to ensure correct order
+            table.sort(ToolQueue.Queue, function(a, b)
+                if a.Priority == b.Priority then
+                    return a.Timestamp < b.Timestamp -- Earlier added first
+                end
+                return a.Priority < b.Priority -- Lower priority number first
+            end)
+            local currentTask = table.remove(ToolQueue.Queue, 1) -- Take first (highest priority) task
+            ToolQueue.CurrentTask = currentTask
+
+            print("🔧 Processing tool queue task:", currentTask.Tool.Name)
+
+            -- Equip the tool, ensure it is equipped before proceeding
+            if self:GetEquippedTool() ~= currentTask.Tool then
+                self:EquipTool(currentTask.Tool)
+                task.wait(0.5) -- Small delay to ensure tool is equipped
+            end
+
+            -- Execute task function if provided and wait for completion
+            local success, result = pcall(function()
+                return currentTask.TaskFunction()
+            end)
+
+            if currentTask.Callback then
+                local callbackSuccess, callbackErr = pcall(currentTask.Callback, success, result)
+                if not callbackSuccess then
+                    warn("Callback error for tool:", currentTask.Tool.Name, "Error:", callbackErr)
+                end
+            end
+
+            print("Task execution finished")
+            -- task.wait(0.5)
+            self:UnequipTool() -- Unequip after task
+
+            ToolQueue.CurrentTask = nil
+            task.wait(0.1) -- Small delay between tasks
+        end
+
+        ToolQueue.IsProcessing = false
+        print("🔧 Queue processing completed")
+    end
+
+    -- Get current queue status
+    function m:GetQueueStatus()
+        return {
+            queueSize = #ToolQueue.Queue,
+            isProcessing = ToolQueue.IsProcessing,
+            currentTask = ToolQueue.CurrentTask and ToolQueue.CurrentTask.Tool.Name or nil
+        }
+    end
+
+    -- Clear the queue
+    function m:ClearQueue()
+        ToolQueue.Queue = {}
+        ToolQueue.IsProcessing = false
+        ToolQueue.CurrentTask = nil
+        print("🔧 Tool queue cleared")
+    end
+
+    -- Remove specific task from queue by tool name
+    function m:RemoveFromQueue(_toolName)
+        if not _toolName then return false end
+
+        for i = #ToolQueue.Queue, 1, -1 do
+            if ToolQueue.Queue[i].Tool.Name == _toolName then
+                table.remove(ToolQueue.Queue, i)
+                print("🔧 Removed from queue:", _toolName)
+                return true
+            end
+        end
+
+        return false
+    end
+
+    function m:GetTaskByTool(_tool)
+        local tasks = {}
+        if not _tool then return nil end
+
+        for _, task in ipairs(ToolQueue.Queue) do
+            if task.Tool == _tool then
+                table.insert(tasks, task)
+            end
+        end
+
+        return #tasks > 0 and tasks or nil
+    end
+
+    function m:EquipTool(_tool)
+        -- Validate inputs
+        if not _tool or not _tool:IsA("Tool") then 
+            warn("Player:EquipTool - Invalid tool provided")
+            return false 
+        end
+
+        local humanoid = Core:GetHumanoid()
+        local backpack = Core:GetBackpack()
+
+        if not humanoid then
+            warn("Player:EquipTool - Humanoid not found")
+            return false
+        end
+
+        if not backpack then
+            warn("Player:EquipTool - Backpack not found")
+            return false
+        end
+
+        if _tool.Parent ~= backpack then
+            warn("Player:EquipTool - Tool not in backpack")
+            return false 
+        end
+
+        -- Try to equip with error handling
+        local success, err = pcall(function()
+            humanoid:EquipTool(_tool)
+        end)
+
+        if not success then
+            warn("Player:EquipTool - Failed to equip:", err)
+            return false
+        end
+
+        return true
+    end
+
+    function m:UnequipTool()    
+        local humanoid = Core:GetHumanoid()
+        if not humanoid then
+            warn("Player:UnequipTool - Humanoid not found")
+            return false
+        end
+
+        -- Try to unequip with error handling
+        local success, err = pcall(function()
+            humanoid:UnequipTools()
+        end)
+
+        if not success then
+            warn("Player:UnequipTool - Failed to unequip:", err)
+            return false
+        end
+
+        return true
+    end
+
+    function m:GetEquippedTool()
+        local character = Core:GetCharacter()
+        if not character then 
+            warn("Player:GetEquippedTool - Character not found")
+            return nil 
+        end
+
+        for _, item in ipairs(character:GetChildren()) do
+            if item:IsA("Tool") then
+                return item
+            end
+        end
+
+        return nil
+    end
+
+    function m:MoveToPosition(_position)
+        local humanoid = Core:GetHumanoid()
+        if humanoid then
+            humanoid:MoveTo(_position)
+        else
+            warn("Player:MoveToPosition - Humanoid not found")
+        end
+    end
+
+    function m:TeleportToPosition(_position)
+        local hrp = Core:GetHumanoidRootPart()
+        if hrp then
+            hrp.CFrame = CFrame.new(_position)
+            return true
+        end
+        return false
+    end
+
+    function m:GetPosition()
+        local hrp = Core:GetHumanoidRootPart()
+        return hrp and hrp.Position or Vector3.new(0, 0, 0)
+    end
+
+    function m:GetAllTools()
+        local backpack = Core:GetBackpack()
+        if not backpack then 
+            warn("Player:GetAllTools - Backpack not found")
+            return {} 
+        end
+
+        local tools = {}
+        local success, err = pcall(function()
+            for _, item in ipairs(backpack:GetChildren()) do
+                if item:IsA("Tool") then
+                    table.insert(tools, item)
+                end
+            end
+        end)
+
+        if not success then
+            warn("Player:GetAllTools - Error getting tools:", err)
+            return {}
+        end
+
+        return tools
+    end
+
+    function m:GetTool(_toolName)
+        if not _toolName or type(_toolName) ~= "string" then
+            warn("Player:GetTool - Invalid tool name")
+            return nil
+        end
+
+        local backpack = Core:GetBackpack()
+        if not backpack then
+            warn("Player:GetTool - Backpack not found")
+            return nil 
+        end
+
+        local tool = nil
+        local success, err = pcall(function()
+            tool = backpack:FindFirstChild(_toolName)
+            if tool and not tool:IsA("Tool") then
+                tool = nil
+            end
+        end)
+
+        if not success then
+            warn("Player:GetTool - Error finding tool:", err)
+            return nil
+        end
+
+        if not tool then
+            warn("Player:GetTool - Tool not found:", _toolName)
+        end
+
+        return tool
+    end
+
+    return m
+end
+
+-- Module: shop/premium.lua
+EmbeddedModules["shop/premium.lua"] = function()
+    local m ={}
+
+    local Window
+    local Core
+
+    function m:Init(_window, _core)
+        Window = _window
+        Core = _core
+    end
+
+    m.ListOfItems = {
+        { text = "[4th July Event 2025] Liberty Lily", value = 3322972631 },
+        { text = "[4th July Event 2025] Firework Flower", value = 3322974839 },
+        { text = "[4th July Event 2025] Firework", value = 3322978636 },
+        { text = "[4th July Event 2025] Bald Eagle", value = 3322970897 },
+        { text = "[4th July Event 2025] July 4th Crate", value = 3322970196 },
+        { text = "[Halloween Event] Bloodred Mushroom", value = 3426534747 },
+        { text = "[Halloween Event] Jack O Lantern", value = 3426535112 },
+        { text = "[Halloween Event] Ghoul Root", value = 3426535875 },
+        { text = "[Halloween Event] Chicken Feed", value = 3426536221 },
+        { text = "[Halloween Event] Seer Vine", value = 3426536516 },
+        { text = "[Halloween Event] Poison Apple", value = 3426537228 },
+        { text = "[Halloween Event] Spooky Egg", value = 3426500875 },
+        { text = "[Halloween Event] Pumpkin Rat", value = 3426530616 },
+        { text = "[Halloween Event] Ghost Bear", value = 3426533454 },
+        { text = "[Halloween Event] Wolf", value = 3426533989 },
+        { text = "[Halloween Event] Reaper", value = 3426534351 },
+        { text = "[Halloween Event] Pumpkin Crate", value = 3426537997 },
+        { text = "[Halloween Event] Ghost Lantern", value = 3426539369 },
+        { text = "[Halloween Event] Tombstones", value = 3426539598 },
+        { text = "[Halloween Event] Casket", value = 3426540158 },
+        { text = "[Halloween Event] Skull Chain", value = 3426540522 },
+    }
+
+    function m:BuyItemWithRobux()
+        print("Attempting to purchase item from Premium Shop...")
+        local premiumItem = Window:GetConfigValue("PremiumShopItem")
+        local premiumProductID = tonumber(Window:GetConfigValue("PremiumShopProductID"))
+
+        if not premiumProductID then
+            premiumProductID = premiumItem
+        end
+
+        if not premiumItem then
+            warn("Please select a valid item to purchase.")
+            return
+        end
+
+        if not premiumProductID or premiumProductID <= 0 then
+            warn("Please enter a valid Product ID.")
+            return
+        end
+
+        Core.MarketplaceService:PromptProductPurchase(Core.LocalPlayer, premiumProductID)
+    end
+
+    return m
+end
+
+-- Module: shop/season_pass.lua
+EmbeddedModules["shop/season_pass.lua"] = function()
+    local m = {}
+
+    local Window
+    local Core
+
+    function m:Init(_window, _core)
+        Window = _window
+        Core = _core
+
+        _core:MakeLoop(function()
+            return Window:GetConfigValue("AutoBuySeasonPasses")
+        end, function()
+            self:BuyAllSeasonPassItems()
+        end)
+    end
+
+    function m:GetAvailableSeasonPassesItems()
+        local availableItems = {}
+
+        local shopUI = Core:GetPlayerGui():FindFirstChild("SeasonPassUI", true)
+        if not shopUI then
+            return availableItems
+        end
+
+        local items = shopUI.SeasonPassFrame.Main.Store.ScrollingFrame.Content:GetChildren()
+        for _, Item in pairs(items) do
+            local MainFrame = Item:FindFirstChild("Main_Frame")
+            if not MainFrame then continue end
+
+            local StockText = MainFrame.Stock_Text.Text
+            local StockCount = tonumber(StockText:match("%d+"))
+
+            availableItems[Item.Name] = StockCount
+        end
+
+        return availableItems
+    end
+
+    function m:BuySeasonPassItem(itemName)
+        if not itemName or itemName == "" then
+            warn("Invalid item name")
+            return
+        end
+
+        Core.GameEvents.SeasonPass.BuySeasonPassStock:FireServer(itemName)
+    end
+
+    function m:BuyAllSeasonPassItems()
+        local items = self:GetAvailableSeasonPassesItems()
+
+        for itemName, stock in pairs(items) do
+            if stock < 1 then
+                continue
+            end
+
+            for i = 1, stock do
+                self:BuySeasonPassItem(itemName)
+                task.wait(0.1) -- Small delay to avoid spamming
+            end
+        end
+    end
+
+    return m
+end
+
+-- Module: shop/ui.lua
+EmbeddedModules["shop/ui.lua"] = function()
+    local m = {}
+
+    local Window
+    local Core
+    local EggShop
+    local SeedShop
+    local GearShop
+    local SeasonPassShop
+    local TravelingShop
+    local PremiumShop
+
+    function m:Init(_window, _core, _eggShop, _seedShop, _gearShop, _seasonPassShop, _travelingShop, _premiumShop)
+        Window = _window
+        Core = _core
+        EggShop = _eggShop
+        SeedShop = _seedShop
+        GearShop = _gearShop
+        SeasonPassShop = _seasonPassShop
+        TravelingShop = _travelingShop
+        PremiumShop = _premiumShop
+    end
+
+    function m:CreateShopTab()
+        local tab = Window:AddTab({
+            Name = "Shop",
+            Icon = "🛍️",
+        })
+
+        -- Gear Automation
+        tab:AddToggle({
+            Name = "Auto Buy Gear 🛠️",
+            Default = false,
+            Flag = "AutoBuyGear",
+            Callback = function(Value)
+                if Value then
+                    GearShop:BuyAllGear()
+                end
+            end,
+        })
+
+        -- Egg Automation
+        tab:AddToggle({
+            Name = "Auto Buy Eggs 🥚",
+            Default = false,
+            Flag = "AutoBuyEggs",
+            Callback = function(Value)
+                if Value then
+                    EggShop:BuyAllEggs()
+                end
+            end,
+        })
+
+        tab:AddToggle({
+            Name = "Auto Buy Traveling Items 🧳",
+            Default = false,
+            Flag = "AutoBuyTravelingMerchant",
+            Callback = function(Value)
+                if Value then
+                    TravelingShop:BuyAllTravelingItems()
+                end
+            end,
+        })
+
+        -- Season Pass Automation
+        tab:AddToggle({
+            Name = "Auto Buy Season Pass Items 🎟️",
+            Default = false,
+            Flag = "AutoBuySeasonPasses",
+            Callback = function(Value)
+                if Value then
+                    SeasonPassShop:BuyAllSeasonPassItems()
+                end
+            end,
+        })
+
+        self:SeedShopSection(tab)
+        self:PremiumShopSection(tab)
+    end
+
+    function m:SeedShopSection(tab)
+        local accordion = tab:AddAccordion({
+            Title = "Seed Shop 🌱",
+            Icon = "🌱",
+            Expanded = false,
+        })
+
+        accordion:AddSelectBox({
+            Name = "Select Seeds to Ignore Buying",
+            Options = {"loading ..."},
+            Placeholder = "Select Seeds",
+            MultiSelect = true,
+            Flag = "IgnoreSeedItems",
+            OnInit =  function(api, optionsData)
+                local items = SeedShop:GetItemRepository()
+                local itemNames = {}
+
+                for itemName, _ in pairs(items) do
+                    table.insert(itemNames, itemName)
+                end
+
+                optionsData.updateOptions(itemNames)
+            end
+        })
+
+        accordion:AddToggle({
+            Name = "Auto Buy Seeds 🛒",
+            Default = false,
+            Flag = "AutoBuySeeds",
+            Callback = function(Value)
+                if Value then
+                    SeedShop:StartAutoBuySeeds()
+                end
+            end,
+        })
+
+        accordion:AddToggle({
+            Name = "Auto Buy Daily Deals 🛒",
+            Default = false,
+            Flag = "AutoBuyDailyDeals",
+            Callback = function(Value)
+                if Value then
+                    SeedShop:StartAutoBuyDailyDeals()
+                end
+            end,
+        })
+    end
+
+    function m:PremiumShopSection(tab)
+        local accordion = tab:AddAccordion({
+            Title = "Premium Shop ",
+            Icon = "💎",
+            Expanded = false,
+        })
+
+        accordion:AddSelectBox({
+            Name = "Select Item to Buy 🛒",
+            Options = PremiumShop.ListOfItems,
+            Placeholder = "Select Item",
+            MultiSelect = false,
+            Flag = "PremiumShopItem"
+        })
+
+        accordion:AddTextBox({
+            Name = "Product ID (for custom item)",
+            Default = "",
+            Flag = "PremiumShopProductID",
+            Placeholder = "example: 3322970897",
+            MaxLength = 50,
+            Buttons = {
+                {
+                    Text = "Paste 📋",
+                    Variant = "primary", 
+                    Callback = function(text, textBox)
+                        print("Pasting from clipboard...")
+                        -- text.text = tostring(Core.ClipboardService:GetClipboard())
+                    end
+                },
+                {
+                    Text = "Clear ✖️",
+                    Variant = "destructive", 
+                    Callback = function(text, textBox)
+                        text.text = ""
+                    end
+                }
+            }
+        })
+
+        accordion:AddButton({
+            Name = "Purchase Item 🛒",
+            Callback = function()
+                PremiumShop:BuyItemWithRobux()
+            end
+        })
+    end
+
+    return m
+end
+
+-- Module: event/ghoul/quest.lua
+EmbeddedModules["event/ghoul/quest.lua"] = function()
+    local m = {}
+
+    local Window
+    local Core
+
+    local BackpackConnection
+    local LastSubmitTime
+
+    function m:Init(_window, _core)
+        Window = _window
+        Core = _core
+
+        Core.GameEvents.WitchesBrew.UpdateCauldronVisuals.OnClientEvent:Connect(function(param)
+            if not param and not param.Percentage then
+                return
+            end
+
+            if param.Percentage == 0 then
+                self:StartAutoSubmitEventPlants()
+            end
+        end)
+
+        self:StartAutoSubmitEventPlants()
+    end
+
+    function m:StartAutoSubmitEventPlants()
+        if not Window:GetConfigValue("AutoSubmitGhoulQuest") then
+            return
+        end
+
+        if not BackpackConnection then
+            BackpackConnection = Core:GetBackpack().ChildAdded:Connect(function(child)
+                if not Window:GetConfigValue("AutoSubmitGhoulQuest") then
+                    return
+                end
+
+                -- Debounce to prevent multiple submissions in quick succession
+                if tick() - (LastSubmitTime or 0) < 5 then
+                    return
+                end
+
+                if child:GetAttribute("b") ~= "j" then
+                    return
+                end
+
+                Core.GameEvents.WitchesBrew.SubmitItemToCauldron:InvokeServer("All")
+                LastSubmitTime = tick()
+            end)
+        end
+
+        Core.GameEvents.WitchesBrew.SubmitItemToCauldron:InvokeServer("All")
+        LastSubmitTime = tick()
+    end
+
+    function m:StopAutoSubmitEventPlants()
+        if BackpackConnection then
+            BackpackConnection:Disconnect()
+            BackpackConnection = nil
+        end
+    end
+
+    return m
+end
+
+-- Module: event/ghoul/shop.lua
+EmbeddedModules["event/ghoul/shop.lua"] = function()
+    local m = {}
+
+    local Window
+    local Core
+    local Shop
+    local ShopUI = "EventShop_UI"
+
+    local ShopData
+    local DataService
+
+    local ShopStockConnection
+
+    m.Merchant = {
+        "Spooky Seeds",
+        "Creepy Critters",
+        "Devilish Decor",
+    }
+
+    function m:Init(_window, _core, _shop)
+        Window = _window
+        Core = _core
+        Shop = _shop
+
+        ShopData = require(Core.ReplicatedStorage.Data.EventShopData)
+        DataService = require(Core.ReplicatedStorage.Modules.DataService)
+
+        Core:MakeLoop(
+            function()
+                return Window:GetConfigValue("AutoBuySpookyShop")
+            end, 
+            function()
+                self:StartAutoBuySpookySeeds()
+            end
+        )
+
+        Core:MakeLoop(
+            function()
+                return Window:GetConfigValue("AutoBuyCreepyShop")
+            end, 
+            function()
+                self:StartAutoBuyCreepyCritters()
+            end
+        )
+
+        Core:MakeLoop(
+            function()
+                return Window:GetConfigValue("AutoBuyDevilishShop")
+            end, 
+            function()
+                self:StartAutoBuyDevilishDecor()
+            end
+        )
+    end
+
+    function m:GetItemRepository(merchant)
+        return ShopData[merchant] or {}
+    end
+
+    function m:GetDetailItem(merchant, itemName)
+        local items = self:GetItemRepository(merchant)
+        return items[itemName] or nil
+    end
+
+    function m:GetStock(shopName, itemName)
+        local shopData = DataService:GetData()
+        local stock = 0
+        if not shopData then
+            return stock
+        end
+
+        stock = shopData.EventShopStock[shopName].Stocks[itemName] or 0
+
+        if type(stock) ~= "number" then
+            return stock.Stock or 0
+        end
+
+        return stock
+    end
+
+    function m:GetAvailableItems(merchant)
+        local items = self:GetItemRepository(merchant)
+        local availableItems = {}
+
+        for itemName, _ in pairs(items) do
+            local stock = self:GetStock(merchant, itemName) or 0 or 0
+            if stock > 0 then
+                table.insert(availableItems, itemName)
+            end
+        end
+
+        return availableItems
+    end
+
+    function m:StartAutoBuySpookySeeds()
+        if not Window:GetConfigValue("AutoBuySpookyShop") then
+            return
+        end
+
+        local merchant = "Spooky Seeds"
+        local itemNames = Window:GetConfigValue("SpookyShopItem")
+        if not itemNames or #itemNames == 0 then
+            warn("No items selected for auto-buy")
+            return
+        end
+
+        for _, itemName in ipairs(itemNames) do
+            local stock = self:GetStock(merchant, itemName) or 0
+
+            if stock <= 0 then
+                continue
+            end
+
+            for i = 1, stock do
+                Core.GameEvents.BuyEventShopStock:FireServer(itemName, merchant)
+            end
+        end
+    end
+
+    function m:StartAutoBuyCreepyCritters()
+        if not Window:GetConfigValue("AutoBuyCreepyShop") then
+            return
+        end
+
+        local merchant = "Creepy Critters"
+        local itemNames = Window:GetConfigValue("CreepyShopItem")
+        if not itemNames or #itemNames == 0 then
+            warn("No items selected for auto-buy")
+            return
+        end
+
+        for _, itemName in ipairs(itemNames) do
+            local stock = self:GetStock(merchant, itemName) or 0
+
+            if stock <= 0 then
+                continue
+            end
+
+            for i = 1, stock do
+                Core.GameEvents.BuyEventShopStock:FireServer(itemName, merchant)
+            end
+        end
+    end
+
+    function m:StartAutoBuyDevilishDecor()
+        if not Window:GetConfigValue("AutoBuyDevilishShop") then
+            return
+        end
+
+        local merchant = "Devilish Decor"
+        local itemNames = Window:GetConfigValue("DevilishShopItem")
+        if not itemNames or #itemNames == 0 then
+            warn("No items selected for auto-buy")
+            return
+        end
+
+        for _, itemName in ipairs(itemNames) do
+            local stock = self:GetStock(merchant, itemName) or 0
+
+            if stock <= 0 then
+                continue
+            end
+
+            for i = 1, stock do
+                Core.GameEvents.BuyEventShopStock:FireServer(itemName, merchant)
+            end
+        end
+    end
+
+    return m
+end
+
+-- Module: quest/ui.lua
+EmbeddedModules["quest/ui.lua"] = function()
+    local m = {}
+    local Window
+    local Core
+    local Ascension
+
+
+    local AscensionItem = {
+        Name = "N/A",
+        Amount = 0,
+        Mutations = "N/A",
+        IsEligibleToSubmit = false,
+        NextRebirthSubmitTime = 0
+    }
+
+    function m:Init(_window, _core, _ascension)
+        Window = _window
+        Core = _core
+        Ascension = _ascension
+
+        AscensionItem = Ascension:GetQuestDetail()
+    end
+
+    function m:CreateQuestTab()
+        local tab = Window:AddTab({
+            Name = "Quests",
+            Icon = "📜",
+        })
+
+        -- Ascension
+        self:AscensionSection(tab)
+    end
+
+    local function getTimeRemaining()
+        if not AscensionItem.NextRebirthSubmitTime then
+            return "N/A"
+        end
+
+        if AscensionItem.IsEligibleToSubmit then
+            return "Ready"
+        end
+
+        local remainingSeconds = AscensionItem.NextRebirthSubmitTime - tick()
+        if remainingSeconds <= 0 then
+            return "Ready"
+        end
+
+        local hours = math.floor(remainingSeconds / 3600)
+        local minutes = math.floor((remainingSeconds % 3600) / 60)
+        local seconds = remainingSeconds % 60
+        local parseTime = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+
+        return parseTime
+    end
+
+    function m:AscensionSection(tab)
+        local accordion = tab:AddAccordion({
+            Name = "Ascension",
+            Icon = "🔃",
+            Expanded = false,
+            Callback = function(isExpanded)
+                if not isExpanded then
+                    return
+                end
+
+                local ascensionItem = Ascension:GetQuestDetail()
+
+                if not ascensionItem then
+                    return
+                end
+
+                if ascensionItem.Name ~= AscensionItem.Name or
+                   ascensionItem.Mutations ~= AscensionItem.Mutations then
+                    AscensionItem = ascensionItem
+                end
+            end,
+        })
+
+        accordion:AddLabel(function()
+            return "Current Quest: ".. AscensionItem.Amount .. " " .. AscensionItem.Name .. " (" .. (AscensionItem.Mutations ~= "" and AscensionItem.Mutations or "No Mutation") .. ")"
+        end)
+        accordion:AddLabel(function()
+            return "Next Rebirth Submit Time: " .. getTimeRemaining()
+        end)
+
+        accordion:AddSelectBox({
+            Name = "Position planting seeds",
+            Flag = "PlantingAscensionPosition",
+            Options = {"Random", "Front Right", "Front Left", "Back Right", "Back Left"},
+            Default = "Random",
+            MultiSelect = false,
+            Placeholder = "Select position...",
+        })
+
+        accordion:AddToggle({
+            Name = "Auto Ascend",
+            Default = false,
+            Flag = "AutoAscend",
+            Tooltip = "Automatically ascend when the option is available.",
+        })
+    end
+
+    return m
+end
+
+-- Module: shop/seed.lua
+EmbeddedModules["shop/seed.lua"] = function()
+    local m = {}
+
+    local Window
+    local Core
+
+    local ShopData
+    local DataService
+    local DailyDealsData
+
+    local Connections
+    local ShopUI = "Seed_Shop"
+    local ShopItem = "Carrot"
+
+    function m:Init(_window, _core)
+        Window = _window
+        Core = _core
+
+        DataService = require(Core.ReplicatedStorage.Modules.DataService)
+        ShopData = require(Core.ReplicatedStorage.Data.SeedShopData)
+        DailyDealsData = require(Core.ReplicatedStorage.Data.DailySeedShopData)
+
+        Core:MakeLoop(function()
+            return Window:GetConfigValue("AutoBuySeeds")
+        end, function()
+            self:StartAutoBuySeeds()
+        end)
+
+        Core:MakeLoop(function()
+            return Window:GetConfigValue("AutoBuyDailyDeals")
+        end, function()
+            self:StartAutoBuyDailyDeals()
+        end)
+    end
+
+    function m:GetItemRepository()
+        return ShopData or {}
+    end
+
+    function m:GetItemRepositoryDailyDeals()
+        return DailyDealsData or {}
+    end
+
+    function m:GetStock(shopName, itemName)
+        local shopData = DataService:GetData()
+        local stock = 0
+        if not shopData then
+            return stock
+        end
+
+        stock = shopData.SeedStocks[shopName].Stocks[itemName] or 0
+
+        if type(stock) ~= "number" then
+            return stock.Stock or 0
+        end
+
+        return stock
+    end
+
+    function m:GetAvailableItems(shopName)
+        local availableItems = {}
+        local items = {}
+
+        if shopName == "Shop" then
+            items = self:GetItemRepository()
+        elseif shopName == "Daily Deals" then
+            items = self:GetItemRepositoryDailyDeals()
+        end
+
+        for itemName, _ in pairs(items) do
+            local stock = self:GetStock(shopName, itemName)
+            availableItems[itemName] = stock
+        end
+
+        return availableItems
+    end
+
+    function m:StartAutoBuySeeds()
+        if not Window:GetConfigValue("AutoBuySeeds") then
+            return
+        end
+
+        local ignoreItems = Window:GetConfigValue("IgnoreSeedItems") or {}
+
+        for itemName, stock in pairs(self:GetAvailableItems("Shop")) do
+            if stock <= 0 and table.find(ignoreItems, itemName) then
+                continue
+            end
+
+            for i=1, stock do
+                Core.GameEvents.BuySeedStock:FireServer("Shop", itemName)
+            end
+        end
+    end
+
+    function m:StartAutoBuyDailyDeals()
+        if not Window:GetConfigValue("AutoBuyDailyDeals") then
+            return
+        end
+
+        for itemName, stock in pairs(self:GetAvailableItems("Daily Deals")) do
+            print(itemName, stock)
+            if stock <= 0 then
+                continue
+            end
+
+            for i=1, stock do
+                Core.GameEvents.BuyDailySeedShopStock:FireServer(itemName)
+            end
+        end
+    end
+
+    return m
+end
+
 -- Module: pet/egg.lua
 EmbeddedModules["pet/egg.lua"] = function()
     local m = {}
@@ -381,6 +1671,518 @@ EmbeddedModules["pet/egg.lua"] = function()
 
             Webhook:Statistics(eggName, totalOwnedEggs, Window:GetConfigValue("MaxPlaceEggs") or 0)
         end)
+    end
+
+    return m
+end
+
+-- Module: auto/ui.lua
+EmbeddedModules["auto/ui.lua"] = function()
+    local m = {}
+
+    local Window
+    local Core
+    local Crafting
+
+
+    function m:Init(_window, _core, _crafting)
+        Window = _window
+        Core = _core
+        Crafting = _crafting
+
+        local tab = Window:AddTab({
+            Name = "AutoMation",
+            Icon = "🔧",
+        })
+
+        self:CraftingGearSection(tab)
+        self:CraftingSeedSection(tab)
+    end
+
+    function m:CraftingGearSection(tab)
+        local accordion = tab:AddAccordion({
+            Title = "Crafting Gear",
+            Icon = "⚙️",
+            Default = false,
+        })
+
+        accordion:AddSelectBox({
+            Name = "Crafting Item ⚙️",
+            Options = {"loading ..."},
+            Placeholder = "Select Crafting Item",
+            Flag = "CraftingGearItem",
+            OnInit =  function(api, optionsData)
+                local craftingItems = Crafting:GetAllCraftingItems(Crafting.StationRepository.GearEventWorkbench)
+
+                optionsData.updateOptions(craftingItems)
+            end
+        })
+
+        accordion:AddToggle({
+            Name = "Auto Crafting Gear ⚙️",
+            Default = false,
+            Flag = "AutoCraftingGear",
+        })
+    end
+
+    function m:CraftingSeedSection(tab)
+        local accordion = tab:AddAccordion({
+            Title = "Crafting Seeds",
+            Icon = "🌱",
+            Default = false,
+        })
+
+        accordion:AddSelectBox({
+            Name = "Crafting Item 🌱",
+            Options = {"loading ..."},
+            Placeholder = "Select Crafting Item",
+            Flag = "CraftingSeedItem",
+            OnInit =  function(api, optionsData)
+                local craftingItems = Crafting:GetAllCraftingItems(Crafting.StationRepository.SeedEventCraftingWorkBench)
+
+                optionsData.updateOptions(craftingItems)
+            end
+        })
+
+        accordion:AddToggle({
+            Name = "Auto Crafting Seeds 🌱",
+            Default = false,
+            Flag = "AutoCraftingSeeds",
+        })
+    end
+
+    return m
+end
+
+-- Module: shop/gear.lua
+EmbeddedModules["shop/gear.lua"] = function()
+    local m = {}
+
+    local Window
+    local Core
+    local Shop
+
+    local Connections
+    local ShopUI = "Gear_Shop"
+    local ShopItem = "Watering Can"
+
+    function m:Init(_window, _core, _shop)
+        Window = _window
+        Core = _core
+        Shop = _shop
+
+        _core:MakeLoop(function()
+            return Window:GetConfigValue("AutoBuyGear")
+        end, function()
+            self:BuyAllGear()
+        end)
+    end
+
+    function m:BuyGear(gearName)
+        if not gearName or gearName == "" then
+            warn("Invalid gear name")
+            return
+        end
+
+        Core.GameEvents.BuyGearStock:FireServer(gearName)
+    end
+
+    function m:BuyAllGear()
+        local items = Shop:GetAvailableItems(ShopUI)
+
+        for gearName, stock in pairs(items) do
+            if stock < 1 then
+                continue
+            end
+
+            for i = 1, stock do
+                self:BuyGear(gearName)
+                task.wait(0.1)
+            end
+        end
+    end
+
+    function m:StartGearAutomation()
+        if not Window:GetConfigValue("AutoBuyGear") then
+            return
+        end
+
+        self:BuyAllGear()
+
+        if Connections then
+            for _, conn in pairs(Connections) do
+                conn:Disconnect()
+            end
+            Connections = nil
+        end
+
+        Connections = {}
+        for _, item in pairs(Shop:GetListItems(ShopUI)) do
+            local conn = Shop:ConnectToStock(item, function()
+                if not Window:GetConfigValue("AutoBuyGear") then
+                    return
+                end
+
+                self:BuyAllGear()
+            end)
+            table.insert(Connections, conn)
+        end
+    end
+
+    function m:StopGearAutomation()
+        if Connections then
+            for _, conn in pairs(Connections) do
+                conn:Disconnect()
+            end
+            Connections = nil
+        end
+    end
+
+    return m
+end
+
+-- Module: ../module/discord.lua
+EmbeddedModules["../module/discord.lua"] = function()
+    local m = {}
+    local HttpService = game:GetService("HttpService")
+
+    function m:SendMessage(webhookUrl, data)
+        -- Mencari fungsi request yang tersedia dari berbagai executor
+        local requestFunction = request or
+                               (syn and syn.request) or
+                               (http and http.request) or
+                               (fluxus and fluxus.request) or
+                               http_request
+
+        -- Jika tidak ada fungsi request yang tersedia, keluar dari fungsi
+        if not requestFunction then
+            return
+        end
+
+        -- Mengubah data menjadi format JSON
+        local jsonData = HttpService:JSONEncode(data)
+
+        -- Menyiapkan headers untuk request
+        local headers = {
+            ['Content-Type'] = "application/json"
+        }
+
+        -- Mengirim POST request ke webhook
+        local success, err = pcall(function()
+            task.spawn(requestFunction, {
+                Url = webhookUrl,
+                Body = jsonData,
+                Method = 'POST',
+                Headers = headers
+            })
+        end)
+
+        if success then
+            print("Discord webhook sent successfully.")
+        else
+            warn("Failed to send Discord webhook:", err)
+        end
+    end
+
+    return m
+
+end
+
+-- Module: server/ui.lua
+EmbeddedModules["server/ui.lua"] = function()
+    local m = {}
+    local Window
+    local Core
+    local Player
+    local Garden
+
+    function m:Init(_window, _core, _player, _garden)
+        Window = _window
+        Core = _core
+        Player = _player
+        Garden = _garden
+    end
+
+    function m:CreateServerTab()
+        local tab = Window:AddTab({
+            Name = "Server",
+            Icon = "🌐",
+        })
+
+        tab:AddButton({Text = "Rejoin Server 🔄", Callback = function()
+            Core:Rejoin()
+        end})
+
+        tab:AddButton({Text = "Hop Server 🚀", Callback = function()
+            Core:HopServer()
+        end})
+    end
+
+    return m
+end
+
+-- Module: farm/garden.lua
+EmbeddedModules["farm/garden.lua"] = function()
+    local m = {}
+    local Window
+    local Core
+    local Player
+    local AutoHarvestThread
+    local AutoHarvesting = false
+    local BackpackConnection
+    local PlantConnection
+    local WateringConnection
+    local PlantsLocation
+    m.MailboxPosition = Vector3.new(0, 0, 0)
+
+    function m:Init(_window, _core, _player)
+        Window = _window
+        Core = _core
+        Player = _player
+
+        local important = self:GetMyFarm():FindFirstChild("Important")
+        PlantsLocation = important:FindFirstChild("Plant_Locations")
+
+        local mailbox = self:GetMyFarm():FindFirstChild("Mailbox")
+        if mailbox then
+            m.MailboxPosition = mailbox:GetPivot().Position
+        end
+
+    end
+
+    function m:GetMyFarm()
+    	local farms = Core.Workspace.Farm:GetChildren()
+
+    	for _, farm in next, farms do
+            local important = farm.Important
+            local data = important.Data
+            local owner = data.Owner
+
+    		if owner.Value == Core.LocalPlayer.Name then
+    			return farm
+    		end
+    	end
+    end
+
+    function m:GetArea(_base)
+        local center = _base:GetPivot()
+    	local size = _base.Size
+
+    	-- Bottom left
+    	local x1 = math.ceil(center.X - (size.X/2))
+    	local z1 = math.ceil(center.Z - (size.Z/2))
+
+    	-- Top right
+    	local x2 = math.floor(center.X + (size.X/2))
+    	local z2 = math.floor(center.Z + (size.Z/2))
+
+    	return x1, z1, x2, z2
+    end
+
+    function m:GetFarmCenterPosition()
+        local farmParts = PlantsLocation:GetChildren()
+        if #farmParts < 1 then
+            return Vector3.new(0, 4, 0)
+        end
+
+        -- Calculate center from all farm parts
+        local totalX, totalZ = 0, 0
+        local totalY = 4 -- Default height for farm
+        local partCount = 0
+
+        for _, part in pairs(farmParts) do
+            if part:IsA("BasePart") then
+                local pos = part.Position
+                totalX = totalX + pos.X
+                totalZ = totalZ + pos.Z
+                totalY = math.max(totalY, pos.Y + part.Size.Y/2) -- Use highest Y position
+                partCount = partCount + 1
+            end
+        end
+
+        if partCount > 0 then
+            local centerX = totalX / partCount
+            local centerZ = totalZ / partCount
+            return Vector3.new(centerX, totalY, centerZ)
+        end
+    end
+
+    function m:GetFarmFrontRightPosition()
+        local farmParts = PlantsLocation:GetChildren()
+
+        if #farmParts < 1 then
+            return Vector3.new(0, 4, 0)
+        end
+
+        local farmLand = farmParts[1]
+        if  m.MailboxPosition.Z > 0 then
+            if farmParts[1]:GetPivot().X > farmParts[2]:GetPivot().X then
+                farmLand = farmParts[2]
+            end
+        else
+            if farmParts[1]:GetPivot().X < farmParts[2]:GetPivot().X then
+                farmLand = farmParts[2]
+            end
+        end
+
+        local x1, z1, x2, z2 = self:GetArea(farmLand)
+
+        local x = math.max(x1, x2)
+        local z = math.max(z1, z2)
+
+        if m.MailboxPosition.Z > 0 then
+            x = math.min(x1, x2)
+            z = math.min(z1, z2)
+        end
+
+        return Vector3.new(x, 4, z)
+    end
+
+    function m:GetFarmFrontLeftPosition()
+        local farmParts = PlantsLocation:GetChildren()
+
+        if #farmParts < 1 then
+            return Vector3.new(0, 4, 0)
+        end
+
+        local farmLand = farmParts[1]
+        if  m.MailboxPosition.Z > 0 then
+            if farmParts[1]:GetPivot().X < farmParts[2]:GetPivot().X then
+                farmLand = farmParts[2]
+            end
+        else
+            if farmParts[1]:GetPivot().X > farmParts[2]:GetPivot().X then
+                farmLand = farmParts[2]
+            end
+        end
+
+        local x1, z1, x2, z2 = self:GetArea(farmLand)
+
+        local x = math.min(x1, x2)
+        local z = math.max(z1, z2)
+
+        if m.MailboxPosition.Z > 0 then
+            x = math.max(x1, x2)
+            z = math.min(z1, z2)
+        end
+
+        return Vector3.new(x, 4, z)
+    end
+
+    function m:GetFarmBackRightPosition()
+        local farmParts = PlantsLocation:GetChildren()
+        if #farmParts < 1 then
+            return Vector3.new(0, 4, 0)
+        end
+
+        local farmLand = farmParts[1]
+        if  m.MailboxPosition.Z > 0 then
+            if farmParts[1]:GetPivot().X > farmParts[2]:GetPivot().X then
+                farmLand = farmParts[2]
+            end
+        else
+            if farmParts[1]:GetPivot().X < farmParts[2]:GetPivot().X then
+                farmLand = farmParts[2]
+            end
+        end
+
+        local x1, z1, x2, z2 = self:GetArea(farmLand)
+
+        local x = math.max(x1, x2)
+        local z = math.min(z1, z2)
+
+        if m.MailboxPosition.Z > 0 then
+            x = math.min(x1, x2)
+            z = math.max(z1, z2)
+        end
+
+        return Vector3.new(x, 4, z)
+    end
+
+    function m:GetFarmBackLeftPosition()
+        local farmParts = PlantsLocation:GetChildren()
+        if #farmParts < 1 then
+            return Vector3.new(0, 4, 0)
+        end
+
+        local farmLand = farmParts[1]
+        if  m.MailboxPosition.Z > 0 then
+            if farmParts[1]:GetPivot().X < farmParts[2]:GetPivot().X then
+                farmLand = farmParts[2]
+            end
+        else
+            if farmParts[1]:GetPivot().X > farmParts[2]:GetPivot().X then
+                farmLand = farmParts[2]
+            end
+        end
+
+        local x1, z1, x2, z2 = self:GetArea(farmLand)
+
+        local x = math.min(x1, x2)
+        local z = math.min(z1, z2)
+
+        if m.MailboxPosition.Z > 0 then
+            x = math.max(x1, x2)
+            z = math.max(z1, z2)
+        end
+
+        return Vector3.new(x, 4, z)
+    end
+
+    function m:GetFarmRandomPosition()
+        local farmParts = PlantsLocation:GetChildren()
+
+        if #farmParts < 1 then
+            return Vector3.new(0, 4, 0)
+        end
+
+        local FarmLand = farmParts[math.random(1, #farmParts)]
+
+        local x1, z1, x2, z2 = self:GetArea(FarmLand)
+        local x = math.random(x1, x2)
+        local z = math.random(z1, z2)
+
+        return Vector3.new(x, 4, z)
+    end
+
+    return m
+end
+
+-- Module: pet/team.lua
+EmbeddedModules["pet/team.lua"] = function()
+    local m = {}
+
+    local Core
+    local Player
+    local Window
+    local PetConfig
+    local Garden
+
+    function m:Init(_core, _player, _window, _petConfig, _garden)
+        Core = _core
+        Player = _player
+        Window = _window
+        PetConfig = _petConfig
+        Garden = _garden
+    end
+
+    function m:SaveTeamPets(_teamName, _listPets)
+        PetConfig:SetValue(_teamName, _listPets)
+    end
+
+    function m:GetAllPetTeams()
+        print("Fetching all pet teams from configuration...")
+        local allKeys = PetConfig:GetAllKeys()
+
+        return allKeys
+    end
+
+    function m:FindPetTeam(_teamName)
+        return PetConfig:GetValue(_teamName)
+    end
+
+    function m:DeleteTeamPets(_teamName)
+        PetConfig:DeleteKey(_teamName)
     end
 
     return m
@@ -1876,594 +3678,6 @@ EmbeddedModules["pet/ui.lua"] = function()
     return m
 end
 
--- Module: event/ghoul/quest.lua
-EmbeddedModules["event/ghoul/quest.lua"] = function()
-    local m = {}
-
-    local Window
-    local Core
-
-    local BackpackConnection
-    local LastSubmitTime
-
-    function m:Init(_window, _core)
-        Window = _window
-        Core = _core
-
-        Core.GameEvents.WitchesBrew.UpdateCauldronVisuals.OnClientEvent:Connect(function(param)
-            if not param and not param.Percentage then
-                return
-            end
-
-            if param.Percentage == 0 then
-                self:StartAutoSubmitEventPlants()
-            end
-        end)
-
-        self:StartAutoSubmitEventPlants()
-    end
-
-    function m:StartAutoSubmitEventPlants()
-        if not Window:GetConfigValue("AutoSubmitGhoulQuest") then
-            return
-        end
-
-        if not BackpackConnection then
-            BackpackConnection = Core:GetBackpack().ChildAdded:Connect(function(child)
-                if not Window:GetConfigValue("AutoSubmitGhoulQuest") then
-                    return
-                end
-
-                -- Debounce to prevent multiple submissions in quick succession
-                if tick() - (LastSubmitTime or 0) < 5 then
-                    return
-                end
-
-                if child:GetAttribute("b") ~= "j" then
-                    return
-                end
-
-                Core.GameEvents.WitchesBrew.SubmitItemToCauldron:InvokeServer("All")
-                LastSubmitTime = tick()
-            end)
-        end
-
-        Core.GameEvents.WitchesBrew.SubmitItemToCauldron:InvokeServer("All")
-        LastSubmitTime = tick()
-    end
-
-    function m:StopAutoSubmitEventPlants()
-        if BackpackConnection then
-            BackpackConnection:Disconnect()
-            BackpackConnection = nil
-        end
-    end
-
-    return m
-end
-
--- Module: notification/ui.lua
-EmbeddedModules["notification/ui.lua"] = function()
-    local m = {}
-
-    local Window
-    local Test
-
-    function m:Init(_window, _test)
-        Window = _window
-        Test = _test
-    end
-
-    function m:CreateNotificationTab()
-        local tab = Window:AddTab({
-            Name = "Notifications",
-            Icon = "🔔",
-        })
-
-        tab:AddTextBox({
-            Name = "Discord Webhook URL (for notifications)",
-            Default = "",
-            Flag = "DiscordWebhookURL",
-            Placeholder = "https://discord.com/api/webhooks/...",
-            MaxLength = 500,
-        })
-
-        tab:AddTextBox({
-            Name = "Discord Ping ID (optional)",
-            Default = "",
-            Flag = "DiscordPingID",
-            Placeholder = "123456789012345678",
-            MaxLength = 50,
-        })
-
-        tab:AddButton(
-            {Text = "Test Notification", 
-            Callback = function()
-                task.spawn(function()
-                    Test:HatchEgg("Test Pet", "Test Egg", 10)
-                    task.wait(0.15)
-                    Test:Statistics("Test Egg", 99, 123)
-                end)
-        end})
-    end
-
-    return m
-end
-
--- Module: shop/gear.lua
-EmbeddedModules["shop/gear.lua"] = function()
-    local m = {}
-
-    local Window
-    local Core
-    local Shop
-
-    local Connections
-    local ShopUI = "Gear_Shop"
-    local ShopItem = "Watering Can"
-
-    function m:Init(_window, _core, _shop)
-        Window = _window
-        Core = _core
-        Shop = _shop
-
-        _core:MakeLoop(function()
-            return Window:GetConfigValue("AutoBuyGear")
-        end, function()
-            self:BuyAllGear()
-        end)
-    end
-
-    function m:BuyGear(gearName)
-        if not gearName or gearName == "" then
-            warn("Invalid gear name")
-            return
-        end
-
-        Core.GameEvents.BuyGearStock:FireServer(gearName)
-    end
-
-    function m:BuyAllGear()
-        local items = Shop:GetAvailableItems(ShopUI)
-
-        for gearName, stock in pairs(items) do
-            if stock < 1 then
-                continue
-            end
-
-            for i = 1, stock do
-                self:BuyGear(gearName)
-                task.wait(0.1)
-            end
-        end
-    end
-
-    function m:StartGearAutomation()
-        if not Window:GetConfigValue("AutoBuyGear") then
-            return
-        end
-
-        self:BuyAllGear()
-
-        if Connections then
-            for _, conn in pairs(Connections) do
-                conn:Disconnect()
-            end
-            Connections = nil
-        end
-
-        Connections = {}
-        for _, item in pairs(Shop:GetListItems(ShopUI)) do
-            local conn = Shop:ConnectToStock(item, function()
-                if not Window:GetConfigValue("AutoBuyGear") then
-                    return
-                end
-
-                self:BuyAllGear()
-            end)
-            table.insert(Connections, conn)
-        end
-    end
-
-    function m:StopGearAutomation()
-        if Connections then
-            for _, conn in pairs(Connections) do
-                conn:Disconnect()
-            end
-            Connections = nil
-        end
-    end
-
-    return m
-end
-
--- Module: shop/premium.lua
-EmbeddedModules["shop/premium.lua"] = function()
-    local m ={}
-
-    local Window
-    local Core
-
-    function m:Init(_window, _core)
-        Window = _window
-        Core = _core
-    end
-
-    m.ListOfItems = {
-        { text = "[4th July Event 2025] Liberty Lily", value = 3322972631 },
-        { text = "[4th July Event 2025] Firework Flower", value = 3322974839 },
-        { text = "[4th July Event 2025] Firework", value = 3322978636 },
-        { text = "[4th July Event 2025] Bald Eagle", value = 3322970897 },
-        { text = "[4th July Event 2025] July 4th Crate", value = 3322970196 },
-        { text = "[Halloween Event] Bloodred Mushroom", value = 3426534747 },
-        { text = "[Halloween Event] Jack O Lantern", value = 3426535112 },
-        { text = "[Halloween Event] Ghoul Root", value = 3426535875 },
-        { text = "[Halloween Event] Chicken Feed", value = 3426536221 },
-        { text = "[Halloween Event] Seer Vine", value = 3426536516 },
-        { text = "[Halloween Event] Poison Apple", value = 3426537228 },
-        { text = "[Halloween Event] Spooky Egg", value = 3426500875 },
-        { text = "[Halloween Event] Pumpkin Rat", value = 3426530616 },
-        { text = "[Halloween Event] Ghost Bear", value = 3426533454 },
-        { text = "[Halloween Event] Wolf", value = 3426533989 },
-        { text = "[Halloween Event] Reaper", value = 3426534351 },
-        { text = "[Halloween Event] Pumpkin Crate", value = 3426537997 },
-        { text = "[Halloween Event] Ghost Lantern", value = 3426539369 },
-        { text = "[Halloween Event] Tombstones", value = 3426539598 },
-        { text = "[Halloween Event] Casket", value = 3426540158 },
-        { text = "[Halloween Event] Skull Chain", value = 3426540522 },
-    }
-
-    function m:BuyItemWithRobux()
-        print("Attempting to purchase item from Premium Shop...")
-        local premiumItem = Window:GetConfigValue("PremiumShopItem")
-        local premiumProductID = tonumber(Window:GetConfigValue("PremiumShopProductID"))
-
-        if not premiumProductID then
-            premiumProductID = premiumItem
-        end
-
-        if not premiumItem then
-            warn("Please select a valid item to purchase.")
-            return
-        end
-
-        if not premiumProductID or premiumProductID <= 0 then
-            warn("Please enter a valid Product ID.")
-            return
-        end
-
-        Core.MarketplaceService:PromptProductPurchase(Core.LocalPlayer, premiumProductID)
-    end
-
-    return m
-end
-
--- Module: inventory/inventory.lua
-EmbeddedModules["inventory/inventory.lua"] = function()
-    local m = {}
-
-    local Core
-    local Player
-    local Window
-
-    local InventoryConnection
-
-    function m:Init(_core, _player, _window)
-        Core = _core
-        Player = _player
-        Window = _window
-
-        InventoryConnection = Core:GetBackpack().ChildAdded:Connect(function(child)
-            self:AutoFavoritePet(child)
-        end)
-    end
-
-    function m:GetAllPets()
-        local myPets = {}
-
-        for _, tool in next, Player:GetAllTools() do
-            local toolType = tool:GetAttribute("b")
-            toolType = toolType and string.lower(toolType) or ""
-            if toolType == "l" then
-                table.insert(myPets, tool)
-            end
-        end
-
-        return myPets
-    end
-
-    function m:FavoriteItem(item)
-        Core.GameEvents.Favorite_Item:FireServer(item)
-        task.wait(0.15)
-    end
-
-    function m:AutoFavoritePet(item)
-        if not item or not item:IsA("Tool") then
-            return
-        end 
-
-        local isAutoFavoriting = Window:GetConfigValue("AutoFavoritePets") or false
-        if not isAutoFavoriting then return end
-
-        local petType = item:GetAttribute("b")
-        if not petType or string.lower(petType) ~= "l" then
-            return
-        end
-
-        local isFavorited = item:GetAttribute("d") or false
-        if isFavorited then
-            return
-        end
-
-        local petNames = Window:GetConfigValue("AutoFavoritePetName") or {}
-        local weightThreshold = Window:GetConfigValue("AutoFavoritePetWeight") or 0.0
-        local ageThreshold = Window:GetConfigValue("AutoFavoritePetAge") or 0
-
-        -- Parse pet name, weight, and age from item.Name
-        -- Example format: "Golden Goose [2.19 KG] [Age 2]"
-        local petName, weightStr, ageStr = item.Name:match("^(.-)%s*%[(.-)%s*KG%]%s*%[Age%s*(%d+)%]")
-
-        if not petName then
-            -- Fallback if parsing fails
-            petName = item.Name
-            weightStr = nil
-            ageStr = nil
-        end
-
-        local weight = weightStr and tonumber(weightStr:match("%d+%.?%d*")) or 0
-        local age = ageStr and tonumber(ageStr) or 0
-
-        print(string.format("Checking pet: %s | Weight: %.2f | Age: %d", petName, weight, age))
-
-        for _, name in ipairs(petNames) do
-            if petName == name then
-                print("Auto-favoriting pet by name:", petName)
-                self:FavoriteItem(item)
-                return
-            end
-        end
-
-        if weight >= weightThreshold or age >= ageThreshold then
-            self:FavoriteItem(item)
-        end
-    end
-
-    function m:FavoriteAllPets()
-        for _, tool in pairs(self:GetAllPets()) do
-            self:AutoFavoritePet(tool)
-        end
-    end
-
-    return m
-end
-
--- Module: farm/ui.lua
-EmbeddedModules["farm/ui.lua"] = function()
-    local m = {}
-    local Window
-    local Player
-    local Garden
-    local Plant
-
-    function m:init(_window, _player, _garden, _plant)
-        Window = _window
-        Player = _player
-        Garden = _garden
-        Plant = _plant
-    end
-
-    function m:CreateFarmTab()
-        local tab = Window:AddTab({
-            Name = "Farm",
-            Icon = "🌾",
-        })
-
-        self:AddPlantingSection(tab)
-        self:AddWateringSection(tab)
-        self:AddHarvestingSection(tab)
-        self:AddMovingSection(tab)
-    end
-
-    function m:AddPlantingSection(tab)
-        local accordion = tab:AddAccordion({
-            Title = "Planting",
-            Icon = "🌱",
-            Expanded = false,
-        })
-
-        accordion:AddSelectBox({
-            Name = "Select seeds to auto plant",
-            Options = {"Loading..."},
-            Placeholder = "Select seeds...",
-            MultiSelect = true,
-            Flag = "SeedsToPlant",
-           OnInit = function(api, optionsData)
-                local seeds = Plant:GetPlantRegistry()
-                local formattedSeeds = {}
-                for _, seedData in pairs(seeds) do
-                    table.insert(formattedSeeds, {
-                        text = seedData.plant,
-                        value = seedData.plant
-                    })
-                end
-                optionsData.updateOptions(formattedSeeds)
-            end,
-        })
-
-        accordion:AddNumberBox({
-            Name = "Set the number of seeds to plant",
-            Placeholder = "Enter number of seeds...",
-            Flag = "SeedsToPlantCount",
-            Min = 0,
-            Max = 800,
-            Default = 1,
-            Increment = 1,
-        })
-
-        accordion:AddSelectBox({
-            Name = "Position planting seeds",
-            Flag = "PlantingPosition",
-            Options = {"Random", "Front Right", "Front Left", "Back Right", "Back Left"},
-            Default = "Random",
-            MultiSelect = false,
-            Placeholder = "Select position...",
-        })
-
-        accordion:AddButton({Text = "Manual Planting", Callback = function()
-            local selectedSeeds = Window:GetConfigValue("SeedsToPlant") or {}
-            local seedsToPlantCount = Window:GetConfigValue("SeedsToPlantCount") or 1
-
-            print("Selected Seeds:", selectedSeeds)
-            print("Number of Seeds to Plant:", seedsToPlantCount)
-
-            Plant:PlantSeed(selectedSeeds[1], seedsToPlantCount)
-        end})
-
-        accordion:AddToggle({
-            Name = "Enable Auto Planting",
-            Flag = "AutoPlantSeeds",
-            Default = false,
-            Callback = function(state)
-               if state then
-                    print("Auto Planting Enabled:", state)
-                    Plant:StartAutoPlanting()
-                else
-                    print("Auto Planting Disabled:", state)
-                end
-            end,
-        })
-    end
-
-    function m:AddWateringSection(tab)
-        local accordion = tab:AddAccordion({
-            Title = "Watering",
-            Icon = "💧",
-            Expanded = false,
-        })
-
-        accordion:AddSelectBox({
-            Name = "Watering Position",
-            Flag = "WateringPosition",
-            Options = {"Growing Plants", "Front Right", "Front Left", "Back Right", "Back Left"},
-            Default = "Front Right",
-            MultiSelect = false,
-            Placeholder = "Select position...",
-        })
-
-        accordion:AddNumberBox({
-            Name = "Set the Each Watering",
-            Placeholder = "Enter number of waterings...",
-            Flag = "WateringEach",
-            Min = 1,
-            Max = 100,
-            Default = 1,
-            Increment = 1,
-        })
-
-        accordion:AddNumberBox({
-            Name = "Set the number of waterings delay",
-            Placeholder = "Enter watering delay...",
-            Flag = "WateringDelay",
-            Min = 0,
-            Max = 800,
-            Default = 1,
-            Increment = 1,
-        })
-
-        accordion:AddToggle({
-            Name = "Enable Auto Watering",
-            Flag = "AutoWateringPlants",
-            Default = false,
-            Callback = function(state)
-               if state then
-                    print("Auto Watering Enabled:", state)
-                    Plant:AutoWateringPlants()
-                else
-                    print("Auto Watering Disabled:", state)
-                end
-            end,
-        })
-    end
-
-    function m:AddHarvestingSection(tab)
-        local accordion = tab:AddAccordion({
-            Title = "Harvest",
-            Icon = "🌿",
-            Expanded = false,
-        })
-
-        accordion:AddSelectBox({
-            Name = "Select plants to auto harvest",
-            Flag = "PlantsToHarvest",
-            MultiSelect = true,
-            Placeholder = "Select plants...",
-           OnInit = function(api, optionsData)
-                local plants = Plant:GetPlantRegistry()
-                local formattedPlants = {}
-                for _, plantData in pairs(plants) do
-                    table.insert(formattedPlants, {
-                        text = plantData.plant,
-                        value = plantData.plant,
-                    })
-                end
-                optionsData.updateOptions(formattedPlants)
-            end,
-        })
-
-        accordion:AddToggle({
-            Name = "Auto Harvest Plants 🌿",
-            Default = false,
-            Flag = "AutoHarvestPlants",
-            Callback = function(Value)
-                if Value then
-                    Plant:StartAutoHarvesting()
-                end
-            end,
-        })
-    end
-
-    function m:AddMovingSection(tab)
-        local accordion = tab:AddAccordion({
-            Title = "Move Plants",
-            Icon = "🚜",
-            Expanded = false,
-        })
-
-        accordion:AddSelectBox({
-            Name = "Select plant to move",
-            Flag = "PlantToMove",
-            MultiSelect = false,
-            Placeholder = "Select plant...",
-           OnInit = function(api, optionsData)
-                local plants = Plant:GetPlantRegistry()
-                local formattedPlants = {}
-                for _, plantData in pairs(plants) do
-                    table.insert(formattedPlants, {
-                        text = plantData.plant,
-                        value = plantData.plant,
-                    })
-                end
-                optionsData.updateOptions(formattedPlants)
-            end,
-        })
-
-        accordion:AddSelectBox({
-            Name = "Select destination",
-            Flag = "MoveDestination",
-            Options = {"Front Right", "Front Left", "Back Right", "Back Left"},
-            Default = "Front Right",
-            MultiSelect = false,
-            Placeholder = "Select destination...",
-        })
-
-        accordion:AddButton({Text = "Move Plant", Callback = function()
-            Plant:MovePlant()
-        end})
-    end
-
-    return m
-end
-
 -- Module: quest/ascension.lua
 EmbeddedModules["quest/ascension.lua"] = function()
     local m = {}
@@ -2694,554 +3908,6 @@ EmbeddedModules["quest/ascension.lua"] = function()
     return m
 end
 
--- Module: shop/ui.lua
-EmbeddedModules["shop/ui.lua"] = function()
-    local m = {}
-
-    local Window
-    local Core
-    local EggShop
-    local SeedShop
-    local GearShop
-    local SeasonPassShop
-    local TravelingShop
-    local PremiumShop
-
-    function m:Init(_window, _core, _eggShop, _seedShop, _gearShop, _seasonPassShop, _travelingShop, _premiumShop)
-        Window = _window
-        Core = _core
-        EggShop = _eggShop
-        SeedShop = _seedShop
-        GearShop = _gearShop
-        SeasonPassShop = _seasonPassShop
-        TravelingShop = _travelingShop
-        PremiumShop = _premiumShop
-    end
-
-    function m:CreateShopTab()
-        local tab = Window:AddTab({
-            Name = "Shop",
-            Icon = "🛍️",
-        })
-
-        -- Seed Automation
-        tab:AddToggle({
-            Name = "Auto Buy Seeds 🌱",
-            Default = false,
-            Flag = "AutoBuySeeds",
-            Callback = function(Value)
-                if Value then
-                    SeedShop:BuyAllSeeds()
-                end
-            end,
-        })
-
-        -- Gear Automation
-        tab:AddToggle({
-            Name = "Auto Buy Gear 🛠️",
-            Default = false,
-            Flag = "AutoBuyGear",
-            Callback = function(Value)
-                if Value then
-                    GearShop:BuyAllGear()
-                end
-            end,
-        })
-
-        -- Egg Automation
-        tab:AddToggle({
-            Name = "Auto Buy Eggs 🥚",
-            Default = false,
-            Flag = "AutoBuyEggs",
-            Callback = function(Value)
-                if Value then
-                    EggShop:BuyAllEggs()
-                end
-            end,
-        })
-
-        tab:AddToggle({
-            Name = "Auto Buy Traveling Items 🧳",
-            Default = false,
-            Flag = "AutoBuyTravelingMerchant",
-            Callback = function(Value)
-                if Value then
-                    TravelingShop:BuyAllTravelingItems()
-                end
-            end,
-        })
-
-        -- Season Pass Automation
-        tab:AddToggle({
-            Name = "Auto Buy Season Pass Items 🎟️",
-            Default = false,
-            Flag = "AutoBuySeasonPasses",
-            Callback = function(Value)
-                if Value then
-                    SeasonPassShop:BuyAllSeasonPassItems()
-                end
-            end,
-        })
-
-        self:PremiumShopSection(tab)
-    end
-
-    function m:PremiumShopSection(tab)
-        local accordion = tab:AddAccordion({
-            Title = "Premium Shop ",
-            Icon = "💎",
-            Expanded = false,
-        })
-
-        accordion:AddSelectBox({
-            Name = "Select Item to Buy 🛒",
-            Options = PremiumShop.ListOfItems,
-            Placeholder = "Select Item",
-            MultiSelect = false,
-            Flag = "PremiumShopItem"
-        })
-
-        accordion:AddTextBox({
-            Name = "Product ID (for custom item)",
-            Default = "",
-            Flag = "PremiumShopProductID",
-            Placeholder = "example: 3322970897",
-            MaxLength = 50,
-            Buttons = {
-                {
-                    Text = "Paste 📋",
-                    Variant = "primary", 
-                    Callback = function(text, textBox)
-                        print("Pasting from clipboard...")
-                        -- text.text = tostring(Core.ClipboardService:GetClipboard())
-                    end
-                },
-                {
-                    Text = "Clear ✖️",
-                    Variant = "destructive", 
-                    Callback = function(text, textBox)
-                        text.text = ""
-                    end
-                }
-            }
-        })
-
-        accordion:AddButton({
-            Name = "Purchase Item 🛒",
-            Callback = function()
-                PremiumShop:BuyItemWithRobux()
-            end
-        })
-    end
-
-    return m
-end
-
--- Module: pet/team.lua
-EmbeddedModules["pet/team.lua"] = function()
-    local m = {}
-
-    local Core
-    local Player
-    local Window
-    local PetConfig
-    local Garden
-
-    function m:Init(_core, _player, _window, _petConfig, _garden)
-        Core = _core
-        Player = _player
-        Window = _window
-        PetConfig = _petConfig
-        Garden = _garden
-    end
-
-    function m:SaveTeamPets(_teamName, _listPets)
-        PetConfig:SetValue(_teamName, _listPets)
-    end
-
-    function m:GetAllPetTeams()
-        print("Fetching all pet teams from configuration...")
-        local allKeys = PetConfig:GetAllKeys()
-
-        return allKeys
-    end
-
-    function m:FindPetTeam(_teamName)
-        return PetConfig:GetValue(_teamName)
-    end
-
-    function m:DeleteTeamPets(_teamName)
-        PetConfig:DeleteKey(_teamName)
-    end
-
-    return m
-end
-
--- Module: pet/webhook.lua
-EmbeddedModules["pet/webhook.lua"] = function()
-    local m = {}
-
-    local Window
-    local Core
-    local Discord
-
-    local PlayerName
-    local LastHatchTime = 0
-    local HatchCount = 0
-    local HatchTotal = 0
-    local InitialStockEgg = {}
-
-    function m:Init(_window, _core, _discord)
-        Window = _window
-        Core = _core
-        Discord = _discord
-
-        PlayerName = Core.LocalPlayer.Name or "Unknown"
-        LastHatchTime = tick()
-    end
-
-    function m:HatchEgg(_petName, _eggName, _baseWeight)
-        local url = Window:GetConfigValue("DiscordWebhookURL") or ""
-        local pingId = Window:GetConfigValue("DiscordPingID") or ""
-        if url == "" then
-            return
-        end
-
-        local weightStatus = (
-            (_baseWeight >= 9 and "Godly") or
-            (_baseWeight >= 8 and _baseWeight < 9 and "Titanic") or
-            (_baseWeight >= 3 and _baseWeight < 8 and "Huge") or
-            "Small"
-        )
-
-        local message = {
-            content = pingId ~= "" and ("<@"..pingId..">") or nil,
-            embeds = {{
-                title = "**EzGarden**",
-                type = 'rich',
-                color = tonumber("0xfa0c0c"),
-                fields = {{
-                    name = '**Profile : ** \n',
-                    value = '> Username : ||'..PlayerName.."||",
-                    inline = false
-                }, {
-                    name = "**Hatched : **",
-                    value = "> Pet Name: ``".._petName.."``"..
-                           "\n> Hatched From: ``"..(_eggName or"N/A").."``"..
-                           '\n> Weight: ``'..(tostring(_baseWeight).." KG" or 'N/A')..'``'..
-                           "\n> Weight Status: ``"..weightStatus.."``",
-                    inline = false
-                }}
-            }}
-        }
-
-        Discord:SendMessage(url, message)
-    end
-
-    function m:Statistics(_eggName, _amount, _hatchedEgg)
-        local url = Window:GetConfigValue("DiscordWebhookURL") or ""
-        if url == "" then
-            return
-        end
-
-        if InitialStockEgg[_eggName] == nil then
-            InitialStockEgg[_eggName] = _amount
-        end
-
-        HatchCount = HatchCount + 1
-        HatchTotal = HatchTotal + _hatchedEgg
-
-        local message = {
-            content = "",
-            embeds = {{
-                title = "**EzGarden**",
-                type = 'rich',
-                color = tonumber("0xFFFF00"),
-                fields = {{
-                    name = '**Profile : ** \n',
-                    value = '> Username : ||'..PlayerName.."||",
-                    inline = false
-                }, {
-                    name = "**Hatch Statistics : **",
-                    value = "> Egg Name: ``"..(_eggName or"N/A").."``"..
-                            '\n> Initial Stock: ``'..(tostring(InitialStockEgg[_eggName]) or 'N/A')..'``'..
-                            '\n> Current Amount: ``'..(tostring(_amount) or 'N/A')..'``'..
-                            '\n> Hatch Count: ``'..(tostring(HatchCount) or 'N/A')..'``'..
-                            '\n> Total Hatched: ``'..(tostring(HatchTotal) or 'N/A')..'``'..
-                            '\n> Duration: ``'..string.format("%d Minutes %d Seconds", math.floor((tick() - LastHatchTime) / 60), math.floor((tick() - LastHatchTime) % 60))..'``',
-                    inline = false
-                }}
-            }}
-        }
-
-        LastHatchTime = tick()
-        Discord:SendMessage(url, message)
-    end
-
-    function m:NightmareMutation(_petType, _remains)
-        local url = Window:GetConfigValue("DiscordWebhookURL") or ""
-        local pingId = Window:GetConfigValue("DiscordPingID") or ""
-        if url == "" then
-            return
-        end
-
-        local message = {
-            content = pingId ~= "" and ("<@"..pingId..">") or nil,
-            embeds = {{
-                title = "**EzGarden**",
-                type = 'rich',
-                color = tonumber("0x8B00FF"),
-                fields = {{
-                    name = '**Profile : ** \n',
-                    value = '> Username : ||'..PlayerName.."||",
-                    inline = false
-                }, {
-                    name = "**Nightmare Mutation : **",
-                    value = "> Pet Type: ``"..(_petType or"N/A").."``"..
-                           "\n> Remains Queue: ``"..(_remains or"N/A").."``",
-                    inline = false
-                }}
-            }}
-        }
-        Discord:SendMessage(url, message)
-    end
-
-    function m:Leveling(_petName, _petLevel, _remains)
-        local url = Window:GetConfigValue("DiscordWebhookURL") or ""
-        if url == "" then
-            return
-        end
-
-        local message = {
-            content = "",
-            embeds = {{
-                title = "**EzGarden**",
-                type = 'rich',
-                color = tonumber("0x00FF00"),
-                fields = {{
-                    name = '**Profile : ** \n',
-                    value = '> Username : ||'..PlayerName.."||",
-                    inline = false
-                }, {
-                    name = "**Pet has reached to level : " ..(_petLevel or"N/A").."**",
-                    value = "> Pet Name: ``"..(_petName or"N/A").."``"..
-                           "\n> Remains: ``"..(_remains or"N/A").."``",
-                    inline = false
-                }}
-            }}
-        }
-        Discord:SendMessage(url, message)
-    end
-    return m
-end
-
--- Module: shop/shop.lua
-EmbeddedModules["shop/shop.lua"] = function()
-    local m = {}
-
-    local Core
-
-    function m:Init(_core)
-        Core = _core
-    end
-
-    function m:ConnectToStock(item, buyFunction)
-         task.wait(0.1)
-        local mainFrame = item:FindFirstChild("Main_Frame")
-        if not mainFrame then return end
-
-        local stockText = mainFrame:FindFirstChild("Stock_Text")
-        if not stockText then return end
-
-        print("Connecting to stock changes for", item.Name)
-
-        local connection = stockText:GetPropertyChangedSignal("Text"):Connect(function()
-            print("Stock changed for", item.Name, "New stock:", stockText.Text)
-            local stock = tonumber(stockText.Text:match("%d+"))
-            if stock and stock > 0 then
-                pcall(buyFunction)
-            end
-        end)
-
-        return connection
-    end
-
-    function m:GetListItems(_shopUI)
-        local shopUI = Core:GetPlayerGui():FindFirstChild(_shopUI)
-        if not shopUI then
-            warn("Shop UI not found")
-            return nil
-        end
-
-        local Items = shopUI.Frame.ScrollingFrame:GetChildren()
-        if not Items then
-            warn("Item frame not found in Shop")
-            return nil
-        end
-
-        local listItems = {}
-        for _, item in pairs(Items) do
-            if item:FindFirstChild("Main_Frame") then
-                table.insert(listItems, item)
-            end
-        end
-
-        return listItems
-    end
-
-    function m:GetItemDetail(_item)
-        if not _item then
-            warn("Invalid item")
-            return nil
-        end
-
-        local mainFrame = _item:FindFirstChild("Main_Frame")
-        if not mainFrame then
-            warn("Main frame not found in item")
-            return nil
-        end
-
-        local priceText = mainFrame:FindFirstChild("Price_Text")
-        if not priceText then
-            warn("Price text not found in item")
-            return nil
-        end
-
-        local stockText = mainFrame:FindFirstChild("Stock_Text")
-        if not stockText then
-            warn("Stock text not found in item")
-            return nil
-        end
-
-        local name = _item.Name
-        local price = tonumber(priceText.Text:match("%d+"))
-        local stock = tonumber(stockText.Text:match("%d+"))
-
-        return {
-            Name = name,
-            Price = price,
-            Stock = stock
-        }
-    end
-
-    function m:GetUIItem(_shopUI, _itemName)
-       local shopUI = Core:GetPlayerGui():FindFirstChild(_shopUI)
-        if not shopUI then
-            warn("Shop UI not found")
-            return nil
-        end
-
-        local Item = shopUI:FindFirstChild(_itemName, true)
-        if not Item then
-            warn("Item frame not found in Shop")
-            return nil
-        end
-
-        return Item
-    end
-
-    function m:GetAvailableItems(_shopUI)
-        local availableItems = {}
-        if not _shopUI then
-            warn("Invalid shop UI")
-            return availableItems
-        end
-
-        local shopUI = Core:GetPlayerGui():FindFirstChild(_shopUI)
-        if not shopUI then
-            warn("Shop UI not found")
-            return availableItems
-        end
-
-        local items = shopUI.Frame.ScrollingFrame:GetChildren()
-        if not items then
-            warn("No items found in the shop UI")
-            return availableItems
-        end
-
-        for _, Item in pairs(items) do
-            local MainFrame = Item:FindFirstChild("Main_Frame")
-            if not MainFrame then continue end
-
-            local StockText = MainFrame.Stock_Text.Text
-            local StockCount = tonumber(StockText:match("%d+"))
-
-            availableItems[Item.Name] = StockCount
-        end
-
-        return availableItems
-    end
-
-    return m
-end
-
--- Module: shop/season_pass.lua
-EmbeddedModules["shop/season_pass.lua"] = function()
-    local m = {}
-
-    local Window
-    local Core
-
-    function m:Init(_window, _core)
-        Window = _window
-        Core = _core
-
-        _core:MakeLoop(function()
-            return Window:GetConfigValue("AutoBuySeasonPasses")
-        end, function()
-            self:BuyAllSeasonPassItems()
-        end)
-    end
-
-    function m:GetAvailableSeasonPassesItems()
-        local availableItems = {}
-
-        local shopUI = Core:GetPlayerGui():FindFirstChild("SeasonPassUI", true)
-        if not shopUI then
-            return availableItems
-        end
-
-        local items = shopUI.SeasonPassFrame.Main.Store.ScrollingFrame.Content:GetChildren()
-        for _, Item in pairs(items) do
-            local MainFrame = Item:FindFirstChild("Main_Frame")
-            if not MainFrame then continue end
-
-            local StockText = MainFrame.Stock_Text.Text
-            local StockCount = tonumber(StockText:match("%d+"))
-
-            availableItems[Item.Name] = StockCount
-        end
-
-        return availableItems
-    end
-
-    function m:BuySeasonPassItem(itemName)
-        if not itemName or itemName == "" then
-            warn("Invalid item name")
-            return
-        end
-
-        Core.GameEvents.SeasonPass.BuySeasonPassStock:FireServer(itemName)
-    end
-
-    function m:BuyAllSeasonPassItems()
-        local items = self:GetAvailableSeasonPassesItems()
-
-        for itemName, stock in pairs(items) do
-            if stock < 1 then
-                continue
-            end
-
-            for i = 1, stock do
-                self:BuySeasonPassItem(itemName)
-                task.wait(0.1) -- Small delay to avoid spamming
-            end
-        end
-    end
-
-    return m
-end
-
 -- Module: shop/traveling.lua
 EmbeddedModules["shop/traveling.lua"] = function()
     local m = {}
@@ -3289,6 +3955,1215 @@ EmbeddedModules["shop/traveling.lua"] = function()
         end
     end
 
+
+    return m
+end
+
+-- Module: farm/plant.lua
+EmbeddedModules["farm/plant.lua"] = function()
+    local m = {}
+    local Window
+    local Core
+    local Player
+    local Garden
+    local PlantsPhysical
+
+    function m:Init(_window, _core, _player, _garden)
+        Window = _window
+        Core = _core
+        Player = _player
+        Garden = _garden
+
+        local myGarden = Garden:GetMyFarm()
+        if not myGarden then
+            warn("Failed to find player's garden")
+            return
+        end
+
+        local important = myGarden:FindFirstChild("Important")
+        PlantsPhysical = important:FindFirstChild("Plants_Physical")  
+
+        _core:MakeLoop(function()
+            return Window:GetConfigValue("AutoPlantSeeds")
+        end, function()
+            self:StartAutoPlanting()
+        end)
+
+        _core:MakeLoop(function()
+            return Window:GetConfigValue("AutoWateringPlants")
+        end, function()
+            self:AutoWateringPlants()
+        end)
+
+        _core:MakeLoop(function()
+            return Window:GetConfigValue("AutoHarvestPlants")
+        end, function()
+            self:StartAutoHarvesting()
+        end)
+    end
+
+    function m:GetPlantRegistry()
+        local success, seedRegistry = pcall(function()
+            return require(Core.ReplicatedStorage.Data.SeedData)
+        end)
+
+        if not success then
+            warn("Failed to get seed registry:", seedRegistry)
+            return {}
+        end
+
+        if not seedRegistry then
+            warn("SeedData is nil or not found")
+            return {}
+        end
+
+       -- Convert SeedData to UI format {text = ..., value = ...}
+        local formattedSeeds = {}
+        for seedName, seedData in pairs(seedRegistry) do
+            table.insert(formattedSeeds, {
+                seed = seedData.SeedName or seedName,
+                plant = seedName,
+                rarity = seedData.SeedRarity or "Unknown",
+            })
+        end
+
+        -- Sort seeds alphabetically (ascending order) - Safe for all executors
+        if #formattedSeeds > 0 then
+            table.sort(formattedSeeds, function(a, b)
+                if not a or not b or not a.plant or not b.plant then
+                    return false
+                end
+                return string.lower(tostring(a.plant)) < string.lower(tostring(b.plant))
+            end)
+        end
+
+        return formattedSeeds
+    end
+
+    function m:PlantSeed(_seedName, _numToPlant, _plantingPosition)
+        if not _seedName or type(_seedName) ~= "string" then
+            warn("FarmUtils:PlantSeed - Invalid seed name")
+            return false
+        end
+
+        if #PlantsPhysical:GetChildren() >= 800 then
+            return false
+        end
+
+        local tool
+        local toolQuantity = 0
+
+        for _, t in next, Player:GetAllTools() do
+            local toolType = t:GetAttribute("b")
+            local toolSeed = t:GetAttribute("Seed")
+            if toolType == "n" and toolSeed == _seedName then
+                tool = t
+                toolQuantity = t:GetAttribute("Quantity") or 0
+                break
+            end
+        end
+
+        if toolQuantity < _numToPlant then
+            _numToPlant = toolQuantity
+        end
+
+        if not tool then
+            print("No seed tool found for seed:", _seedName)
+
+            return false
+        end
+
+        local position = Garden:GetFarmRandomPosition()
+        if _plantingPosition == "Front Right" then
+            position = Garden:GetFarmFrontRightPosition()
+        elseif _plantingPosition == "Front Left" then
+            position = Garden:GetFarmFrontLeftPosition()
+        elseif _plantingPosition == "Back Right" then
+            position = Garden:GetFarmBackRightPosition()
+        elseif _plantingPosition == "Back Left" then
+            position = Garden:GetFarmBackLeftPosition()
+        end
+        if not position then
+            warn("Failed to get farm position for planting")
+            return false
+        end
+
+        local plantTask = function(_numToPlant, _seedName, _position)
+            for i = 1, _numToPlant do
+                if #PlantsPhysical:GetChildren() >= 800 then
+                    break
+                end            
+                Core.GameEvents.Plant_RE:FireServer(_position, _seedName)
+                -- Small delay between planting actions
+                task.wait(0.15)
+            end
+        end
+
+        Player:AddToQueue(
+            tool,       -- tool
+            3,          -- priority (medium)
+            function()
+                plantTask(_numToPlant, _seedName, position)
+            end
+        )
+    end
+
+    function m:FindPlants(plantName)
+        if not plantName or type(plantName) ~= "string" then
+            warn("Invalid plant name")
+            return nil
+        end
+
+        if not PlantsPhysical then
+            warn("PlantsPhysical not found")
+            return nil
+        end
+
+        local foundPlants = {}
+        for _, plant in pairs(PlantsPhysical:GetChildren()) do
+            if plant.Name == plantName then
+                table.insert(foundPlants, plant)
+            end
+        end
+
+        return #foundPlants > 0 and foundPlants or nil
+    end
+
+    function m:StartAutoPlanting()
+        local seedsToPlant = Window:GetConfigValue("SeedsToPlant") or {}
+        local seedToPlantCount = Window:GetConfigValue("SeedsToPlantCount") or 1
+        local plantingPosition = Window:GetConfigValue("PlantingPosition") or "Random"
+
+        -- Cache plant count once at the beginning
+        if #PlantsPhysical:GetChildren() >= 800 then
+            task.wait(30) -- Much longer wait when farm is full
+            return
+        end
+
+        local plantsNeeded = false
+
+        for _, seedName in pairs(seedsToPlant) do
+            if #PlantsPhysical:GetChildren() >= 800 then
+                break
+            end
+            local existingPlants = self:FindPlants(seedName) or {}
+            local numExisting = #existingPlants
+            local numToPlant = math.max(0, seedToPlantCount - numExisting)
+
+            if numToPlant > 0 then
+                self:PlantSeed(seedName, numToPlant, plantingPosition)
+                plantsNeeded = true
+            end
+        end
+
+        if not plantsNeeded then
+            task.wait(60) -- Much longer wait when nothing to do
+        else
+            task.wait(15) -- Moderate wait when work was done
+        end
+    end
+
+    function m:AutoWateringPlants()
+        local wateringCan
+        local wateringDelay = Window:GetConfigValue("WateringDelay") or 2
+        local wateringEach = Window:GetConfigValue("WateringEach") or 5
+        local wateringPosition = Window:GetConfigValue("WateringPosition") or "Front Right"
+        local position = Garden:GetFarmRandomPosition()
+
+        for _, Tool in next, Player:GetAllTools() do
+            local toolType = Tool:GetAttribute("b")
+            if toolType == "o" then
+                wateringCan = Tool
+                break
+            end
+        end
+
+        if not wateringCan then
+            warn("No watering can found in inventory")
+            return
+        end
+
+        local growingPlants = self:GetAllGrowingPlants()
+        if #growingPlants < 1 then
+            task.wait(10) -- Wait before checking again
+            return
+        end
+
+        local tasks = Player:GetTaskByTool(wateringCan)
+        if tasks and #tasks > 0 then
+            task.wait(10)
+            return
+        end
+
+        if wateringPosition == "Growing Plants" then
+            position = growingPlants[1]:GetPivot().Position
+        elseif wateringPosition == "Front Right" then
+            position = Garden:GetFarmFrontRightPosition()
+        elseif wateringPosition == "Front Left" then
+            position = Garden:GetFarmFrontLeftPosition()
+        elseif wateringPosition == "Back Right" then
+            position = Garden:GetFarmBackRightPosition()
+        elseif wateringPosition == "Back Left" then
+            position = Garden:GetFarmBackLeftPosition()
+        end
+
+        local wateringTask = function(position, each)
+            local watered = 0
+
+            for i = 1, each do
+                local success = pcall(function()
+                    Core.GameEvents.Water_RE:FireServer(Vector3.new(position.X, 0, position.Z))
+                end)
+
+                if success then
+                    watered = watered + 1
+                end
+
+                task.wait(1.5) -- Slightly longer delay to reduce server load
+            end
+
+            task.wait(0.5) -- Longer final wait
+        end
+
+
+        Player:AddToQueue(
+            wateringCan,   -- tool
+            99,             -- priority (very low)
+            function()
+                wateringTask(position, wateringEach)
+            end
+        )
+        task.wait(math.max(wateringDelay, 5)) -- Minimum 5 second delay
+    end
+
+    function m:EligibleToHarvest(plant)    
+        local Prompt = plant:FindFirstChild("ProximityPrompt", true)
+        if not Prompt then return false end
+        if not Prompt.Enabled then return false end
+
+        return true
+    end
+
+    function m:GetAllGrowingPlants()
+        if not PlantsPhysical then
+            warn("PlantsPhysical not found")
+            return {}
+        end
+
+        local growingPlants = {}
+        for _, plant in pairs(PlantsPhysical:GetChildren()) do
+            local prompt = plant:FindFirstChild("ProximityPrompt", true)
+            if not prompt then
+                table.insert(growingPlants, plant)
+            end
+        end
+
+        return growingPlants
+    end
+
+    function m:IsMaxInventory()
+        local character = Core.LocalPlayer
+        local backpack = Core:GetBackpack()
+        if not character or not backpack then
+            warn("FarmUtils:IsMaxFruitInventory - Character or Backpack not found")
+            return false
+        end
+
+        local bonusBackpack = character:GetAttribute("BonusBackpackSize") or 0
+        local maxCapacity = 200 + bonusBackpack
+        local currentItems = 0
+
+        for _, item in pairs(backpack:GetChildren()) do
+            if item:GetAttribute("b") == "j" then
+                currentItems = currentItems + 1
+            end
+        end
+
+        return currentItems >= maxCapacity
+    end
+
+    function m:GetFruitPlant(plan)
+        local fruits = {}
+
+        for _, child in pairs(plan.Fruits:GetChildren()) do
+            table.insert(fruits, child)
+        end
+
+        return fruits
+    end
+
+    function m:GetPlantDetail(_plant)
+        if not _plant or not _plant:IsA("Model") then
+            warn("Invalid plant")
+            return nil
+        end
+
+        local prompt = _plant:FindFirstChild("ProximityPrompt", true)
+        local parentFruit = prompt and prompt.Parent.Parent.Parent
+        local fruits = {}
+
+        if not prompt or not parentFruit then
+            -- No prompt means not ready to harvest, so no fruits
+            fruits = {}
+        elseif parentFruit and parentFruit.Name == "Fruits" then
+            for _, fruit in pairs(parentFruit:GetChildren()) do
+                table.insert(fruits, fruit)
+            end
+        else
+            fruits = { _plant }
+        end
+
+        local doneGrowTime = _plant:GetAttribute("DoneGrowTime") or math.huge
+
+        local detail = {
+            name = _plant.Name or "Unknown",
+            position = _plant:GetPivot().Position or Vector3.new(0,0,0),
+            isGrowing = not prompt or false,
+            fruits = {},
+        }
+
+        for _, fruit in pairs(fruits) do
+            local mutations = {}
+
+            for attributeName, attributeValue in pairs(fruit:GetAttributes()) do
+                if attributeValue == true then
+                    table.insert(mutations, attributeName)
+                end
+            end
+
+            table.insert(detail.fruits, {
+                isEligibleToHarvest = self:EligibleToHarvest(fruit),
+                mutations = mutations,
+                model = fruit,
+            })
+        end
+
+        return detail
+    end
+
+    function m:HarvestFruit(_fruit)
+        if not _fruit or not _fruit:IsA("Model") then
+            warn("Invalid plant or fruit")
+            return false
+        end
+
+        if not self:EligibleToHarvest(_fruit) then
+            return false
+        end
+
+        if self:IsMaxInventory() then
+            return false
+        end
+
+        local success, err = pcall(function()
+            Core.GameEvents.Crops.Collect:FireServer({_fruit})
+        end)
+
+        if not success then
+            warn("Failed to harvest item:", _fruit.Name, "Error:", err)
+            return false
+        end
+
+        return true
+    end
+
+    function m:StartAutoHarvesting()
+        if Window:GetConfigValue("AutoHarvestPlants") ~= true then
+            warn("Auto harvesting is disabled in config")
+            return
+        end
+
+        if self:IsMaxInventory() then
+            task.wait(10) -- Wait before checking again
+            return
+        end
+
+        local plantsToHarvest = Window:GetConfigValue("PlantsToHarvest") or {}
+        if #plantsToHarvest == 0 then
+            warn("No plants selected for auto harvesting")
+            task.wait(10) -- Wait before checking again
+            return
+        end
+
+        local harvestedCount = 0
+
+        for _, plantName in pairs(plantsToHarvest) do
+            local plants = self:FindPlants(plantName) or {}
+
+            -- Harvest with limits
+            for _, plant in pairs(plants) do
+                if self:IsMaxInventory() then
+                    break
+                end
+
+                local plantDetail = self:GetPlantDetail(plant)
+                if not plantDetail or plantDetail.isGrowing then
+                    continue
+                end
+
+                for _, fruitDetail in pairs(plantDetail.fruits) do
+                    if self:IsMaxInventory() then
+                        break
+                    end
+
+                    if not fruitDetail.isEligibleToHarvest then
+                        continue
+                    end
+
+                    local success = self:HarvestFruit(fruitDetail.model)
+                    if success then
+                        harvestedCount = harvestedCount + 1
+                        task.wait(0.15) -- Small delay between harvests
+                    end
+                end
+            end
+
+            if self:IsMaxInventory() then
+                break
+            end
+        end
+
+        if harvestedCount > 0 then
+            task.wait(0.5) -- Moderate wait after work
+        else
+            task.wait(15) -- Longer wait when nothing to do
+        end
+    end
+
+    function m:MovePlant()
+        local plantToMove = Window:GetConfigValue("PlantToMove")
+        if not plantToMove or type(plantToMove) ~= "string" then
+            warn("Invalid plant selected for moving")
+            return
+        end
+        local moveDestination = Window:GetConfigValue("MoveDestination")
+        if not moveDestination or type(moveDestination) ~= "string" then
+            warn("Invalid move destination selected")
+            return
+        end
+
+        local plants = self:FindPlants(plantToMove) or {}
+
+        if #plants == 0 then
+            warn("No plants found to move")
+            return
+        end
+
+        local position = Garden:GetFarmRandomPosition()
+        if moveDestination == "Front Right" then
+            position = Garden:GetFarmFrontRightPosition()
+        elseif moveDestination == "Front Left" then
+            position = Garden:GetFarmFrontLeftPosition()
+        elseif moveDestination == "Back Right" then
+            position = Garden:GetFarmBackRightPosition()
+        elseif moveDestination == "Back Left" then
+            position = Garden:GetFarmBackLeftPosition()
+        end
+        if not position then
+            warn("Failed to get farm position for moving")
+            return
+        end
+
+        local trowel
+        for _, Tool in next, Player:GetAllTools() do
+            local toolType = Tool:GetAttribute("b")
+            if toolType == "b" then
+                trowel = Tool
+                break
+            end
+        end
+        if not trowel then
+            warn("No trowel found in inventory")
+            return
+        end
+
+        local moveTask = function(plants, position)
+            for _, plant in pairs(plants) do
+                if not plant or not plant:IsA("Model") then
+                    continue
+                end
+
+                local success = pcall(function()
+                    Core.GameEvents.TrowelRemote:InvokeServer(
+                        "Pickup",
+                        trowel,
+                        plant
+                    )
+                end)
+
+                if success then
+                    task.wait(0.5) -- Small delay between moves
+                end
+
+                local successPlace = pcall(function()
+                    Core.GameEvents.TrowelRemote:InvokeServer(
+                        "Place",
+                        trowel,
+                        plant,
+                        CFrame.new(position.X, 0.5, position.Z)
+                    )
+                end)
+
+                if not successPlace then
+                    warn("Failed to place plant:", plant.Name)
+                end
+            end
+        end
+
+        Player:AddToQueue(
+            trowel,     -- tool
+            10,          -- priority (high)
+            function()
+                moveTask(plants, position)
+            end
+        )
+    end
+    return m
+end
+
+-- Module: inventory/inventory.lua
+EmbeddedModules["inventory/inventory.lua"] = function()
+    local m = {}
+
+    local Core
+    local Player
+    local Window
+
+    local InventoryConnection
+
+    function m:Init(_core, _player, _window)
+        Core = _core
+        Player = _player
+        Window = _window
+
+        InventoryConnection = Core:GetBackpack().ChildAdded:Connect(function(child)
+            self:AutoFavoritePet(child)
+        end)
+    end
+
+    function m:GetAllPets()
+        local myPets = {}
+
+        for _, tool in next, Player:GetAllTools() do
+            local toolType = tool:GetAttribute("b")
+            toolType = toolType and string.lower(toolType) or ""
+            if toolType == "l" then
+                table.insert(myPets, tool)
+            end
+        end
+
+        return myPets
+    end
+
+    function m:FavoriteItem(item)
+        Core.GameEvents.Favorite_Item:FireServer(item)
+        task.wait(0.15)
+    end
+
+    function m:AutoFavoritePet(item)
+        if not item or not item:IsA("Tool") then
+            return
+        end 
+
+        local isAutoFavoriting = Window:GetConfigValue("AutoFavoritePets") or false
+        if not isAutoFavoriting then return end
+
+        local petType = item:GetAttribute("b")
+        if not petType or string.lower(petType) ~= "l" then
+            return
+        end
+
+        local isFavorited = item:GetAttribute("d") or false
+        if isFavorited then
+            return
+        end
+
+        local petNames = Window:GetConfigValue("AutoFavoritePetName") or {}
+        local weightThreshold = Window:GetConfigValue("AutoFavoritePetWeight") or 0.0
+        local ageThreshold = Window:GetConfigValue("AutoFavoritePetAge") or 0
+
+        -- Parse pet name, weight, and age from item.Name
+        -- Example format: "Golden Goose [2.19 KG] [Age 2]"
+        local petName, weightStr, ageStr = item.Name:match("^(.-)%s*%[(.-)%s*KG%]%s*%[Age%s*(%d+)%]")
+
+        if not petName then
+            -- Fallback if parsing fails
+            petName = item.Name
+            weightStr = nil
+            ageStr = nil
+        end
+
+        local weight = weightStr and tonumber(weightStr:match("%d+%.?%d*")) or 0
+        local age = ageStr and tonumber(ageStr) or 0
+
+        print(string.format("Checking pet: %s | Weight: %.2f | Age: %d", petName, weight, age))
+
+        for _, name in ipairs(petNames) do
+            if petName == name then
+                print("Auto-favoriting pet by name:", petName)
+                self:FavoriteItem(item)
+                return
+            end
+        end
+
+        if weight >= weightThreshold or age >= ageThreshold then
+            self:FavoriteItem(item)
+        end
+    end
+
+    function m:FavoriteAllPets()
+        for _, tool in pairs(self:GetAllPets()) do
+            self:AutoFavoritePet(tool)
+        end
+    end
+
+    return m
+end
+
+-- Module: inventory/ui.lua
+EmbeddedModules["inventory/ui.lua"] = function()
+    local m = {}
+
+    local Window
+    local Inventory
+    local Pet
+
+    function m:Init(_window, _inventory, _pet)
+        Window = _window
+        Inventory = _inventory
+        Pet = _pet
+    end
+
+    function m:CreateTab()
+        local tab = Window:AddTab({
+            Name = "Inventory",
+            Icon = "🎒"
+        })
+
+        self:AddPetSection(tab)
+    end
+
+    function m:AddPetSection(tab)
+        local accordion = tab:AddAccordion({
+            Title = "Pets",
+            Icon = "🐶",
+            Expanded = false,
+        })
+
+        accordion:AddSelectBox({
+            Name = "Select pet name for auto favorite",
+            Options = {"Loading..."},
+            Placeholder = "Select a pet",
+            MultiSelect = true,
+            Flag = "AutoFavoritePetName",
+           OnInit = function(api, optionsData)
+                local specialPets = Pet:GetPetRegistry()
+                optionsData.updateOptions(specialPets)
+            end
+        })
+
+        accordion:AddNumberBox({
+            Name = "Or If Weight Is Higher Than Or Equal To",
+            Placeholder = "Enter weight...",
+            Default = 0.0,
+            Min = 0.0,
+            Max = 20.0,
+            Increment = 1.0,
+            Decimals = 2,
+            Flag = "AutoFavoritePetWeight",
+        })
+
+        accordion:AddNumberBox({
+            Name = "Or If Age Is Higher Than Or Equal To",
+            Placeholder = "Enter age...",
+            Default = 0,
+            Min = 0,
+            Max = 100,
+            Increment = 1,
+            Flag = "AutoFavoritePetAge",
+        })
+
+        accordion:AddToggle({
+            Name = "Auto Favorite Pets",
+            Flag = "AutoFavoritePets",
+            Default = false,
+            Callback = function(value)
+                if value then
+                    Inventory:FavoriteAllPets()
+                end
+            end
+        })
+    end
+
+    return m
+end
+
+-- Module: notification/ui.lua
+EmbeddedModules["notification/ui.lua"] = function()
+    local m = {}
+
+    local Window
+    local Test
+
+    function m:Init(_window, _test)
+        Window = _window
+        Test = _test
+    end
+
+    function m:CreateNotificationTab()
+        local tab = Window:AddTab({
+            Name = "Notifications",
+            Icon = "🔔",
+        })
+
+        tab:AddTextBox({
+            Name = "Discord Webhook URL (for notifications)",
+            Default = "",
+            Flag = "DiscordWebhookURL",
+            Placeholder = "https://discord.com/api/webhooks/...",
+            MaxLength = 500,
+        })
+
+        tab:AddTextBox({
+            Name = "Discord Ping ID (optional)",
+            Default = "",
+            Flag = "DiscordPingID",
+            Placeholder = "123456789012345678",
+            MaxLength = 50,
+        })
+
+        tab:AddButton(
+            {Text = "Test Notification", 
+            Callback = function()
+                task.spawn(function()
+                    Test:HatchEgg("Test Pet", "Test Egg", 10)
+                    task.wait(0.15)
+                    Test:Statistics("Test Egg", 99, 123)
+                end)
+        end})
+    end
+
+    return m
+end
+
+-- Module: shop/egg.lua
+EmbeddedModules["shop/egg.lua"] = function()
+    local m = {}
+
+    local Window
+    local Core
+    local Shop
+
+    local Connections
+    local ShopUI = "PetShop_UI"
+    local ShopItem = "Common Egg"
+
+    function m:Init(_window, _core, _shop)
+        Window = _window
+        Core = _core
+        Shop = _shop
+
+        _core:MakeLoop(function()
+            return Window:GetConfigValue("AutoBuyEggs")
+        end, function()
+            self:BuyAllEggs()
+        end)
+    end
+
+    function m:BuyEgg(eggName)
+        if not eggName or eggName == "" then
+            warn("Invalid egg name")
+            return
+        end
+
+        Core.GameEvents.BuyPetEgg:FireServer(eggName)
+    end
+
+    function m:BuyAllEggs()
+         local items = Shop:GetAvailableItems(ShopUI)
+
+        for eggName, stock in pairs(items) do
+            if stock < 1 then
+                continue
+            end
+
+            for i = 1, stock do
+                self:BuyEgg(eggName)
+                task.wait(0.1) -- Small delay to avoid spamming
+            end
+        end
+    end
+
+    function m:StartEggAutomation()
+        if not Window:GetConfigValue("AutoBuyEggs") then
+            return
+        end
+
+        self:BuyAllEggs()
+
+        if Connections then
+            for _, conn in pairs(Connections) do
+                conn:Disconnect()
+            end
+            Connections = nil
+        end
+
+        Connections = {}
+        for _, item in pairs(Shop:GetListItems(ShopUI)) do
+            local conn = Shop:ConnectToStock(item, function()
+                if not Window:GetConfigValue("AutoBuyEggs") then
+                    return
+                end
+
+                self:BuyAllEggs()
+            end)
+            table.insert(Connections, conn)
+        end
+    end
+
+    function m:StopEggAutomation()
+        if Connections then
+            for _, conn in pairs(Connections) do
+                conn:Disconnect()
+            end
+            Connections = nil
+        end
+    end
+
+    return m
+end
+
+-- Module: auto/crafting.lua
+EmbeddedModules["auto/crafting.lua"] = function()
+    local m = {}
+
+    local Window
+    local Core
+
+    local MachineTypes = {}
+    local CraftingRecipeRegistry
+    local Recipes
+    local CraftingUtil
+    local Plant
+
+    m.StationRepository = {
+        GearEventWorkbench = workspace.CraftingTables.EventCraftingWorkBench,
+        SeedEventCraftingWorkBench = workspace.CraftingTables.SeedEventCraftingWorkBench,
+    }
+
+    function m:Init(window, core, plant)
+        Window = window
+        Core = core
+        Plant = plant
+
+        CraftingRecipeRegistry = require(Core.ReplicatedStorage.Data.CraftingData.CraftingRecipeRegistry)
+        Recipes = CraftingRecipeRegistry.ItemRecipes
+        CraftingUtil = require(Core.ReplicatedStorage.Modules.CraftingService.CraftingGlobalObjectService)
+
+        self:InitCraftingRecipes()
+
+        Core:MakeLoop(
+            function()
+                return Window:GetConfigValue("AutoCraftingGear")
+            end, 
+            function()
+                self:CraftingController( 
+                    self.StationRepository.GearEventWorkbench,
+                    Window:GetConfigValue("CraftingGearItem")
+                )
+            end
+        )
+
+        Core:MakeLoop(
+            function()
+                return Window:GetConfigValue("AutoCraftingSeeds")
+            end, 
+            function()
+                self:CraftingController( 
+                    self.StationRepository.SeedEventCraftingWorkBench,
+                    Window:GetConfigValue("CraftingSeedItem")
+                )
+            end
+        )
+    end
+
+    function m:GetCraftingObjectType(craftingStation)
+        return craftingStation:GetAttribute("CraftingObjectType")
+    end 
+
+    function m:InitCraftingRecipes()
+        if #MachineTypes > 0 then
+            return MachineTypes
+        end
+
+        MachineTypes = CraftingRecipeRegistry.RecipiesSortedByMachineType or {}
+
+        return MachineTypes
+    end
+
+    function m:GetMachineTypes()
+        local machineTypes =  {}
+
+        for machineType, _ in pairs(MachineTypes) do
+            table.insert(machineTypes, machineType)
+        end
+
+        return machineTypes
+    end
+
+    function m:GetAllCraftingItems(craftingStation)
+        local machineType = self:GetCraftingObjectType(craftingStation)
+        local craftingItems = {}
+
+        for item, _ in pairs(MachineTypes[machineType] or {}) do
+            table.insert(craftingItems, item)
+        end
+
+        -- Sort the crafting items alphabetically
+        table.sort(craftingItems)
+
+        return craftingItems
+    end
+
+    function m:GetCraftingData(craftingStation, craftingItem)
+        local machineType = self:GetCraftingObjectType(craftingStation)
+        local data = {}
+
+        for items, detail in pairs(MachineTypes[machineType] or {}) do
+            if items == craftingItem then
+                table.insert(data, detail)
+                break
+            end
+        end
+
+        return data
+    end
+
+    function m:GetCraftingRecipes(craftingStation, craftingItem)
+        local craftingData = self:GetCraftingData(craftingStation, craftingItem)
+        local craftingInputs = {}
+        local recipes = {}
+
+        if #craftingData == 0 then
+            return recipes
+        end
+
+        for _, detail in pairs(craftingData) do
+            if type(detail) == "table" and detail.Inputs then
+                for _, input in pairs(detail.Inputs) do
+                    table.insert(craftingInputs, input)
+                end
+                continue
+            end
+        end
+
+        for i, input in pairs(craftingInputs) do
+            local dataItems
+            table.insert(recipes, input)
+        end
+
+        return recipes
+    end
+
+    function m:GetCraftingStationStatus(craftingStation)
+        local data = CraftingUtil:GetIndividualCraftingMachineData(craftingStation, self:GetCraftingObjectType(craftingStation))
+        if not data or not data.RecipeId then
+            return "Idle"
+        end
+
+        local unsubmittedItems = self:GetUnsubmittedItems(craftingStation)
+        if #unsubmittedItems > 0 then
+            return "Waiting for Item"
+        end
+
+        local craftingItem = data.CraftingItems and data.CraftingItems[1]
+        if craftingItem then
+            if craftingItem.IsDone then
+                return "Ready to Claim"
+            else
+                return "On Progress"
+            end
+        end
+
+        return "Ready to Start"
+    end
+
+    function m:SetRecipe(craftingStation, craftingItem)
+        if not craftingStation or not craftingItem then
+            return
+        end
+
+        Core.GameEvents.CraftingGlobalObjectService:FireServer(
+            "SetRecipe",
+            craftingStation,
+            self:GetCraftingObjectType(craftingStation),
+            craftingItem
+        )
+    end
+
+    function m:SubmitCraftingRequest(craftingStation)
+        local craftingHandler = require(Core.ReplicatedStorage.Modules.CraftingStationHandler)
+
+        local success, error = pcall(function() 
+            craftingHandler:SubmitAllRequiredItems(craftingStation) 
+        end)
+
+        if not success then
+            warn("Error submitting crafting request:", error)
+            return
+        end
+
+        local unsubmittedItems = self:GetUnsubmittedItems(craftingStation)
+
+        if #unsubmittedItems == 0 then
+            return
+        end
+
+        local needFruits = {}
+        for _, item in pairs(unsubmittedItems) do
+            if item.ItemType == "Holdable" then
+                table.insert(needFruits, item.ItemData.ItemName)
+            end
+        end
+
+        if #needFruits == 0 then
+            return
+        end
+
+        for _, fruit in pairs(needFruits) do
+            local plants = Plant:FindPlants(fruit) or {}
+
+            if #plants == 0 then
+                continue
+            end
+
+            for _, plant in pairs(plants) do
+                local plantDetail = Plant:GetPlantDetail(plant)
+                local successHarvest
+                if not plantDetail or #plantDetail.fruits == 0 then
+                    continue
+                end
+
+                for _, harvestingFruit in pairs(plantDetail.fruits) do
+                    if not harvestingFruit.isEligibleToHarvest then
+                        continue
+                    end
+
+                    successHarvest = pcall(function()
+                        Plant:HarvestFruit(harvestingFruit.model)
+                    end)
+                end
+
+                if successHarvest then
+                    break
+                end
+            end
+        end
+    end
+
+    function m:StartCrafting(craftingStation)
+        local unsubmittedItems = self:GetUnsubmittedItems(craftingStation)
+
+        if #unsubmittedItems > 0 then
+            return
+        end
+
+        local OpenRecipeEvent = Core.GameEvents.OpenRecipeBindableEvent
+
+        local success, error = pcall(function()
+            Core.GameEvents.CraftingGlobalObjectService:FireServer(
+                "Craft",
+                craftingStation,
+                self:GetCraftingObjectType(craftingStation)
+            )
+        end)
+
+        if not success then
+            warn("Error starting crafting:", error)
+            return
+        end
+    end
+
+    function m:CraftingController(craftingStation, craftingItem)
+        if not craftingStation or not craftingItem then
+            return
+        end
+
+        if self:GetCraftingStationStatus(craftingStation) == "Idle" then
+            self:SetRecipe(craftingStation, craftingItem)
+            task.wait(0.5) -- Wait for 0.5 seconds to allow the station to update its status
+        end
+
+        while self:GetCraftingStationStatus(craftingStation) == "Waiting for Item" do
+            self:SubmitCraftingRequest(craftingStation)
+
+            wait(5) -- Wait for 5 seconds before checking again
+        end
+
+        if  self:GetCraftingStationStatus(craftingStation) == "Ready to Start" then
+            self:StartCrafting(craftingStation)
+            task.wait(0.5) -- Wait for 0.5 seconds to allow the crafting process to start
+        end
+
+        while self:GetCraftingStationStatus(craftingStation) == "On Progress" do
+            wait(5) -- Wait for 5 seconds before checking again
+        end
+
+        if self:GetCraftingStationStatus(craftingStation) == "Ready to Claim" then
+            local success, error = pcall(function()
+                Core.GameEvents.CraftingGlobalObjectService:FireServer(
+                    "Claim",
+                    craftingStation,
+                    self:GetCraftingObjectType(craftingStation),
+                    1
+                )
+            end)
+
+            if not success then
+                warn("Error claiming crafted item:", error)
+                return
+            end
+
+            task.wait(0.5) -- Wait for 0.5 seconds to allow the
+        end
+    end
+
+    function m:GetSubmittedItems(craftingStation)
+    	local machineData = CraftingUtil:GetIndividualCraftingMachineData(craftingStation, self:GetCraftingObjectType(craftingStation))
+        local submittedItems = {}
+
+        if not (machineData and machineData.RecipeId) then
+    		return submittedItems
+    	end
+
+        if not Recipes[machineData.RecipeId] then
+    		return submittedItems
+    	end
+
+        for item, _ in machineData.InputItems do
+    		submittedItems[tostring(item)] = true
+    	end
+
+        return submittedItems
+    end
+
+    function m:GetUnsubmittedItems(craftingStation)
+        local submitted = self:GetSubmittedItems(craftingStation)
+        local machineData = CraftingUtil:GetIndividualCraftingMachineData(craftingStation, self:GetCraftingObjectType(craftingStation))
+
+        local recipe = machineData and machineData.RecipeId and Recipes[machineData.RecipeId]
+        local result = {}
+
+        if recipe then
+            for id, input in pairs(recipe.Inputs) do
+                if not submitted[tostring(id)] then
+                    table.insert(result, input)
+                end
+            end
+        end
+
+        return result
+    end
 
     return m
 end
@@ -9224,2337 +11099,528 @@ EmbeddedModules["../module/core.lua"] = function()
     return m
 end
 
--- Module: quest/ui.lua
-EmbeddedModules["quest/ui.lua"] = function()
+-- Module: farm/ui.lua
+EmbeddedModules["farm/ui.lua"] = function()
     local m = {}
     local Window
-    local Core
-    local Ascension
+    local Player
+    local Garden
+    local Plant
 
-
-    local AscensionItem = {
-        Name = "N/A",
-        Amount = 0,
-        Mutations = "N/A",
-        IsEligibleToSubmit = false,
-        NextRebirthSubmitTime = 0
-    }
-
-    function m:Init(_window, _core, _ascension)
+    function m:init(_window, _player, _garden, _plant)
         Window = _window
-        Core = _core
-        Ascension = _ascension
-
-        AscensionItem = Ascension:GetQuestDetail()
+        Player = _player
+        Garden = _garden
+        Plant = _plant
     end
 
-    function m:CreateQuestTab()
+    function m:CreateFarmTab()
         local tab = Window:AddTab({
-            Name = "Quests",
-            Icon = "📜",
+            Name = "Farm",
+            Icon = "🌾",
         })
 
-        -- Ascension
-        self:AscensionSection(tab)
+        self:AddPlantingSection(tab)
+        self:AddWateringSection(tab)
+        self:AddHarvestingSection(tab)
+        self:AddMovingSection(tab)
     end
 
-    local function getTimeRemaining()
-        if not AscensionItem.NextRebirthSubmitTime then
-            return "N/A"
-        end
-
-        if AscensionItem.IsEligibleToSubmit then
-            return "Ready"
-        end
-
-        local remainingSeconds = AscensionItem.NextRebirthSubmitTime - tick()
-        if remainingSeconds <= 0 then
-            return "Ready"
-        end
-
-        local hours = math.floor(remainingSeconds / 3600)
-        local minutes = math.floor((remainingSeconds % 3600) / 60)
-        local seconds = remainingSeconds % 60
-        local parseTime = string.format("%02d:%02d:%02d", hours, minutes, seconds)
-
-        return parseTime
-    end
-
-    function m:AscensionSection(tab)
+    function m:AddPlantingSection(tab)
         local accordion = tab:AddAccordion({
-            Name = "Ascension",
-            Icon = "🔃",
+            Title = "Planting",
+            Icon = "🌱",
             Expanded = false,
-            Callback = function(isExpanded)
-                if not isExpanded then
-                    return
-                end
+        })
 
-                local ascensionItem = Ascension:GetQuestDetail()
-
-                if not ascensionItem then
-                    return
+        accordion:AddSelectBox({
+            Name = "Select seeds to auto plant",
+            Options = {"Loading..."},
+            Placeholder = "Select seeds...",
+            MultiSelect = true,
+            Flag = "SeedsToPlant",
+           OnInit = function(api, optionsData)
+                local seeds = Plant:GetPlantRegistry()
+                local formattedSeeds = {}
+                for _, seedData in pairs(seeds) do
+                    table.insert(formattedSeeds, {
+                        text = seedData.plant,
+                        value = seedData.plant
+                    })
                 end
-
-                if ascensionItem.Name ~= AscensionItem.Name or
-                   ascensionItem.Mutations ~= AscensionItem.Mutations then
-                    AscensionItem = ascensionItem
-                end
+                optionsData.updateOptions(formattedSeeds)
             end,
         })
 
-        accordion:AddLabel(function()
-            return "Current Quest: ".. AscensionItem.Amount .. " " .. AscensionItem.Name .. " (" .. (AscensionItem.Mutations ~= "" and AscensionItem.Mutations or "No Mutation") .. ")"
-        end)
-        accordion:AddLabel(function()
-            return "Next Rebirth Submit Time: " .. getTimeRemaining()
-        end)
+        accordion:AddNumberBox({
+            Name = "Set the number of seeds to plant",
+            Placeholder = "Enter number of seeds...",
+            Flag = "SeedsToPlantCount",
+            Min = 0,
+            Max = 800,
+            Default = 1,
+            Increment = 1,
+        })
 
         accordion:AddSelectBox({
             Name = "Position planting seeds",
-            Flag = "PlantingAscensionPosition",
+            Flag = "PlantingPosition",
             Options = {"Random", "Front Right", "Front Left", "Back Right", "Back Left"},
             Default = "Random",
             MultiSelect = false,
             Placeholder = "Select position...",
         })
 
+        accordion:AddButton({Text = "Manual Planting", Callback = function()
+            local selectedSeeds = Window:GetConfigValue("SeedsToPlant") or {}
+            local seedsToPlantCount = Window:GetConfigValue("SeedsToPlantCount") or 1
+
+            print("Selected Seeds:", selectedSeeds)
+            print("Number of Seeds to Plant:", seedsToPlantCount)
+
+            Plant:PlantSeed(selectedSeeds[1], seedsToPlantCount)
+        end})
+
         accordion:AddToggle({
-            Name = "Auto Ascend",
+            Name = "Enable Auto Planting",
+            Flag = "AutoPlantSeeds",
             Default = false,
-            Flag = "AutoAscend",
-            Tooltip = "Automatically ascend when the option is available.",
+            Callback = function(state)
+               if state then
+                    print("Auto Planting Enabled:", state)
+                    Plant:StartAutoPlanting()
+                else
+                    print("Auto Planting Disabled:", state)
+                end
+            end,
         })
     end
 
-    return m
-end
-
--- Module: auto/crafting.lua
-EmbeddedModules["auto/crafting.lua"] = function()
-    local m = {}
-
-    local Window
-    local Core
-
-    local MachineTypes = {}
-    local CraftingRecipeRegistry
-    local Recipes
-    local CraftingUtil
-    local Plant
-
-    m.StationRepository = {
-        GearEventWorkbench = workspace.CraftingTables.EventCraftingWorkBench,
-        SeedEventCraftingWorkBench = workspace.CraftingTables.SeedEventCraftingWorkBench,
-    }
-
-    function m:Init(window, core, plant)
-        Window = window
-        Core = core
-        Plant = plant
-
-        CraftingRecipeRegistry = require(Core.ReplicatedStorage.Data.CraftingData.CraftingRecipeRegistry)
-        Recipes = CraftingRecipeRegistry.ItemRecipes
-        CraftingUtil = require(Core.ReplicatedStorage.Modules.CraftingService.CraftingGlobalObjectService)
-
-        self:InitCraftingRecipes()
-
-        Core:MakeLoop(
-            function()
-                return Window:GetConfigValue("AutoCraftingGear")
-            end, 
-            function()
-                self:CraftingController( 
-                    self.StationRepository.GearEventWorkbench,
-                    Window:GetConfigValue("CraftingGearItem")
-                )
-            end
-        )
-
-        Core:MakeLoop(
-            function()
-                return Window:GetConfigValue("AutoCraftingSeeds")
-            end, 
-            function()
-                self:CraftingController( 
-                    self.StationRepository.SeedEventCraftingWorkBench,
-                    Window:GetConfigValue("CraftingSeedItem")
-                )
-            end
-        )
-    end
-
-    function m:GetCraftingObjectType(craftingStation)
-        return craftingStation:GetAttribute("CraftingObjectType")
-    end 
-
-    function m:InitCraftingRecipes()
-        if #MachineTypes > 0 then
-            return MachineTypes
-        end
-
-        MachineTypes = CraftingRecipeRegistry.RecipiesSortedByMachineType or {}
-
-        return MachineTypes
-    end
-
-    function m:GetMachineTypes()
-        local machineTypes =  {}
-
-        for machineType, _ in pairs(MachineTypes) do
-            table.insert(machineTypes, machineType)
-        end
-
-        return machineTypes
-    end
-
-    function m:GetAllCraftingItems(craftingStation)
-        local machineType = self:GetCraftingObjectType(craftingStation)
-        local craftingItems = {}
-
-        for item, _ in pairs(MachineTypes[machineType] or {}) do
-            table.insert(craftingItems, item)
-        end
-
-        -- Sort the crafting items alphabetically
-        table.sort(craftingItems)
-
-        return craftingItems
-    end
-
-    function m:GetCraftingData(craftingStation, craftingItem)
-        local machineType = self:GetCraftingObjectType(craftingStation)
-        local data = {}
-
-        for items, detail in pairs(MachineTypes[machineType] or {}) do
-            if items == craftingItem then
-                table.insert(data, detail)
-                break
-            end
-        end
-
-        return data
-    end
-
-    function m:GetCraftingRecipes(craftingStation, craftingItem)
-        local craftingData = self:GetCraftingData(craftingStation, craftingItem)
-        local craftingInputs = {}
-        local recipes = {}
-
-        if #craftingData == 0 then
-            return recipes
-        end
-
-        for _, detail in pairs(craftingData) do
-            if type(detail) == "table" and detail.Inputs then
-                for _, input in pairs(detail.Inputs) do
-                    table.insert(craftingInputs, input)
-                end
-                continue
-            end
-        end
-
-        for i, input in pairs(craftingInputs) do
-            local dataItems
-            table.insert(recipes, input)
-        end
-
-        return recipes
-    end
-
-    function m:GetCraftingStationStatus(craftingStation)
-        local data = CraftingUtil:GetIndividualCraftingMachineData(craftingStation, self:GetCraftingObjectType(craftingStation))
-        if not data or not data.RecipeId then
-            return "Idle"
-        end
-
-        local unsubmittedItems = self:GetUnsubmittedItems(craftingStation)
-        if #unsubmittedItems > 0 then
-            return "Waiting for Item"
-        end
-
-        local craftingItem = data.CraftingItems and data.CraftingItems[1]
-        if craftingItem then
-            if craftingItem.IsDone then
-                return "Ready to Claim"
-            else
-                return "On Progress"
-            end
-        end
-
-        return "Ready to Start"
-    end
-
-    function m:SetRecipe(craftingStation, craftingItem)
-        if not craftingStation or not craftingItem then
-            return
-        end
-
-        Core.GameEvents.CraftingGlobalObjectService:FireServer(
-            "SetRecipe",
-            craftingStation,
-            self:GetCraftingObjectType(craftingStation),
-            craftingItem
-        )
-    end
-
-    function m:SubmitCraftingRequest(craftingStation)
-        local craftingHandler = require(Core.ReplicatedStorage.Modules.CraftingStationHandler)
-
-        local success, error = pcall(function() 
-            craftingHandler:SubmitAllRequiredItems(craftingStation) 
-        end)
-
-        if not success then
-            warn("Error submitting crafting request:", error)
-            return
-        end
-
-        local unsubmittedItems = self:GetUnsubmittedItems(craftingStation)
-
-        if #unsubmittedItems == 0 then
-            return
-        end
-
-        local needFruits = {}
-        for _, item in pairs(unsubmittedItems) do
-            if item.ItemType == "Holdable" then
-                table.insert(needFruits, item.ItemData.ItemName)
-            end
-        end
-
-        if #needFruits == 0 then
-            return
-        end
-
-        for _, fruit in pairs(needFruits) do
-            local plants = Plant:FindPlants(fruit) or {}
-
-            if #plants == 0 then
-                continue
-            end
-
-            for _, plant in pairs(plants) do
-                local plantDetail = Plant:GetPlantDetail(plant)
-                local successHarvest
-                if not plantDetail or #plantDetail.fruits == 0 then
-                    continue
-                end
-
-                for _, harvestingFruit in pairs(plantDetail.fruits) do
-                    if not harvestingFruit.isEligibleToHarvest then
-                        continue
-                    end
-
-                    successHarvest = pcall(function()
-                        Plant:HarvestFruit(harvestingFruit.model)
-                    end)
-                end
-
-                if successHarvest then
-                    break
-                end
-            end
-        end
-    end
-
-    function m:StartCrafting(craftingStation)
-        local unsubmittedItems = self:GetUnsubmittedItems(craftingStation)
-
-        if #unsubmittedItems > 0 then
-            return
-        end
-
-        local OpenRecipeEvent = Core.GameEvents.OpenRecipeBindableEvent
-
-        local success, error = pcall(function()
-            Core.GameEvents.CraftingGlobalObjectService:FireServer(
-                "Craft",
-                craftingStation,
-                self:GetCraftingObjectType(craftingStation)
-            )
-        end)
-
-        if not success then
-            warn("Error starting crafting:", error)
-            return
-        end
-    end
-
-    function m:CraftingController(craftingStation, craftingItem)
-        if not craftingStation or not craftingItem then
-            return
-        end
-
-        if self:GetCraftingStationStatus(craftingStation) == "Idle" then
-            self:SetRecipe(craftingStation, craftingItem)
-            task.wait(0.5) -- Wait for 0.5 seconds to allow the station to update its status
-        end
-
-        while self:GetCraftingStationStatus(craftingStation) == "Waiting for Item" do
-            self:SubmitCraftingRequest(craftingStation)
-
-            wait(5) -- Wait for 5 seconds before checking again
-        end
-
-        if  self:GetCraftingStationStatus(craftingStation) == "Ready to Start" then
-            self:StartCrafting(craftingStation)
-            task.wait(0.5) -- Wait for 0.5 seconds to allow the crafting process to start
-        end
-
-        while self:GetCraftingStationStatus(craftingStation) == "On Progress" do
-            wait(5) -- Wait for 5 seconds before checking again
-        end
-
-        if self:GetCraftingStationStatus(craftingStation) == "Ready to Claim" then
-            local success, error = pcall(function()
-                Core.GameEvents.CraftingGlobalObjectService:FireServer(
-                    "Claim",
-                    craftingStation,
-                    self:GetCraftingObjectType(craftingStation),
-                    1
-                )
-            end)
-
-            if not success then
-                warn("Error claiming crafted item:", error)
-                return
-            end
-
-            task.wait(0.5) -- Wait for 0.5 seconds to allow the
-        end
-    end
-
-    function m:GetSubmittedItems(craftingStation)
-    	local machineData = CraftingUtil:GetIndividualCraftingMachineData(craftingStation, self:GetCraftingObjectType(craftingStation))
-        local submittedItems = {}
-
-        if not (machineData and machineData.RecipeId) then
-    		return submittedItems
-    	end
-
-        if not Recipes[machineData.RecipeId] then
-    		return submittedItems
-    	end
-
-        for item, _ in machineData.InputItems do
-    		submittedItems[tostring(item)] = true
-    	end
-
-        return submittedItems
-    end
-
-    function m:GetUnsubmittedItems(craftingStation)
-        local submitted = self:GetSubmittedItems(craftingStation)
-        local machineData = CraftingUtil:GetIndividualCraftingMachineData(craftingStation, self:GetCraftingObjectType(craftingStation))
-
-        local recipe = machineData and machineData.RecipeId and Recipes[machineData.RecipeId]
-        local result = {}
-
-        if recipe then
-            for id, input in pairs(recipe.Inputs) do
-                if not submitted[tostring(id)] then
-                    table.insert(result, input)
-                end
-            end
-        end
-
-        return result
-    end
-
-    return m
-end
-
--- Module: inventory/ui.lua
-EmbeddedModules["inventory/ui.lua"] = function()
-    local m = {}
-
-    local Window
-    local Inventory
-    local Pet
-
-    function m:Init(_window, _inventory, _pet)
-        Window = _window
-        Inventory = _inventory
-        Pet = _pet
-    end
-
-    function m:CreateTab()
-        local tab = Window:AddTab({
-            Name = "Inventory",
-            Icon = "🎒"
-        })
-
-        self:AddPetSection(tab)
-    end
-
-    function m:AddPetSection(tab)
+    function m:AddWateringSection(tab)
         local accordion = tab:AddAccordion({
-            Title = "Pets",
-            Icon = "🐶",
+            Title = "Watering",
+            Icon = "💧",
             Expanded = false,
         })
 
         accordion:AddSelectBox({
-            Name = "Select pet name for auto favorite",
-            Options = {"Loading..."},
-            Placeholder = "Select a pet",
-            MultiSelect = true,
-            Flag = "AutoFavoritePetName",
-           OnInit = function(api, optionsData)
-                local specialPets = Pet:GetPetRegistry()
-                optionsData.updateOptions(specialPets)
-            end
+            Name = "Watering Position",
+            Flag = "WateringPosition",
+            Options = {"Growing Plants", "Front Right", "Front Left", "Back Right", "Back Left"},
+            Default = "Front Right",
+            MultiSelect = false,
+            Placeholder = "Select position...",
         })
 
         accordion:AddNumberBox({
-            Name = "Or If Weight Is Higher Than Or Equal To",
-            Placeholder = "Enter weight...",
-            Default = 0.0,
-            Min = 0.0,
-            Max = 20.0,
-            Increment = 1.0,
-            Decimals = 2,
-            Flag = "AutoFavoritePetWeight",
-        })
-
-        accordion:AddNumberBox({
-            Name = "Or If Age Is Higher Than Or Equal To",
-            Placeholder = "Enter age...",
-            Default = 0,
-            Min = 0,
+            Name = "Set the Each Watering",
+            Placeholder = "Enter number of waterings...",
+            Flag = "WateringEach",
+            Min = 1,
             Max = 100,
+            Default = 1,
             Increment = 1,
-            Flag = "AutoFavoritePetAge",
+        })
+
+        accordion:AddNumberBox({
+            Name = "Set the number of waterings delay",
+            Placeholder = "Enter watering delay...",
+            Flag = "WateringDelay",
+            Min = 0,
+            Max = 800,
+            Default = 1,
+            Increment = 1,
         })
 
         accordion:AddToggle({
-            Name = "Auto Favorite Pets",
-            Flag = "AutoFavoritePets",
+            Name = "Enable Auto Watering",
+            Flag = "AutoWateringPlants",
             Default = false,
-            Callback = function(value)
-                if value then
-                    Inventory:FavoriteAllPets()
+            Callback = function(state)
+               if state then
+                    print("Auto Watering Enabled:", state)
+                    Plant:AutoWateringPlants()
+                else
+                    print("Auto Watering Disabled:", state)
                 end
-            end
+            end,
         })
+    end
+
+    function m:AddHarvestingSection(tab)
+        local accordion = tab:AddAccordion({
+            Title = "Harvest",
+            Icon = "🌿",
+            Expanded = false,
+        })
+
+        accordion:AddSelectBox({
+            Name = "Select plants to auto harvest",
+            Flag = "PlantsToHarvest",
+            MultiSelect = true,
+            Placeholder = "Select plants...",
+           OnInit = function(api, optionsData)
+                local plants = Plant:GetPlantRegistry()
+                local formattedPlants = {}
+                for _, plantData in pairs(plants) do
+                    table.insert(formattedPlants, {
+                        text = plantData.plant,
+                        value = plantData.plant,
+                    })
+                end
+                optionsData.updateOptions(formattedPlants)
+            end,
+        })
+
+        accordion:AddToggle({
+            Name = "Auto Harvest Plants 🌿",
+            Default = false,
+            Flag = "AutoHarvestPlants",
+            Callback = function(Value)
+                if Value then
+                    Plant:StartAutoHarvesting()
+                end
+            end,
+        })
+    end
+
+    function m:AddMovingSection(tab)
+        local accordion = tab:AddAccordion({
+            Title = "Move Plants",
+            Icon = "🚜",
+            Expanded = false,
+        })
+
+        accordion:AddSelectBox({
+            Name = "Select plant to move",
+            Flag = "PlantToMove",
+            MultiSelect = false,
+            Placeholder = "Select plant...",
+           OnInit = function(api, optionsData)
+                local plants = Plant:GetPlantRegistry()
+                local formattedPlants = {}
+                for _, plantData in pairs(plants) do
+                    table.insert(formattedPlants, {
+                        text = plantData.plant,
+                        value = plantData.plant,
+                    })
+                end
+                optionsData.updateOptions(formattedPlants)
+            end,
+        })
+
+        accordion:AddSelectBox({
+            Name = "Select destination",
+            Flag = "MoveDestination",
+            Options = {"Front Right", "Front Left", "Back Right", "Back Left"},
+            Default = "Front Right",
+            MultiSelect = false,
+            Placeholder = "Select destination...",
+        })
+
+        accordion:AddButton({Text = "Move Plant", Callback = function()
+            Plant:MovePlant()
+        end})
     end
 
     return m
 end
 
--- Module: event/ghoul/shop.lua
-EmbeddedModules["event/ghoul/shop.lua"] = function()
+-- Module: shop/shop.lua
+EmbeddedModules["shop/shop.lua"] = function()
     local m = {}
 
-    local Window
     local Core
-    local Shop
-    local ShopUI = "EventShop_UI"
 
-    local ShopData
-    local DataService
-
-    local ShopStockConnection
-
-    m.Merchant = {
-        "Spooky Seeds",
-        "Creepy Critters",
-        "Devilish Decor",
-    }
-
-    function m:Init(_window, _core, _shop)
-        Window = _window
+    function m:Init(_core)
         Core = _core
-        Shop = _shop
-
-        ShopData = require(Core.ReplicatedStorage.Data.EventShopData)
-        DataService = require(Core.ReplicatedStorage.Modules.DataService)
-
-        Core:MakeLoop(
-            function()
-                return Window:GetConfigValue("AutoBuySpookyShop")
-            end, 
-            function()
-                self:StartAutoBuySpookySeeds()
-            end
-        )
-
-        Core:MakeLoop(
-            function()
-                return Window:GetConfigValue("AutoBuyCreepyShop")
-            end, 
-            function()
-                self:StartAutoBuyCreepyCritters()
-            end
-        )
-
-        Core:MakeLoop(
-            function()
-                return Window:GetConfigValue("AutoBuyDevilishShop")
-            end, 
-            function()
-                self:StartAutoBuyDevilishDecor()
-            end
-        )
     end
 
-    function m:GetItemRepository(merchant)
-        return ShopData[merchant] or {}
+    function m:ConnectToStock(item, buyFunction)
+         task.wait(0.1)
+        local mainFrame = item:FindFirstChild("Main_Frame")
+        if not mainFrame then return end
+
+        local stockText = mainFrame:FindFirstChild("Stock_Text")
+        if not stockText then return end
+
+        print("Connecting to stock changes for", item.Name)
+
+        local connection = stockText:GetPropertyChangedSignal("Text"):Connect(function()
+            print("Stock changed for", item.Name, "New stock:", stockText.Text)
+            local stock = tonumber(stockText.Text:match("%d+"))
+            if stock and stock > 0 then
+                pcall(buyFunction)
+            end
+        end)
+
+        return connection
     end
 
-    function m:GetDetailItem(merchant, itemName)
-        local items = self:GetItemRepository(merchant)
-        return items[itemName] or nil
-    end
-
-    function m:GetStock(shopName, itemName)
-        local shopData = DataService:GetData()
-        local stock = 0
-        if not shopData then
-            return stock
+    function m:GetListItems(_shopUI)
+        local shopUI = Core:GetPlayerGui():FindFirstChild(_shopUI)
+        if not shopUI then
+            warn("Shop UI not found")
+            return nil
         end
 
-        stock = shopData.EventShopStock[shopName].Stocks[itemName] or 0
-
-        if type(stock) ~= "number" then
-            return stock.Stock or 0
+        local Items = shopUI.Frame.ScrollingFrame:GetChildren()
+        if not Items then
+            warn("Item frame not found in Shop")
+            return nil
         end
 
-        return stock
+        local listItems = {}
+        for _, item in pairs(Items) do
+            if item:FindFirstChild("Main_Frame") then
+                table.insert(listItems, item)
+            end
+        end
+
+        return listItems
     end
 
-    function m:GetAvailableItems(merchant)
-        local items = self:GetItemRepository(merchant)
+    function m:GetItemDetail(_item)
+        if not _item then
+            warn("Invalid item")
+            return nil
+        end
+
+        local mainFrame = _item:FindFirstChild("Main_Frame")
+        if not mainFrame then
+            warn("Main frame not found in item")
+            return nil
+        end
+
+        local priceText = mainFrame:FindFirstChild("Price_Text")
+        if not priceText then
+            warn("Price text not found in item")
+            return nil
+        end
+
+        local stockText = mainFrame:FindFirstChild("Stock_Text")
+        if not stockText then
+            warn("Stock text not found in item")
+            return nil
+        end
+
+        local name = _item.Name
+        local price = tonumber(priceText.Text:match("%d+"))
+        local stock = tonumber(stockText.Text:match("%d+"))
+
+        return {
+            Name = name,
+            Price = price,
+            Stock = stock
+        }
+    end
+
+    function m:GetUIItem(_shopUI, _itemName)
+       local shopUI = Core:GetPlayerGui():FindFirstChild(_shopUI)
+        if not shopUI then
+            warn("Shop UI not found")
+            return nil
+        end
+
+        local Item = shopUI:FindFirstChild(_itemName, true)
+        if not Item then
+            warn("Item frame not found in Shop")
+            return nil
+        end
+
+        return Item
+    end
+
+    function m:GetAvailableItems(_shopUI)
         local availableItems = {}
+        if not _shopUI then
+            warn("Invalid shop UI")
+            return availableItems
+        end
 
-        for itemName, _ in pairs(items) do
-            local stock = self:GetStock(merchant, itemName) or 0 or 0
-            if stock > 0 then
-                table.insert(availableItems, itemName)
-            end
+        local shopUI = Core:GetPlayerGui():FindFirstChild(_shopUI)
+        if not shopUI then
+            warn("Shop UI not found")
+            return availableItems
+        end
+
+        local items = shopUI.Frame.ScrollingFrame:GetChildren()
+        if not items then
+            warn("No items found in the shop UI")
+            return availableItems
+        end
+
+        for _, Item in pairs(items) do
+            local MainFrame = Item:FindFirstChild("Main_Frame")
+            if not MainFrame then continue end
+
+            local StockText = MainFrame.Stock_Text.Text
+            local StockCount = tonumber(StockText:match("%d+"))
+
+            availableItems[Item.Name] = StockCount
         end
 
         return availableItems
     end
 
-    function m:StartAutoBuySpookySeeds()
-        if not Window:GetConfigValue("AutoBuySpookyShop") then
-            return
-        end
-
-        local merchant = "Spooky Seeds"
-        local itemNames = Window:GetConfigValue("SpookyShopItem")
-        if not itemNames or #itemNames == 0 then
-            warn("No items selected for auto-buy")
-            return
-        end
-
-        for _, itemName in ipairs(itemNames) do
-            local stock = self:GetStock(merchant, itemName) or 0
-
-            if stock <= 0 then
-                continue
-            end
-
-            for i = 1, stock do
-                Core.GameEvents.BuyEventShopStock:FireServer(itemName, merchant)
-            end
-        end
-    end
-
-    function m:StartAutoBuyCreepyCritters()
-        if not Window:GetConfigValue("AutoBuyCreepyShop") then
-            return
-        end
-
-        local merchant = "Creepy Critters"
-        local itemNames = Window:GetConfigValue("CreepyShopItem")
-        if not itemNames or #itemNames == 0 then
-            warn("No items selected for auto-buy")
-            return
-        end
-
-        for _, itemName in ipairs(itemNames) do
-            local stock = self:GetStock(merchant, itemName) or 0
-
-            if stock <= 0 then
-                continue
-            end
-
-            for i = 1, stock do
-                Core.GameEvents.BuyEventShopStock:FireServer(itemName, merchant)
-            end
-        end
-    end
-
-    function m:StartAutoBuyDevilishDecor()
-        if not Window:GetConfigValue("AutoBuyDevilishShop") then
-            return
-        end
-
-        local merchant = "Devilish Decor"
-        local itemNames = Window:GetConfigValue("DevilishShopItem")
-        if not itemNames or #itemNames == 0 then
-            warn("No items selected for auto-buy")
-            return
-        end
-
-        for _, itemName in ipairs(itemNames) do
-            local stock = self:GetStock(merchant, itemName) or 0
-
-            if stock <= 0 then
-                continue
-            end
-
-            for i = 1, stock do
-                Core.GameEvents.BuyEventShopStock:FireServer(itemName, merchant)
-            end
-        end
-    end
-
     return m
 end
 
--- Module: ../module/discord.lua
-EmbeddedModules["../module/discord.lua"] = function()
-    local m = {}
-    local HttpService = game:GetService("HttpService")
-
-    function m:SendMessage(webhookUrl, data)
-        -- Mencari fungsi request yang tersedia dari berbagai executor
-        local requestFunction = request or
-                               (syn and syn.request) or
-                               (http and http.request) or
-                               (fluxus and fluxus.request) or
-                               http_request
-
-        -- Jika tidak ada fungsi request yang tersedia, keluar dari fungsi
-        if not requestFunction then
-            return
-        end
-
-        -- Mengubah data menjadi format JSON
-        local jsonData = HttpService:JSONEncode(data)
-
-        -- Menyiapkan headers untuk request
-        local headers = {
-            ['Content-Type'] = "application/json"
-        }
-
-        -- Mengirim POST request ke webhook
-        local success, err = pcall(function()
-            task.spawn(requestFunction, {
-                Url = webhookUrl,
-                Body = jsonData,
-                Method = 'POST',
-                Headers = headers
-            })
-        end)
-
-        if success then
-            print("Discord webhook sent successfully.")
-        else
-            warn("Failed to send Discord webhook:", err)
-        end
-    end
-
-    return m
-
-end
-
--- Module: server/ui.lua
-EmbeddedModules["server/ui.lua"] = function()
-    local m = {}
-    local Window
-    local Core
-    local Player
-    local Garden
-
-    function m:Init(_window, _core, _player, _garden)
-        Window = _window
-        Core = _core
-        Player = _player
-        Garden = _garden
-    end
-
-    function m:CreateServerTab()
-        local tab = Window:AddTab({
-            Name = "Server",
-            Icon = "🌐",
-        })
-
-        tab:AddButton({Text = "Rejoin Server 🔄", Callback = function()
-            Core:Rejoin()
-        end})
-
-        tab:AddButton({Text = "Hop Server 🚀", Callback = function()
-            Core:HopServer()
-        end})
-    end
-
-    return m
-end
-
--- Module: shop/seed.lua
-EmbeddedModules["shop/seed.lua"] = function()
+-- Module: pet/webhook.lua
+EmbeddedModules["pet/webhook.lua"] = function()
     local m = {}
 
     local Window
     local Core
-    local Shop
+    local Discord
 
-    local Connections
-    local ShopUI = "Seed_Shop"
-    local ShopItem = "Carrot"
+    local PlayerName
+    local LastHatchTime = 0
+    local HatchCount = 0
+    local HatchTotal = 0
+    local InitialStockEgg = {}
 
-    function m:Init(_window, _core, _shop)
+    function m:Init(_window, _core, _discord)
         Window = _window
         Core = _core
-        Shop = _shop
+        Discord = _discord
 
-        _core:MakeLoop(function()
-            return Window:GetConfigValue("AutoBuySeeds")
-        end, function()
-            self:BuyAllSeeds()
-        end)
+        PlayerName = Core.LocalPlayer.Name or "Unknown"
+        LastHatchTime = tick()
     end
 
-    function m:BuySeed(seedName)
-        if not seedName or seedName == "" then
-            warn("Invalid seed name")
+    function m:HatchEgg(_petName, _eggName, _baseWeight)
+        local url = Window:GetConfigValue("DiscordWebhookURL") or ""
+        local pingId = Window:GetConfigValue("DiscordPingID") or ""
+        if url == "" then
             return
         end
 
-        Core.GameEvents.BuySeedStock:FireServer("Tier 1", seedName)
-    end
-
-    function m:BuyAllSeeds()
-        local items = Shop:GetAvailableItems(ShopUI)
-
-        for seedName, stock in pairs(items) do
-            if stock and stock < 1 then
-                continue
-            end
-
-            for i = 1, stock do
-                self:BuySeed(seedName)
-                task.wait(0.1)
-            end
-        end
-    end
-
-    function m:StartSeedAutomation()
-        if not Window:GetConfigValue("AutoBuySeeds") then
-            return
-        end
-
-        self:BuyAllSeeds()
-
-        if Connections then
-            for _, conn in pairs(Connections) do
-                conn:Disconnect()
-            end
-            Connections = nil
-        end
-
-        Connections = {}
-        for _, item in pairs(Shop:GetListItems(ShopUI)) do
-            local conn = Shop:ConnectToStock(item, function()
-                if Window:GetConfigValue("AutoBuySeeds") then
-                    return
-                end
-
-                self:BuyAllSeeds()
-            end)
-            table.insert(Connections, conn)
-        end
-    end
-
-    function m:StopSeedAutomation()
-        if Connections then
-            for _, conn in pairs(Connections) do
-                conn:Disconnect()
-            end
-            Connections = nil
-        end
-    end
-
-    return m
-end
-
--- Module: auto/ui.lua
-EmbeddedModules["auto/ui.lua"] = function()
-    local m = {}
-
-    local Window
-    local Core
-    local Crafting
-
-
-    function m:Init(_window, _core, _crafting)
-        Window = _window
-        Core = _core
-        Crafting = _crafting
-
-        local tab = Window:AddTab({
-            Name = "AutoMation",
-            Icon = "🔧",
-        })
-
-        self:CraftingGearSection(tab)
-        self:CraftingSeedSection(tab)
-    end
-
-    function m:CraftingGearSection(tab)
-        local accordion = tab:AddAccordion({
-            Title = "Crafting Gear",
-            Icon = "⚙️",
-            Default = false,
-        })
-
-        accordion:AddSelectBox({
-            Name = "Crafting Item ⚙️",
-            Options = {"loading ..."},
-            Placeholder = "Select Crafting Item",
-            Flag = "CraftingGearItem",
-            OnInit =  function(api, optionsData)
-                local craftingItems = Crafting:GetAllCraftingItems(Crafting.StationRepository.GearEventWorkbench)
-
-                optionsData.updateOptions(craftingItems)
-            end
-        })
-
-        accordion:AddToggle({
-            Name = "Auto Crafting Gear ⚙️",
-            Default = false,
-            Flag = "AutoCraftingGear",
-        })
-    end
-
-    function m:CraftingSeedSection(tab)
-        local accordion = tab:AddAccordion({
-            Title = "Crafting Seeds",
-            Icon = "🌱",
-            Default = false,
-        })
-
-        accordion:AddSelectBox({
-            Name = "Crafting Item 🌱",
-            Options = {"loading ..."},
-            Placeholder = "Select Crafting Item",
-            Flag = "CraftingSeedItem",
-            OnInit =  function(api, optionsData)
-                local craftingItems = Crafting:GetAllCraftingItems(Crafting.StationRepository.SeedEventCraftingWorkBench)
-
-                optionsData.updateOptions(craftingItems)
-            end
-        })
-
-        accordion:AddToggle({
-            Name = "Auto Crafting Seeds 🌱",
-            Default = false,
-            Flag = "AutoCraftingSeeds",
-        })
-    end
-
-    return m
-end
-
--- Module: farm/plant.lua
-EmbeddedModules["farm/plant.lua"] = function()
-    local m = {}
-    local Window
-    local Core
-    local Player
-    local Garden
-    local PlantsPhysical
-
-    function m:Init(_window, _core, _player, _garden)
-        Window = _window
-        Core = _core
-        Player = _player
-        Garden = _garden
-
-        local myGarden = Garden:GetMyFarm()
-        if not myGarden then
-            warn("Failed to find player's garden")
-            return
-        end
-
-        local important = myGarden:FindFirstChild("Important")
-        PlantsPhysical = important:FindFirstChild("Plants_Physical")  
-
-        _core:MakeLoop(function()
-            return Window:GetConfigValue("AutoPlantSeeds")
-        end, function()
-            self:StartAutoPlanting()
-        end)
-
-        _core:MakeLoop(function()
-            return Window:GetConfigValue("AutoWateringPlants")
-        end, function()
-            self:AutoWateringPlants()
-        end)
-
-        _core:MakeLoop(function()
-            return Window:GetConfigValue("AutoHarvestPlants")
-        end, function()
-            self:StartAutoHarvesting()
-        end)
-    end
-
-    function m:GetPlantRegistry()
-        local success, seedRegistry = pcall(function()
-            return require(Core.ReplicatedStorage.Data.SeedData)
-        end)
-
-        if not success then
-            warn("Failed to get seed registry:", seedRegistry)
-            return {}
-        end
-
-        if not seedRegistry then
-            warn("SeedData is nil or not found")
-            return {}
-        end
-
-       -- Convert SeedData to UI format {text = ..., value = ...}
-        local formattedSeeds = {}
-        for seedName, seedData in pairs(seedRegistry) do
-            table.insert(formattedSeeds, {
-                seed = seedData.SeedName or seedName,
-                plant = seedName,
-                rarity = seedData.SeedRarity or "Unknown",
-            })
-        end
-
-        -- Sort seeds alphabetically (ascending order) - Safe for all executors
-        if #formattedSeeds > 0 then
-            table.sort(formattedSeeds, function(a, b)
-                if not a or not b or not a.plant or not b.plant then
-                    return false
-                end
-                return string.lower(tostring(a.plant)) < string.lower(tostring(b.plant))
-            end)
-        end
-
-        return formattedSeeds
-    end
-
-    function m:PlantSeed(_seedName, _numToPlant, _plantingPosition)
-        if not _seedName or type(_seedName) ~= "string" then
-            warn("FarmUtils:PlantSeed - Invalid seed name")
-            return false
-        end
-
-        if #PlantsPhysical:GetChildren() >= 800 then
-            return false
-        end
-
-        local tool
-        local toolQuantity = 0
-
-        for _, t in next, Player:GetAllTools() do
-            local toolType = t:GetAttribute("b")
-            local toolSeed = t:GetAttribute("Seed")
-            if toolType == "n" and toolSeed == _seedName then
-                tool = t
-                toolQuantity = t:GetAttribute("Quantity") or 0
-                break
-            end
-        end
-
-        if toolQuantity < _numToPlant then
-            _numToPlant = toolQuantity
-        end
-
-        if not tool then
-            print("No seed tool found for seed:", _seedName)
-
-            return false
-        end
-
-        local position = Garden:GetFarmRandomPosition()
-        if _plantingPosition == "Front Right" then
-            position = Garden:GetFarmFrontRightPosition()
-        elseif _plantingPosition == "Front Left" then
-            position = Garden:GetFarmFrontLeftPosition()
-        elseif _plantingPosition == "Back Right" then
-            position = Garden:GetFarmBackRightPosition()
-        elseif _plantingPosition == "Back Left" then
-            position = Garden:GetFarmBackLeftPosition()
-        end
-        if not position then
-            warn("Failed to get farm position for planting")
-            return false
-        end
-
-        local plantTask = function(_numToPlant, _seedName, _position)
-            for i = 1, _numToPlant do
-                if #PlantsPhysical:GetChildren() >= 800 then
-                    break
-                end            
-                Core.GameEvents.Plant_RE:FireServer(_position, _seedName)
-                -- Small delay between planting actions
-                task.wait(0.15)
-            end
-        end
-
-        Player:AddToQueue(
-            tool,       -- tool
-            3,          -- priority (medium)
-            function()
-                plantTask(_numToPlant, _seedName, position)
-            end
+        local weightStatus = (
+            (_baseWeight >= 9 and "Godly") or
+            (_baseWeight >= 8 and _baseWeight < 9 and "Titanic") or
+            (_baseWeight >= 3 and _baseWeight < 8 and "Huge") or
+            "Small"
         )
-    end
 
-    function m:FindPlants(plantName)
-        if not plantName or type(plantName) ~= "string" then
-            warn("Invalid plant name")
-            return nil
-        end
-
-        if not PlantsPhysical then
-            warn("PlantsPhysical not found")
-            return nil
-        end
-
-        local foundPlants = {}
-        for _, plant in pairs(PlantsPhysical:GetChildren()) do
-            if plant.Name == plantName then
-                table.insert(foundPlants, plant)
-            end
-        end
-
-        return #foundPlants > 0 and foundPlants or nil
-    end
-
-    function m:StartAutoPlanting()
-        local seedsToPlant = Window:GetConfigValue("SeedsToPlant") or {}
-        local seedToPlantCount = Window:GetConfigValue("SeedsToPlantCount") or 1
-        local plantingPosition = Window:GetConfigValue("PlantingPosition") or "Random"
-
-        -- Cache plant count once at the beginning
-        if #PlantsPhysical:GetChildren() >= 800 then
-            task.wait(30) -- Much longer wait when farm is full
-            return
-        end
-
-        local plantsNeeded = false
-
-        for _, seedName in pairs(seedsToPlant) do
-            if #PlantsPhysical:GetChildren() >= 800 then
-                break
-            end
-            local existingPlants = self:FindPlants(seedName) or {}
-            local numExisting = #existingPlants
-            local numToPlant = math.max(0, seedToPlantCount - numExisting)
-
-            if numToPlant > 0 then
-                self:PlantSeed(seedName, numToPlant, plantingPosition)
-                plantsNeeded = true
-            end
-        end
-
-        if not plantsNeeded then
-            task.wait(60) -- Much longer wait when nothing to do
-        else
-            task.wait(15) -- Moderate wait when work was done
-        end
-    end
-
-    function m:AutoWateringPlants()
-        local wateringCan
-        local wateringDelay = Window:GetConfigValue("WateringDelay") or 2
-        local wateringEach = Window:GetConfigValue("WateringEach") or 5
-        local wateringPosition = Window:GetConfigValue("WateringPosition") or "Front Right"
-        local position = Garden:GetFarmRandomPosition()
-
-        for _, Tool in next, Player:GetAllTools() do
-            local toolType = Tool:GetAttribute("b")
-            if toolType == "o" then
-                wateringCan = Tool
-                break
-            end
-        end
-
-        if not wateringCan then
-            warn("No watering can found in inventory")
-            return
-        end
-
-        local growingPlants = self:GetAllGrowingPlants()
-        if #growingPlants < 1 then
-            task.wait(10) -- Wait before checking again
-            return
-        end
-
-        local tasks = Player:GetTaskByTool(wateringCan)
-        if tasks and #tasks > 0 then
-            task.wait(10)
-            return
-        end
-
-        if wateringPosition == "Growing Plants" then
-            position = growingPlants[1]:GetPivot().Position
-        elseif wateringPosition == "Front Right" then
-            position = Garden:GetFarmFrontRightPosition()
-        elseif wateringPosition == "Front Left" then
-            position = Garden:GetFarmFrontLeftPosition()
-        elseif wateringPosition == "Back Right" then
-            position = Garden:GetFarmBackRightPosition()
-        elseif wateringPosition == "Back Left" then
-            position = Garden:GetFarmBackLeftPosition()
-        end
-
-        local wateringTask = function(position, each)
-            local watered = 0
-
-            for i = 1, each do
-                local success = pcall(function()
-                    Core.GameEvents.Water_RE:FireServer(Vector3.new(position.X, 0, position.Z))
-                end)
-
-                if success then
-                    watered = watered + 1
-                end
-
-                task.wait(1.5) -- Slightly longer delay to reduce server load
-            end
-
-            task.wait(0.5) -- Longer final wait
-        end
-
-
-        Player:AddToQueue(
-            wateringCan,   -- tool
-            99,             -- priority (very low)
-            function()
-                wateringTask(position, wateringEach)
-            end
-        )
-        task.wait(math.max(wateringDelay, 5)) -- Minimum 5 second delay
-    end
-
-    function m:EligibleToHarvest(plant)    
-        local Prompt = plant:FindFirstChild("ProximityPrompt", true)
-        if not Prompt then return false end
-        if not Prompt.Enabled then return false end
-
-        return true
-    end
-
-    function m:GetAllGrowingPlants()
-        if not PlantsPhysical then
-            warn("PlantsPhysical not found")
-            return {}
-        end
-
-        local growingPlants = {}
-        for _, plant in pairs(PlantsPhysical:GetChildren()) do
-            local prompt = plant:FindFirstChild("ProximityPrompt", true)
-            if not prompt then
-                table.insert(growingPlants, plant)
-            end
-        end
-
-        return growingPlants
-    end
-
-    function m:IsMaxInventory()
-        local character = Core.LocalPlayer
-        local backpack = Core:GetBackpack()
-        if not character or not backpack then
-            warn("FarmUtils:IsMaxFruitInventory - Character or Backpack not found")
-            return false
-        end
-
-        local bonusBackpack = character:GetAttribute("BonusBackpackSize") or 0
-        local maxCapacity = 200 + bonusBackpack
-        local currentItems = 0
-
-        for _, item in pairs(backpack:GetChildren()) do
-            if item:GetAttribute("b") == "j" then
-                currentItems = currentItems + 1
-            end
-        end
-
-        return currentItems >= maxCapacity
-    end
-
-    function m:GetFruitPlant(plan)
-        local fruits = {}
-
-        for _, child in pairs(plan.Fruits:GetChildren()) do
-            table.insert(fruits, child)
-        end
-
-        return fruits
-    end
-
-    function m:GetPlantDetail(_plant)
-        if not _plant or not _plant:IsA("Model") then
-            warn("Invalid plant")
-            return nil
-        end
-
-        local prompt = _plant:FindFirstChild("ProximityPrompt", true)
-        local parentFruit = prompt and prompt.Parent.Parent.Parent
-        local fruits = {}
-
-        if not prompt or not parentFruit then
-            -- No prompt means not ready to harvest, so no fruits
-            fruits = {}
-        elseif parentFruit and parentFruit.Name == "Fruits" then
-            for _, fruit in pairs(parentFruit:GetChildren()) do
-                table.insert(fruits, fruit)
-            end
-        else
-            fruits = { _plant }
-        end
-
-        local doneGrowTime = _plant:GetAttribute("DoneGrowTime") or math.huge
-
-        local detail = {
-            name = _plant.Name or "Unknown",
-            position = _plant:GetPivot().Position or Vector3.new(0,0,0),
-            isGrowing = not prompt or false,
-            fruits = {},
+        local message = {
+            content = pingId ~= "" and ("<@"..pingId..">") or nil,
+            embeds = {{
+                title = "**EzGarden**",
+                type = 'rich',
+                color = tonumber("0xfa0c0c"),
+                fields = {{
+                    name = '**Profile : ** \n',
+                    value = '> Username : ||'..PlayerName.."||",
+                    inline = false
+                }, {
+                    name = "**Hatched : **",
+                    value = "> Pet Name: ``".._petName.."``"..
+                           "\n> Hatched From: ``"..(_eggName or"N/A").."``"..
+                           '\n> Weight: ``'..(tostring(_baseWeight).." KG" or 'N/A')..'``'..
+                           "\n> Weight Status: ``"..weightStatus.."``",
+                    inline = false
+                }}
+            }}
         }
 
-        for _, fruit in pairs(fruits) do
-            local mutations = {}
-
-            for attributeName, attributeValue in pairs(fruit:GetAttributes()) do
-                if attributeValue == true then
-                    table.insert(mutations, attributeName)
-                end
-            end
-
-            table.insert(detail.fruits, {
-                isEligibleToHarvest = self:EligibleToHarvest(fruit),
-                mutations = mutations,
-                model = fruit,
-            })
-        end
-
-        return detail
+        Discord:SendMessage(url, message)
     end
 
-    function m:HarvestFruit(_fruit)
-        if not _fruit or not _fruit:IsA("Model") then
-            warn("Invalid plant or fruit")
-            return false
-        end
-
-        if not self:EligibleToHarvest(_fruit) then
-            return false
-        end
-
-        if self:IsMaxInventory() then
-            return false
-        end
-
-        local success, err = pcall(function()
-            Core.GameEvents.Crops.Collect:FireServer({_fruit})
-        end)
-
-        if not success then
-            warn("Failed to harvest item:", _fruit.Name, "Error:", err)
-            return false
-        end
-
-        return true
-    end
-
-    function m:StartAutoHarvesting()
-        if Window:GetConfigValue("AutoHarvestPlants") ~= true then
-            warn("Auto harvesting is disabled in config")
+    function m:Statistics(_eggName, _amount, _hatchedEgg)
+        local url = Window:GetConfigValue("DiscordWebhookURL") or ""
+        if url == "" then
             return
         end
 
-        if self:IsMaxInventory() then
-            task.wait(10) -- Wait before checking again
-            return
+        if InitialStockEgg[_eggName] == nil then
+            InitialStockEgg[_eggName] = _amount
         end
 
-        local plantsToHarvest = Window:GetConfigValue("PlantsToHarvest") or {}
-        if #plantsToHarvest == 0 then
-            warn("No plants selected for auto harvesting")
-            task.wait(10) -- Wait before checking again
-            return
-        end
+        HatchCount = HatchCount + 1
+        HatchTotal = HatchTotal + _hatchedEgg
 
-        local harvestedCount = 0
-
-        for _, plantName in pairs(plantsToHarvest) do
-            local plants = self:FindPlants(plantName) or {}
-
-            -- Harvest with limits
-            for _, plant in pairs(plants) do
-                if self:IsMaxInventory() then
-                    break
-                end
-
-                local plantDetail = self:GetPlantDetail(plant)
-                if not plantDetail or plantDetail.isGrowing then
-                    continue
-                end
-
-                for _, fruitDetail in pairs(plantDetail.fruits) do
-                    if self:IsMaxInventory() then
-                        break
-                    end
-
-                    if not fruitDetail.isEligibleToHarvest then
-                        continue
-                    end
-
-                    local success = self:HarvestFruit(fruitDetail.model)
-                    if success then
-                        harvestedCount = harvestedCount + 1
-                        task.wait(0.15) -- Small delay between harvests
-                    end
-                end
-            end
-
-            if self:IsMaxInventory() then
-                break
-            end
-        end
-
-        if harvestedCount > 0 then
-            task.wait(0.5) -- Moderate wait after work
-        else
-            task.wait(15) -- Longer wait when nothing to do
-        end
-    end
-
-    function m:MovePlant()
-        local plantToMove = Window:GetConfigValue("PlantToMove")
-        if not plantToMove or type(plantToMove) ~= "string" then
-            warn("Invalid plant selected for moving")
-            return
-        end
-        local moveDestination = Window:GetConfigValue("MoveDestination")
-        if not moveDestination or type(moveDestination) ~= "string" then
-            warn("Invalid move destination selected")
-            return
-        end
-
-        local plants = self:FindPlants(plantToMove) or {}
-
-        if #plants == 0 then
-            warn("No plants found to move")
-            return
-        end
-
-        local position = Garden:GetFarmRandomPosition()
-        if moveDestination == "Front Right" then
-            position = Garden:GetFarmFrontRightPosition()
-        elseif moveDestination == "Front Left" then
-            position = Garden:GetFarmFrontLeftPosition()
-        elseif moveDestination == "Back Right" then
-            position = Garden:GetFarmBackRightPosition()
-        elseif moveDestination == "Back Left" then
-            position = Garden:GetFarmBackLeftPosition()
-        end
-        if not position then
-            warn("Failed to get farm position for moving")
-            return
-        end
-
-        local trowel
-        for _, Tool in next, Player:GetAllTools() do
-            local toolType = Tool:GetAttribute("b")
-            if toolType == "b" then
-                trowel = Tool
-                break
-            end
-        end
-        if not trowel then
-            warn("No trowel found in inventory")
-            return
-        end
-
-        local moveTask = function(plants, position)
-            for _, plant in pairs(plants) do
-                if not plant or not plant:IsA("Model") then
-                    continue
-                end
-
-                local success = pcall(function()
-                    Core.GameEvents.TrowelRemote:InvokeServer(
-                        "Pickup",
-                        trowel,
-                        plant
-                    )
-                end)
-
-                if success then
-                    task.wait(0.5) -- Small delay between moves
-                end
-
-                local successPlace = pcall(function()
-                    Core.GameEvents.TrowelRemote:InvokeServer(
-                        "Place",
-                        trowel,
-                        plant,
-                        CFrame.new(position.X, 0.5, position.Z)
-                    )
-                end)
-
-                if not successPlace then
-                    warn("Failed to place plant:", plant.Name)
-                end
-            end
-        end
-
-        Player:AddToQueue(
-            trowel,     -- tool
-            10,          -- priority (high)
-            function()
-                moveTask(plants, position)
-            end
-        )
-    end
-    return m
-end
-
--- Module: shop/egg.lua
-EmbeddedModules["shop/egg.lua"] = function()
-    local m = {}
-
-    local Window
-    local Core
-    local Shop
-
-    local Connections
-    local ShopUI = "PetShop_UI"
-    local ShopItem = "Common Egg"
-
-    function m:Init(_window, _core, _shop)
-        Window = _window
-        Core = _core
-        Shop = _shop
-
-        _core:MakeLoop(function()
-            return Window:GetConfigValue("AutoBuyEggs")
-        end, function()
-            self:BuyAllEggs()
-        end)
-    end
-
-    function m:BuyEgg(eggName)
-        if not eggName or eggName == "" then
-            warn("Invalid egg name")
-            return
-        end
-
-        Core.GameEvents.BuyPetEgg:FireServer(eggName)
-    end
-
-    function m:BuyAllEggs()
-         local items = Shop:GetAvailableItems(ShopUI)
-
-        for eggName, stock in pairs(items) do
-            if stock < 1 then
-                continue
-            end
-
-            for i = 1, stock do
-                self:BuyEgg(eggName)
-                task.wait(0.1) -- Small delay to avoid spamming
-            end
-        end
-    end
-
-    function m:StartEggAutomation()
-        if not Window:GetConfigValue("AutoBuyEggs") then
-            return
-        end
-
-        self:BuyAllEggs()
-
-        if Connections then
-            for _, conn in pairs(Connections) do
-                conn:Disconnect()
-            end
-            Connections = nil
-        end
-
-        Connections = {}
-        for _, item in pairs(Shop:GetListItems(ShopUI)) do
-            local conn = Shop:ConnectToStock(item, function()
-                if not Window:GetConfigValue("AutoBuyEggs") then
-                    return
-                end
-
-                self:BuyAllEggs()
-            end)
-            table.insert(Connections, conn)
-        end
-    end
-
-    function m:StopEggAutomation()
-        if Connections then
-            for _, conn in pairs(Connections) do
-                conn:Disconnect()
-            end
-            Connections = nil
-        end
-    end
-
-    return m
-end
-
--- Module: ../module/player.lua
-EmbeddedModules["../module/player.lua"] = function()
-    local m = {}
-
-    -- Load Core module with error handling
-    local Core
-    local AntiAFKConnection -- Store the connection reference
-    local ReconnectConnection
-
-    -- Queue system for tool equipping
-    local ToolQueue = {
-        Queue = {},
-        IsProcessing = false,
-        CurrentTask = nil
-    }
-
-    function m:Init(_core)
-        if not _core then
-            error("Player:Init - Core module is required")
-        end
-        Core = _core
-
-        -- Store the connection so we can disconnect it later
-        AntiAFKConnection = Core.LocalPlayer.Idled:Connect(function()
-            Core.VirtualUser:CaptureController()
-            Core.VirtualUser:ClickButton2(Vector2.new())
-            print("Anti-AFK: Clicked to prevent idle kick")
-        end)
-
-        ReconnectConnection = Core.GuiService.ErrorMessageChanged:Connect(function()
-            local IsSingle = #Core.Players:GetPlayers() <= 1
-
-            --// Join a different server if the player is solo
-            if IsSingle then
-                Core:HopServer()
-                return
-            end
-
-            Core:Rejoin()
-        end)
-
-        -- Initialize queue system
-        ToolQueue.Queue = {}
-        ToolQueue.IsProcessing = false
-        ToolQueue.CurrentTask = nil
-    end
-
-    function m:RemoveAntiAFK()
-        -- Disconnect the stored connection
-        if AntiAFKConnection then
-            AntiAFKConnection:Disconnect()
-            AntiAFKConnection = nil
-            print("Anti-AFK: Disconnected idle connection")
-        else
-            print("Anti-AFK: No connection to disconnect")
-        end
-    end
-
-    function m:RemoveReconnect()
-        if ReconnectConnection then
-            ReconnectConnection:Disconnect()
-            ReconnectConnection = nil
-            print("Reconnect: Disconnected error message connection")
-        else
-            print("Reconnect: No connection to disconnect")
-        end
-    end
-
-    -- ===== QUEUE SYSTEM =====
-
-    -- Add task to queue
-    -- tool: Tool object to equip
-    -- priority: Number (lower = higher priority, default = 5)
-    -- taskFunction: Function to execute after tool is equipped (optional)
-    -- callback: Function to call when task is complete (optional)
-    function m:AddToQueue(_tool, _priority, _taskFunction, _callback)
-        _priority = _priority or 5
-
-        if not _tool or not _tool:IsA("Tool") then
-            warn("Player:AddToQueue - Invalid tool provided")
-            if _callback then _callback(false, "Invalid tool") end
-            return false
-        end
-
-        local task = {
-            Id = tick(), -- Unique identifier
-            Tool = _tool,
-            Priority = _priority,
-            TaskFunction = _taskFunction,
-            Callback = _callback,
-            Timestamp = tick()
+        local message = {
+            content = "",
+            embeds = {{
+                title = "**EzGarden**",
+                type = 'rich',
+                color = tonumber("0xFFFF00"),
+                fields = {{
+                    name = '**Profile : ** \n',
+                    value = '> Username : ||'..PlayerName.."||",
+                    inline = false
+                }, {
+                    name = "**Hatch Statistics : **",
+                    value = "> Egg Name: ``"..(_eggName or"N/A").."``"..
+                            '\n> Initial Stock: ``'..(tostring(InitialStockEgg[_eggName]) or 'N/A')..'``'..
+                            '\n> Current Amount: ``'..(tostring(_amount) or 'N/A')..'``'..
+                            '\n> Hatch Count: ``'..(tostring(HatchCount) or 'N/A')..'``'..
+                            '\n> Total Hatched: ``'..(tostring(HatchTotal) or 'N/A')..'``'..
+                            '\n> Duration: ``'..string.format("%d Minutes %d Seconds", math.floor((tick() - LastHatchTime) / 60), math.floor((tick() - LastHatchTime) % 60))..'``',
+                    inline = false
+                }}
+            }}
         }
 
-        -- Insert task into queue
-        table.insert(ToolQueue.Queue, task)
-
-        print("🔧 Added tool to queue:", _tool.Name, "Priority:", _priority, "Queue size:", #ToolQueue.Queue)
-
-        -- Start processing if not already processing
-        if not ToolQueue.IsProcessing then
-            print("🔧 Queue is already processing or empty, skipping...", self:GetQueueStatus())
-
-            self:ProcessQueue()
-        end
-
-        return true
+        LastHatchTime = tick()
+        Discord:SendMessage(url, message)
     end
 
-    -- Process the queue
-    function m:ProcessQueue()
-        if ToolQueue.IsProcessing or #ToolQueue.Queue == 0 then
-            print("🔧 Queue is already processing or empty, skipping...", self:GetQueueStatus())
-            return -- Already processing or queue is empty
+    function m:NightmareMutation(_petType, _remains)
+        local url = Window:GetConfigValue("DiscordWebhookURL") or ""
+        local pingId = Window:GetConfigValue("DiscordPingID") or ""
+        if url == "" then
+            return
         end
 
-        ToolQueue.IsProcessing = true
-
-        while #ToolQueue.Queue > 0 do
-            -- Sort queue by priority and timestamp to ensure correct order
-            table.sort(ToolQueue.Queue, function(a, b)
-                if a.Priority == b.Priority then
-                    return a.Timestamp < b.Timestamp -- Earlier added first
-                end
-                return a.Priority < b.Priority -- Lower priority number first
-            end)
-            local currentTask = table.remove(ToolQueue.Queue, 1) -- Take first (highest priority) task
-            ToolQueue.CurrentTask = currentTask
-
-            print("🔧 Processing tool queue task:", currentTask.Tool.Name)
-
-            -- Equip the tool, ensure it is equipped before proceeding
-            if self:GetEquippedTool() ~= currentTask.Tool then
-                self:EquipTool(currentTask.Tool)
-                task.wait(0.5) -- Small delay to ensure tool is equipped
-            end
-
-            -- Execute task function if provided and wait for completion
-            local success, result = pcall(function()
-                return currentTask.TaskFunction()
-            end)
-
-            if currentTask.Callback then
-                local callbackSuccess, callbackErr = pcall(currentTask.Callback, success, result)
-                if not callbackSuccess then
-                    warn("Callback error for tool:", currentTask.Tool.Name, "Error:", callbackErr)
-                end
-            end
-
-            print("Task execution finished")
-            -- task.wait(0.5)
-            self:UnequipTool() -- Unequip after task
-
-            ToolQueue.CurrentTask = nil
-            task.wait(0.1) -- Small delay between tasks
-        end
-
-        ToolQueue.IsProcessing = false
-        print("🔧 Queue processing completed")
-    end
-
-    -- Get current queue status
-    function m:GetQueueStatus()
-        return {
-            queueSize = #ToolQueue.Queue,
-            isProcessing = ToolQueue.IsProcessing,
-            currentTask = ToolQueue.CurrentTask and ToolQueue.CurrentTask.Tool.Name or nil
+        local message = {
+            content = pingId ~= "" and ("<@"..pingId..">") or nil,
+            embeds = {{
+                title = "**EzGarden**",
+                type = 'rich',
+                color = tonumber("0x8B00FF"),
+                fields = {{
+                    name = '**Profile : ** \n',
+                    value = '> Username : ||'..PlayerName.."||",
+                    inline = false
+                }, {
+                    name = "**Nightmare Mutation : **",
+                    value = "> Pet Type: ``"..(_petType or"N/A").."``"..
+                           "\n> Remains Queue: ``"..(_remains or"N/A").."``",
+                    inline = false
+                }}
+            }}
         }
+        Discord:SendMessage(url, message)
     end
 
-    -- Clear the queue
-    function m:ClearQueue()
-        ToolQueue.Queue = {}
-        ToolQueue.IsProcessing = false
-        ToolQueue.CurrentTask = nil
-        print("🔧 Tool queue cleared")
+    function m:Leveling(_petName, _petLevel, _remains)
+        local url = Window:GetConfigValue("DiscordWebhookURL") or ""
+        if url == "" then
+            return
+        end
+
+        local message = {
+            content = "",
+            embeds = {{
+                title = "**EzGarden**",
+                type = 'rich',
+                color = tonumber("0x00FF00"),
+                fields = {{
+                    name = '**Profile : ** \n',
+                    value = '> Username : ||'..PlayerName.."||",
+                    inline = false
+                }, {
+                    name = "**Pet has reached to level : " ..(_petLevel or"N/A").."**",
+                    value = "> Pet Name: ``"..(_petName or"N/A").."``"..
+                           "\n> Remains: ``"..(_remains or"N/A").."``",
+                    inline = false
+                }}
+            }}
+        }
+        Discord:SendMessage(url, message)
     end
-
-    -- Remove specific task from queue by tool name
-    function m:RemoveFromQueue(_toolName)
-        if not _toolName then return false end
-
-        for i = #ToolQueue.Queue, 1, -1 do
-            if ToolQueue.Queue[i].Tool.Name == _toolName then
-                table.remove(ToolQueue.Queue, i)
-                print("🔧 Removed from queue:", _toolName)
-                return true
-            end
-        end
-
-        return false
-    end
-
-    function m:GetTaskByTool(_tool)
-        local tasks = {}
-        if not _tool then return nil end
-
-        for _, task in ipairs(ToolQueue.Queue) do
-            if task.Tool == _tool then
-                table.insert(tasks, task)
-            end
-        end
-
-        return #tasks > 0 and tasks or nil
-    end
-
-    function m:EquipTool(_tool)
-        -- Validate inputs
-        if not _tool or not _tool:IsA("Tool") then 
-            warn("Player:EquipTool - Invalid tool provided")
-            return false 
-        end
-
-        local humanoid = Core:GetHumanoid()
-        local backpack = Core:GetBackpack()
-
-        if not humanoid then
-            warn("Player:EquipTool - Humanoid not found")
-            return false
-        end
-
-        if not backpack then
-            warn("Player:EquipTool - Backpack not found")
-            return false
-        end
-
-        if _tool.Parent ~= backpack then
-            warn("Player:EquipTool - Tool not in backpack")
-            return false 
-        end
-
-        -- Try to equip with error handling
-        local success, err = pcall(function()
-            humanoid:EquipTool(_tool)
-        end)
-
-        if not success then
-            warn("Player:EquipTool - Failed to equip:", err)
-            return false
-        end
-
-        return true
-    end
-
-    function m:UnequipTool()    
-        local humanoid = Core:GetHumanoid()
-        if not humanoid then
-            warn("Player:UnequipTool - Humanoid not found")
-            return false
-        end
-
-        -- Try to unequip with error handling
-        local success, err = pcall(function()
-            humanoid:UnequipTools()
-        end)
-
-        if not success then
-            warn("Player:UnequipTool - Failed to unequip:", err)
-            return false
-        end
-
-        return true
-    end
-
-    function m:GetEquippedTool()
-        local character = Core:GetCharacter()
-        if not character then 
-            warn("Player:GetEquippedTool - Character not found")
-            return nil 
-        end
-
-        for _, item in ipairs(character:GetChildren()) do
-            if item:IsA("Tool") then
-                return item
-            end
-        end
-
-        return nil
-    end
-
-    function m:MoveToPosition(_position)
-        local humanoid = Core:GetHumanoid()
-        if humanoid then
-            humanoid:MoveTo(_position)
-        else
-            warn("Player:MoveToPosition - Humanoid not found")
-        end
-    end
-
-    function m:TeleportToPosition(_position)
-        local hrp = Core:GetHumanoidRootPart()
-        if hrp then
-            hrp.CFrame = CFrame.new(_position)
-            return true
-        end
-        return false
-    end
-
-    function m:GetPosition()
-        local hrp = Core:GetHumanoidRootPart()
-        return hrp and hrp.Position or Vector3.new(0, 0, 0)
-    end
-
-    function m:GetAllTools()
-        local backpack = Core:GetBackpack()
-        if not backpack then 
-            warn("Player:GetAllTools - Backpack not found")
-            return {} 
-        end
-
-        local tools = {}
-        local success, err = pcall(function()
-            for _, item in ipairs(backpack:GetChildren()) do
-                if item:IsA("Tool") then
-                    table.insert(tools, item)
-                end
-            end
-        end)
-
-        if not success then
-            warn("Player:GetAllTools - Error getting tools:", err)
-            return {}
-        end
-
-        return tools
-    end
-
-    function m:GetTool(_toolName)
-        if not _toolName or type(_toolName) ~= "string" then
-            warn("Player:GetTool - Invalid tool name")
-            return nil
-        end
-
-        local backpack = Core:GetBackpack()
-        if not backpack then
-            warn("Player:GetTool - Backpack not found")
-            return nil 
-        end
-
-        local tool = nil
-        local success, err = pcall(function()
-            tool = backpack:FindFirstChild(_toolName)
-            if tool and not tool:IsA("Tool") then
-                tool = nil
-            end
-        end)
-
-        if not success then
-            warn("Player:GetTool - Error finding tool:", err)
-            return nil
-        end
-
-        if not tool then
-            warn("Player:GetTool - Tool not found:", _toolName)
-        end
-
-        return tool
-    end
-
-    return m
-end
-
--- Module: farm/garden.lua
-EmbeddedModules["farm/garden.lua"] = function()
-    local m = {}
-    local Window
-    local Core
-    local Player
-    local AutoHarvestThread
-    local AutoHarvesting = false
-    local BackpackConnection
-    local PlantConnection
-    local WateringConnection
-    local PlantsLocation
-    m.MailboxPosition = Vector3.new(0, 0, 0)
-
-    function m:Init(_window, _core, _player)
-        Window = _window
-        Core = _core
-        Player = _player
-
-        local important = self:GetMyFarm():FindFirstChild("Important")
-        PlantsLocation = important:FindFirstChild("Plant_Locations")
-
-        local mailbox = self:GetMyFarm():FindFirstChild("Mailbox")
-        if mailbox then
-            m.MailboxPosition = mailbox:GetPivot().Position
-        end
-
-    end
-
-    function m:GetMyFarm()
-    	local farms = Core.Workspace.Farm:GetChildren()
-
-    	for _, farm in next, farms do
-            local important = farm.Important
-            local data = important.Data
-            local owner = data.Owner
-
-    		if owner.Value == Core.LocalPlayer.Name then
-    			return farm
-    		end
-    	end
-    end
-
-    function m:GetArea(_base)
-        local center = _base:GetPivot()
-    	local size = _base.Size
-
-    	-- Bottom left
-    	local x1 = math.ceil(center.X - (size.X/2))
-    	local z1 = math.ceil(center.Z - (size.Z/2))
-
-    	-- Top right
-    	local x2 = math.floor(center.X + (size.X/2))
-    	local z2 = math.floor(center.Z + (size.Z/2))
-
-    	return x1, z1, x2, z2
-    end
-
-    function m:GetFarmCenterPosition()
-        local farmParts = PlantsLocation:GetChildren()
-        if #farmParts < 1 then
-            return Vector3.new(0, 4, 0)
-        end
-
-        -- Calculate center from all farm parts
-        local totalX, totalZ = 0, 0
-        local totalY = 4 -- Default height for farm
-        local partCount = 0
-
-        for _, part in pairs(farmParts) do
-            if part:IsA("BasePart") then
-                local pos = part.Position
-                totalX = totalX + pos.X
-                totalZ = totalZ + pos.Z
-                totalY = math.max(totalY, pos.Y + part.Size.Y/2) -- Use highest Y position
-                partCount = partCount + 1
-            end
-        end
-
-        if partCount > 0 then
-            local centerX = totalX / partCount
-            local centerZ = totalZ / partCount
-            return Vector3.new(centerX, totalY, centerZ)
-        end
-    end
-
-    function m:GetFarmFrontRightPosition()
-        local farmParts = PlantsLocation:GetChildren()
-
-        if #farmParts < 1 then
-            return Vector3.new(0, 4, 0)
-        end
-
-        local farmLand = farmParts[1]
-        if  m.MailboxPosition.Z > 0 then
-            if farmParts[1]:GetPivot().X > farmParts[2]:GetPivot().X then
-                farmLand = farmParts[2]
-            end
-        else
-            if farmParts[1]:GetPivot().X < farmParts[2]:GetPivot().X then
-                farmLand = farmParts[2]
-            end
-        end
-
-        local x1, z1, x2, z2 = self:GetArea(farmLand)
-
-        local x = math.max(x1, x2)
-        local z = math.max(z1, z2)
-
-        if m.MailboxPosition.Z > 0 then
-            x = math.min(x1, x2)
-            z = math.min(z1, z2)
-        end
-
-        return Vector3.new(x, 4, z)
-    end
-
-    function m:GetFarmFrontLeftPosition()
-        local farmParts = PlantsLocation:GetChildren()
-
-        if #farmParts < 1 then
-            return Vector3.new(0, 4, 0)
-        end
-
-        local farmLand = farmParts[1]
-        if  m.MailboxPosition.Z > 0 then
-            if farmParts[1]:GetPivot().X < farmParts[2]:GetPivot().X then
-                farmLand = farmParts[2]
-            end
-        else
-            if farmParts[1]:GetPivot().X > farmParts[2]:GetPivot().X then
-                farmLand = farmParts[2]
-            end
-        end
-
-        local x1, z1, x2, z2 = self:GetArea(farmLand)
-
-        local x = math.min(x1, x2)
-        local z = math.max(z1, z2)
-
-        if m.MailboxPosition.Z > 0 then
-            x = math.max(x1, x2)
-            z = math.min(z1, z2)
-        end
-
-        return Vector3.new(x, 4, z)
-    end
-
-    function m:GetFarmBackRightPosition()
-        local farmParts = PlantsLocation:GetChildren()
-        if #farmParts < 1 then
-            return Vector3.new(0, 4, 0)
-        end
-
-        local farmLand = farmParts[1]
-        if  m.MailboxPosition.Z > 0 then
-            if farmParts[1]:GetPivot().X > farmParts[2]:GetPivot().X then
-                farmLand = farmParts[2]
-            end
-        else
-            if farmParts[1]:GetPivot().X < farmParts[2]:GetPivot().X then
-                farmLand = farmParts[2]
-            end
-        end
-
-        local x1, z1, x2, z2 = self:GetArea(farmLand)
-
-        local x = math.max(x1, x2)
-        local z = math.min(z1, z2)
-
-        if m.MailboxPosition.Z > 0 then
-            x = math.min(x1, x2)
-            z = math.max(z1, z2)
-        end
-
-        return Vector3.new(x, 4, z)
-    end
-
-    function m:GetFarmBackLeftPosition()
-        local farmParts = PlantsLocation:GetChildren()
-        if #farmParts < 1 then
-            return Vector3.new(0, 4, 0)
-        end
-
-        local farmLand = farmParts[1]
-        if  m.MailboxPosition.Z > 0 then
-            if farmParts[1]:GetPivot().X < farmParts[2]:GetPivot().X then
-                farmLand = farmParts[2]
-            end
-        else
-            if farmParts[1]:GetPivot().X > farmParts[2]:GetPivot().X then
-                farmLand = farmParts[2]
-            end
-        end
-
-        local x1, z1, x2, z2 = self:GetArea(farmLand)
-
-        local x = math.min(x1, x2)
-        local z = math.min(z1, z2)
-
-        if m.MailboxPosition.Z > 0 then
-            x = math.max(x1, x2)
-            z = math.max(z1, z2)
-        end
-
-        return Vector3.new(x, 4, z)
-    end
-
-    function m:GetFarmRandomPosition()
-        local farmParts = PlantsLocation:GetChildren()
-
-        if #farmParts < 1 then
-            return Vector3.new(0, 4, 0)
-        end
-
-        local FarmLand = farmParts[math.random(1, #farmParts)]
-
-        local x1, z1, x2, z2 = self:GetArea(FarmLand)
-        local x = math.random(x1, x2)
-        local z = math.random(z1, z2)
-
-        return Vector3.new(x, 4, z)
-    end
-
-    return m
-end
-
--- Module: event/ghoul/ui.lua
-EmbeddedModules["event/ghoul/ui.lua"] = function()
-    local m = {}
-
-    local Window
-    local Quest
-    local Shop
-
-    function m:Init(_window, _quest, _shop)
-        Window = _window
-        Quest = _quest
-        Shop = _shop
-
-
-        local tab = Window:AddTab({
-            Name = "Ghoul Event",
-            Icon = "👻",
-        })
-        self:GhoulSection(tab)
-        self:SeedShopSection(tab)
-        self:CreepyCrittersSection(tab)
-        self:DevilishDecorSection(tab)
-    end
-
-    function m:GhoulSection(tab)
-        local eventAccordion = tab:AddAccordion({
-            Title = "Ghoul Event",
-            Icon = "👻",
-            Default = false,
-        })
-
-        eventAccordion:AddToggle({
-            Name = "Auto Submit Ghoul Quest Items 👻",
-            Default = false,
-            Flag = "AutoSubmitGhoulQuest",
-            Callback = function(Value)
-                if Value then
-                    Quest:StartAutoSubmitEventPlants()
-                end
-            end,
-        })
-    end
-
-    function m:SeedShopSection(tab)
-        local merchant = "Spooky Seeds"
-        local accordion = tab:AddAccordion({
-            Title = "Spooky Seeds Shop",
-            Icon = "🎃",
-            Default = false,
-        })
-
-        accordion:AddSelectBox({
-            Name = "Select Item to Buy 🛒",
-            Options = {"loading ..."},
-            Placeholder = "Select Item",
-            MultiSelect = true,
-            Flag = "SpookyShopItem",
-            OnInit =  function(api, optionsData)
-                local items = Shop:GetItemRepository(merchant)
-
-                local itemNames = {}
-                for itemName, _ in pairs(items) do
-                    table.insert(itemNames, itemName)
-                end
-
-                optionsData.updateOptions(itemNames)
-            end
-        })
-
-        accordion:AddToggle({
-            Name = "Auto Buy Spooky Shop Items 🛒",
-            Default = false,
-            Flag = "AutoBuySpookyShop",
-            Callback = function(Value)
-                if Value then
-                    Quest:StartAutoBuyEventItems()
-                end
-            end,
-        })
-    end
-
-    function m:CreepyCrittersSection(tab)
-        local merchant = "Creepy Critters"
-        local accordion = tab:AddAccordion({
-            Title = "Creepy Critters Shop",
-            Icon = "🦇",
-            Default = false,
-        })
-
-        accordion:AddSelectBox({
-            Name = "Select Item to Buy 🛒",
-            Options = {"loading ..."},
-            Placeholder = "Select Item",
-            MultiSelect = true,
-            Flag = "CreepyShopItem",
-            OnInit =  function(api, optionsData)
-                local items = Shop:GetItemRepository(merchant)
-
-                local itemNames = {}
-                for itemName, _ in pairs(items) do
-                    table.insert(itemNames, itemName)
-                end
-
-                optionsData.updateOptions(itemNames)
-            end
-        })
-
-        accordion:AddToggle({
-            Name = "Auto Buy Creepy Shop Items 🛒",
-            Default = false,
-            Flag = "AutoBuyCreepyShop",
-            Callback = function(Value)
-                if Value then
-                    Quest:StartAutoBuyEventItems()
-                end
-            end,
-        })
-    end
-
-    function m:DevilishDecorSection(tab)
-        local merchant = "Devilish Decor"
-        local accordion = tab:AddAccordion({
-            Title = "Devilish Decor Shop",
-            Icon = "🕸️",
-            Default = false,
-        })
-
-        accordion:AddSelectBox({
-            Name = "Select Item to Buy 🛒",
-            Options = {"loading ..."},
-            Placeholder = "Select Item",
-            MultiSelect = true,
-            Flag = "DevilishShopItem",
-            OnInit =  function(api, optionsData)
-                local items = Shop:GetItemRepository(merchant)
-
-                local itemNames = {}
-                for itemName, _ in pairs(items) do
-                    table.insert(itemNames, itemName)
-                end
-
-                optionsData.updateOptions(itemNames)
-            end
-        })
-
-        accordion:AddToggle({
-            Name = "Auto Buy Devilish Shop Items 🛒",
-            Default = false,
-            Flag = "AutoBuyDevilishShop",
-            Callback = function(Value)
-                if Value then
-                    Quest:StartAutoBuyEventItems()
-                end
-            end,
-        })
-    end
-
     return m
 end
 
@@ -11686,7 +11752,7 @@ print("Automation initialized")
 
 -- Shop
 ShopModule:Init(CoreModule)
-ShopSeedModule:Init(window, CoreModule, ShopModule)
+ShopSeedModule:Init(window, CoreModule)
 ShopGearModule:Init(window, CoreModule, ShopModule)
 ShopEggModule:Init(window, CoreModule, ShopModule)
 ShopTravelingModule:Init(window, CoreModule, ShopModule)
